@@ -1,0 +1,16 @@
+<h1>Sign In</h1>
+<form method="POST" action="/submit">
+    {{ form.csrf_token }}
+    <p>
+        {{ form.username.label }}<br>{{ form.username(size=20) }}
+    </p>
+    <p>
+        {{ form.password.label }}<br>{{ form.password(size=20) }}
+    </p>
+    <p>
+        {{ form.remember_me() }} {{ form.remember_me.label }}
+    </p>
+    <p>
+        {{ form.submit() }}
+    </p>
+</form>

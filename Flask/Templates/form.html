@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>填写账号密码</title>
+</head>
+<body>
+<p style="color:red">{{message}}</p>
+<form action="/signin" method="post">
+    <legend>Please sign in</legend>
+    <p><input name="username" placeholder="Username" value="{{username}}"></p>
+    <p><input name="password" placeholder="Password" value="{{password}}"></p>
+    <button value="提交" type="submit">Sign in</button>
+</form>
+</body>
+</html>
