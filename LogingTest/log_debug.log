@@ -1,0 +1,13 @@
+DEBUG:root:test_log
+DEBUG:root:test_log
+DEBUG:root:test_log_1
+DEBUG:root:test_log
+DEBUG:root:test_log_1
+2019-01-30 11:24:37,149 - __main__ - DEBUG - test_log
+2019-01-30 11:24:37,149 - test_log - DEBUG - test_log_1
+2019-01-30 11:25:02,699 - __main__ - DEBUG - 12345
+2019-01-30 11:25:02,699 - test_log - DEBUG - 67890
+2019-01-30 11:28:24,023 - __main__ - DEBUG - 12345
+2019-01-30 11:28:24,023 - test_log_1 - DEBUG - 67890
+2019-01-30 11:28:50,081 - test_log - DEBUG - 12345
+2019-01-30 11:28:50,081 - test_log_1 - DEBUG - 67890
