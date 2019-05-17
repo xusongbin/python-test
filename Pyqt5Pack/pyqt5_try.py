@@ -3,6 +3,7 @@ import re
 import sys
 from ui_pack import Ui_Form
 from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt
 
 
@@ -16,6 +17,7 @@ class Form(QWidget):
         self.show()
 
         self.work_cnt = 0
+        self.pos = None
         self.work_ui_init()
 
     def work_ui_init(self):
@@ -23,7 +25,9 @@ class Form(QWidget):
         self.work_ui.lineEdit.setAcceptDrops(False)
         self.work_ui.labelKeyText.setText('')
         self.work_ui.labelKeyValue.setText('')
+        self.work_ui.labelPosValue.setText('')
         self.work_ui.pushButton.clicked.connect(self.fun_btn_add)
+        self.setMouseTracking(True)
 
     def fun_btn_add(self):
         self.work_cnt += 1
@@ -49,6 +53,17 @@ class Form(QWidget):
         else:
             print('获取文本内容：%s' % _text)
         e.accept()
+
+    def mouseMoveEvent(self, e):
+        self.work_ui.labelPosValue.setText('{:d},{:d}'.format(e.x(), e.y()))
+        self.pos = (e.x(), e.y())
+
+    def paintEvent(self, e):
+        if self.pos:
+            q = QPainter(self)
+            # q.drawLine(0, 0, self.pos[0], self.pos[1])
+            q.drawEllipse(self.pos[0]-5, self.pos[1]-5, 10, 10)
+            self.update()
 
 
 if __name__ == '__main__':

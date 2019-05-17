@@ -36,6 +36,9 @@ class Ui_Form(object):
         self.label_4.setGeometry(QtCore.QRect(75, 160, 40, 12))
         self.label_4.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_4.setObjectName("label_4")
+        self.labelPosValue = QtWidgets.QLabel(Form)
+        self.labelPosValue.setGeometry(QtCore.QRect(10, 10, 54, 12))
+        self.labelPosValue.setObjectName("labelPosValue")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -48,5 +51,6 @@ class Ui_Form(object):
         self.labelKeyText.setText(_translate("Form", "0"))
         self.labelKeyValue.setText(_translate("Form", "0"))
         self.label_4.setText(_translate("Form", "键值："))
+        self.labelPosValue.setText(_translate("Form", "0"))
 
 
