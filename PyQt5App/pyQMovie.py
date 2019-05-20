@@ -14,14 +14,14 @@ class Example(QWidget):
         self.bt1.move(100, 20)
         self.bt2 = QPushButton('停止', self)
         self.bt2.move(200, 20)
-        self.pix = QPixmap('movie.gif')
+        self.pix = QPixmap('pyQMovie.gif')
         self.lb.setPixmap(self.pix)
         self.lb.setScaledContents(True)
         self.bt1.clicked.connect(self.run)
         self.bt2.clicked.connect(self.run)
         self.show()
 
-        self.movie = QMovie("movie.gif")
+        self.movie = QMovie("pyQMovie.gif")
         self.movie.setSpeed(500)
         self.movie.updated.connect(self.fun_movie_updated)
 
