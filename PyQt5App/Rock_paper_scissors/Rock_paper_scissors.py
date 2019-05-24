@@ -3,7 +3,7 @@ import sys
 from random import randint
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox
 
-from Rock_paper_scissors_ui import *
+from .Rock_paper_scissors_ui import *
 
 
 class Form(QWidget):
