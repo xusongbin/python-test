@@ -1,9 +1,0 @@
-<RCC>
-  <qresource prefix="se">
-    <file>pyQToolBox/baidu.ico</file>
-    <file>pyQToolBox/sougo.ico</file>
-  </qresource>
-  <qresource prefix="v">
-    <file>pyQToolBox/tengxun.ico</file>
-  </qresource>
-</RCC>
