@@ -2,7 +2,7 @@
 import sys
 from PyQt5.QtWidgets import QWidget, QApplication
 
-from buddies_ui import *
+from .buddies_ui import *
 
 
 class Form(QWidget):
