@@ -11,12 +11,16 @@ headers = {
 
 
 def get_account():
-    resp = get(URL, headers=headers)
-    selector = etree.HTML(resp.text)
-    addr = selector.xpath('//h4[text()="IP Address:"]/span/text()')
-    port = selector.xpath('//h4[text()="Port:"]/span/text()')
-    pwd = selector.xpath('//h4[text()="Password:"]/span/text()')
-    return addr, port, pwd
+    try:
+        resp = get(URL, headers=headers)
+        selector = etree.HTML(resp.text)
+        addr = selector.xpath('//h4[text()="IP Address:"]/span/text()')
+        port = selector.xpath('//h4[text()="Port:"]/span/text()')
+        pwd = selector.xpath('//h4[text()="Password:"]/span/text()')
+        return addr, port, pwd
+    except:
+        pass
+    return None
 
 
 if __name__ == '__main__':

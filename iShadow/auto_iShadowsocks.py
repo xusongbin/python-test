@@ -18,18 +18,23 @@ def elapsed(t):
 
 def run():
     tms = 0
-    addr, port, pwd = get_server()
+    server = get_server()
+    if server:
+        addr, port, pwd = server[0], server[1], server[2]
+    else:
+        addr, port, pwd = '', '', ''
     while True:
         if elapsed(tms) > 1000 * 60:
             tms = millis()
 
-            a, b, c = get_account()
-            a, b, c = a[2], b[2], c[2]
-            if any([addr != a, port != b, pwd != c]):
-                addr = a
-                port = b
-                pwd = c
-                set_server(a, b, c)
+            server = get_account()
+            if not server:
+                continue
+            a, b, c = server[0][2], server[1][2], server[2][2]
+            if not any([addr != a, port != b, pwd != c]):
+                continue
+            if set_server(a, b, c):
+                addr, port, pwd = a, b, c
         sleep(5)
 
 

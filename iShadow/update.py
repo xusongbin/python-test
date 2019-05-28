@@ -10,41 +10,50 @@ import win32con
 
 
 def set_server(addr, port, pwd):
-    name = 'Shadowsocks.exe'
-    path = r'E:\Program Files\ss-v4.0.6\Shadowsocks.exe'
-    cfg = r'E:\Program Files\ss-v4.0.6\gui-config.json'
+    try:
+        name = 'Shadowsocks.exe'
+        path = r'E:\Program Files\ss-v4.0.6\Shadowsocks.exe'
+        cfg = r'E:\Program Files\ss-v4.0.6\gui-config.json'
 
-    # 1.close 2.setting 3.open
-    print('addr:{} port:{} pwd:{}'.format(addr, port, pwd))
-    # kill app
-    os.system('taskkill /f /im "{}"'.format(name))
+        # 1.close 2.setting 3.open
+        print('addr:{} port:{} pwd:{}'.format(addr, port, pwd))
+        # kill app
+        os.system('taskkill /f /im "{}"'.format(name))
 
-    # change setting
-    with open(cfg, 'r') as f:
-        js = json.loads(f.read())
-    js['configs'][0]['server'] = str(addr).strip()
-    js['configs'][0]['server_port'] = str(port).strip()
-    js['configs'][0]['password'] = str(pwd).strip()
-    js['configs'][0]['method'] = 'aes-256-cfb'
-    js['configs'][0]['plugin'] = ''
-    js['configs'][0]['plugin_opts'] = ''
-    js['configs'][0]['remarks'] = ''
-    js['configs'][0]['timeout'] = 5
-    with open(cfg, 'w') as f:
-        f.write(json.dumps(js))
+        # change setting
+        with open(cfg, 'r') as f:
+            js = json.loads(f.read())
+        js['configs'][0]['server'] = str(addr).strip()
+        js['configs'][0]['server_port'] = str(port).strip()
+        js['configs'][0]['password'] = str(pwd).strip()
+        js['configs'][0]['method'] = 'aes-256-cfb'
+        js['configs'][0]['plugin'] = ''
+        js['configs'][0]['plugin_opts'] = ''
+        js['configs'][0]['remarks'] = ''
+        js['configs'][0]['timeout'] = 5
+        with open(cfg, 'w') as f:
+            f.write(json.dumps(js))
 
-    # run app
-    Popen(path)
+        # run app
+        Popen(path)
+        return True
+    except:
+        pass
+    return False
 
 
 def get_server():
-    cfg = r'E:\Program Files\ss-v4.0.6\gui-config.json'
-    with open(cfg, 'r') as f:
-        js = json.loads(f.read())
-    addr = js['configs'][0]['server']
-    port = js['configs'][0]['server_port']
-    pwd = js['configs'][0]['password']
-    return addr, port, pwd
+    try:
+        cfg = r'E:\Program Files\ss-v4.0.6\gui-config.json'
+        with open(cfg, 'r') as f:
+            js = json.loads(f.read())
+        addr = js['configs'][0]['server']
+        port = js['configs'][0]['server_port']
+        pwd = js['configs'][0]['password']
+        return addr, port, pwd
+    except:
+        pass
+    return False
 
 
 def cls_tray():
