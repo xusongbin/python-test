@@ -1,5 +1,5 @@
 
-# 表格装置实例
+# 表格装置实例，继承自QTableView，不能使用数据模型，可以设置复选框，不能与QSqlTableModel绑定
 
 import sys
 from PyQt5.QtWidgets import *

@@ -1,5 +1,5 @@
 
-# 清单装置实例
+# 清单装置实例，继承自QListView，集成QListWidgetItem数据存储模型
 
 import sys
 from PyQt5.QtWidgets import *

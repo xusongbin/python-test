@@ -1,5 +1,5 @@
 
-# 界面动画演示
+# 界面控件动画演示
 
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget

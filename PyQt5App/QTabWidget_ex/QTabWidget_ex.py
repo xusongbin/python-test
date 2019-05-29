@@ -1,5 +1,5 @@
 
-# 标签装置实例1
+# 标签页实例1
 
 import sys
 from PyQt5.QtWidgets import *

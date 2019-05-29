@@ -1,5 +1,5 @@
 
-# Dock停靠控件实例1
+# MainWindow窗口Dock停靠控件实例1
 
 import sys
 from PyQt5.QtWidgets import *

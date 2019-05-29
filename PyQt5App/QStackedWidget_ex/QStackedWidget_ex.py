@@ -1,5 +1,5 @@
 
-# 堆栈装置实例1
+# 堆栈装置实例1，类似TabWidget，没有标签页
 
 import sys
 from PyQt5.QtWidgets import *

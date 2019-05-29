@@ -1,5 +1,5 @@
 
-# 清单视图实例
+# 清单视图实例，需要自建数据模型
 
 import sys
 from PyQt5.QtWidgets import *

@@ -1,5 +1,5 @@
 
-# 滑块实例
+# 滑块实例，左右滑块、上下滑块和表盘滑块
 
 import sys
 from PyQt5.QtWidgets import QWidget, QApplication

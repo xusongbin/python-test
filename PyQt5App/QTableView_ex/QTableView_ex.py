@@ -1,5 +1,5 @@
 
-# 表格视图实例
+# 表格视图实例，可以设置数据模型，不能实现复选框，能够与QSqlTableModel绑定
 
 import sys
 from PyQt5.QtWidgets import *
