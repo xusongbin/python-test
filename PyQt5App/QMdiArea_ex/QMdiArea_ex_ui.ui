@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>500</width>
+    <height>500</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QMdiArea" name="mdiArea">
+    <property name="geometry">
+     <rect>
+      <x>-1</x>
+      <y>-1</y>
+      <width>501</width>
+      <height>466</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QWidget" name="widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>255</y>
+      <width>120</width>
+      <height>80</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::TopToolBarArea</set>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionaction1"/>
+   <addaction name="actionaction2"/>
+   <addaction name="actionaction3"/>
+   <addaction name="actionaction4"/>
+  </widget>
+  <action name="actionaction1">
+   <property name="icon">
+    <iconset resource="QMdiArea_rc.qrc">
+     <normaloff>:/image/image/1.jpg</normaloff>:/image/image/1.jpg</iconset>
+   </property>
+   <property name="text">
+    <string>发一张牌</string>
+   </property>
+  </action>
+  <action name="actionaction2">
+   <property name="icon">
+    <iconset resource="QMdiArea_rc.qrc">
+     <normaloff>:/image/image/2.jpg</normaloff>:/image/image/2.jpg</iconset>
+   </property>
+   <property name="text">
+    <string>随机5张牌</string>
+   </property>
+  </action>
+  <action name="actionaction3">
+   <property name="icon">
+    <iconset resource="QMdiArea_rc.qrc">
+     <normaloff>:/image/image/3.jpg</normaloff>:/image/image/3.jpg</iconset>
+   </property>
+   <property name="text">
+    <string>清除牌</string>
+   </property>
+  </action>
+  <action name="actionaction4">
+   <property name="icon">
+    <iconset resource="QMdiArea_rc.qrc">
+     <normaloff>:/image/image/4.jpg</normaloff>:/image/image/4.jpg</iconset>
+   </property>
+   <property name="text">
+    <string>收牌</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="QMdiArea_rc.qrc"/>
+ </resources>
+ <connections/>
+</ui>
