@@ -1,5 +1,5 @@
 
-# 子窗口控件实例1
+# 子窗口控件实例1，包含QToolBar和QAction用法
 
 import sys
 import random
