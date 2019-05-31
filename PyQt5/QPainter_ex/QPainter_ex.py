@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import sys
+from time import time
 
 from QPainter_ex_ui import *
 
@@ -49,8 +50,8 @@ class Form(QWidget):
             # QApplication.desktop().winId(), _x, _y, _w, _h
             self.winId(), _x, _y, _w, _h
         )
-        pix.save("123.jpg")
-        print('save')
+        # pix.save("123.jpg")
+        print('{:.3f}: save'.format(time()))
 
     def mouseMoveEvent(self, QMouseEvent):
         if self.flag:

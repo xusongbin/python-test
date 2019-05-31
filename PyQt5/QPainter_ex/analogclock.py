@@ -81,14 +81,14 @@ class AnalogClock(QWidget):
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.translate(self.width() / 2, self.height() / 2)
-        painter.scale(side / 200.0, side / 200.0)
+        painter.translate(self.width() / 2, self.height() / 2)  # 移动到窗口中心
+        painter.scale(side / 250.0, side / 250.0)   # 设置像素点大小？
 
         painter.setPen(Qt.NoPen)
         painter.setBrush(AnalogClock.hourColor)
 
         painter.save()
-        painter.rotate(30.0 * ((time.hour() + time.minute() / 60.0)))
+        painter.rotate(30.0 * (time.hour() + time.minute() / 60.0))
         painter.drawConvexPolygon(AnalogClock.hourHand)
         painter.restore()
 
