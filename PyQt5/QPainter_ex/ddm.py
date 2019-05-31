@@ -22,12 +22,14 @@ class Example(QWidget):
         self.resize(400, 500)
 
         self.draw_pen = QPen(Qt.black, 3)
-        self.head_color = QColor(156, 214, 239)
-        self.face_color = QColor(255, 255, 255)
-        self.mouth_color = QColor(180, 10, 10)
-        self.nose_color = QColor(200, 50, 50)
-        self.neck_color = QColor(220, 90, 90)
-        self.pupil_color = QColor(0, 0, 0)
+        self.head_color = QColor(0x4E, 0x6D, 0xE4)
+        self.face_color = QColor(0xFF, 0xFF, 0xFF)
+        self.mouth_color = QColor(0xBB, 0x00, 0x00)
+        self.nose_color = QColor(0xFF, 0x66, 0x66)
+        self.neck_color = QColor(0xFF, 0x22, 0x22)
+        self.pupil_color = QColor(0x00, 0x00, 0x00)
+        self.bell_color = QColor(0xFF, 0xD6, 0x33)
+        self.pocket_color = QColor(0x33, 0xFF, 0xFF)
 
         self.eye_color = self.face_color
         self.nose_light_color = self.face_color
@@ -36,7 +38,8 @@ class Example(QWidget):
         self.body_color = self.head_color
         self.foot_color = self.face_color
         self.chest_color = self.face_color
-        self.pocket_color = self.chest_color
+        self.arm_color = self.head_color
+        self.hand_color = self.face_color
 
     def draw_head(self, qp, x, y, r):     # 画头部
         path = QPainterPath()
@@ -299,8 +302,8 @@ class Example(QWidget):
         cx = (p4[0] + p3[0]) / 2
         cy = p4[1]
         r = (p4[0] - p3[0]) / 2
-        a = (r / 2) * 1.3
-        b = (r / 2) * 0.6
+        a = (r / 2) * 1.1
+        b = (r / 2) * 0.5
         # 计算脚中心位置
         cx1, cy1 = cx - a, cy
         cx2, cy2 = cx + a, cy
@@ -405,6 +408,125 @@ class Example(QWidget):
         qp.drawPath(path)
         return (x1, y1), (x2, y2), (x3, y3)
 
+    def draw_arm_left(self, qp, head):     # 画手臂
+        cx, cy = head[0]
+        ox, oy = head[1]    # 右边
+        r = ox - cx
+        path = QPainterPath()
+        # 计算多边形4个点
+        k = 0.5     # a/b 手臂离身体及离肩膀距离
+        a = r * 0.35    # 手臂离身体距离
+        j = r * 0.1     # 补偿量
+        x1, y1 = cx - r, oy
+        x2, y2 = x1, y1 + r * 0.45
+        x3, y3 = x2 - a + j, y2 + a / k - j / k
+        x4, y4 = x1 - a, y1 + a / k
+        body_pg = QPolygonF()
+        body_pg << QPointF(x1, y1) << QPointF(x2, y2) << QPointF(x3, y3) << QPointF(x4, y4)
+        path.addPolygon(body_pg)
+        path.closeSubpath()
+        # 设置绘图颜色
+        qp.restore()
+        qp.setPen(self.draw_pen)
+        qp.setBrush(self.arm_color)
+        qp.save()
+        # 设置以上绘图信息给QPainter
+        qp.drawPath(path)
+        return (x1, y1), (x2, y2), (x3, y3), (x4, y4)
+
+    def draw_arm_right(self, qp, head):     # 画手臂
+        cx, cy = head[0]
+        ox, oy = head[1]    # 右边
+        r = ox - cx
+        path = QPainterPath()
+        # 计算多边形4个点
+        x1, y1 = cx + r, oy
+        x2, y2 = x1, y1 + r * 0.3
+        x3, y3 = x2 + r * 0.6, y2 - r * 0.4
+        x4, y4 = x1 + r * 0.6, y1 - r * 0.4
+        body_pg = QPolygonF()
+        body_pg << QPointF(x1, y1) << QPointF(x2, y2) << QPointF(x3, y3) << QPointF(x4, y4)
+        path.addPolygon(body_pg)
+        path.closeSubpath()
+        # 设置绘图颜色
+        qp.restore()
+        qp.setPen(self.draw_pen)
+        qp.setBrush(self.arm_color)
+        qp.save()
+        # 设置以上绘图信息给QPainter
+        qp.drawPath(path)
+        return (x1, y1), (x2, y2), (x3, y3), (x4, y4)
+
+    def draw_hand(self, qp, arm, r):     # 画拳头
+        p1 = arm[3]
+        p2 = arm[2]
+        r = r / 8
+        cx = p1[0]
+        cy = p1[1] + r
+        path = QPainterPath()
+        # 计算绘图起始坐标
+        ox = cx + r
+        oy = cy
+        path.moveTo(ox, oy)
+        # 计算头部的矩形信息 fx,fy,fw,fh， 设置绘图起始到结束角度
+        fx, fy, fw, fh = cx - r, cy - r, r * 2,  r * 2
+        path.arcTo(QRectF(fx, fy, fw, fh), 0, 360)
+        # 设置封闭绘图形状
+        path.closeSubpath()
+        # 设置绘图颜色
+        qp.restore()
+        qp.setPen(self.draw_pen)
+        qp.setBrush(self.hand_color)
+        qp.save()
+        # 设置以上绘图信息给QPainter
+        qp.drawPath(path)
+        return (cx, cy), (ox, oy)
+
+    def draw_bell(self, qp, neck):     # 画铃铛
+        p1 = neck[0]
+        p2 = neck[1]    # 尖
+        r = (p2[1] - p1[1]) * 0.5
+        cx = p2[0]
+        cy = p2[1]
+        path = QPainterPath()
+        # 计算绘图起始坐标
+        ox = cx + r
+        oy = cy
+        path.moveTo(ox, oy)
+        # 计算头部的矩形信息 fx,fy,fw,fh， 设置绘图起始到结束角度
+        fx, fy, fw, fh = cx - r, cy - r, r * 2,  r * 2
+        path.arcTo(QRectF(fx, fy, fw, fh), 0, 360)
+        # 设置封闭绘图形状
+        path.closeSubpath()
+        # 设置绘图颜色
+        qp.restore()
+        qp.setPen(self.draw_pen)
+        qp.setBrush(self.bell_color)
+        qp.save()
+        # 设置以上绘图信息给QPainter
+        qp.drawPath(path)
+
+        k = 0.3
+        # 计算线信息
+        x1, y1 = cx - r * k, cy - r * k
+        x2, y2 = cx + r * k, cy
+        # 设置绘图颜色
+        qp.restore()
+        qp.setPen(self.draw_pen)
+        qp.setBrush(self.nose_line_color)
+        qp.save()
+        qp.drawLine(x1, y1, x2, y2)
+
+        # 计算线信息
+        x1, y1 = cx + r * k, cy
+        x2, y2 = cx - r * k, cy + r * k
+        # 设置绘图颜色
+        qp.restore()
+        qp.setPen(self.draw_pen)
+        qp.setBrush(self.nose_line_color)
+        qp.save()
+        qp.drawLine(x1, y1, x2, y2)
+
     def paintEvent(self, e):
         w = self.size().width()
         h = self.size().height()
@@ -425,7 +547,12 @@ class Example(QWidget):
         self.draw_foot(qp, body)    # 画脚
         chest = self.draw_chest(qp, head)   # 画胸
         pocket = self.draw_pocket(qp, chest)     # 画口袋
-        self.draw_neck(qp, head, pocket)    # 画围脖
+        neck = self.draw_neck(qp, head, pocket)    # 画围脖
+        arm_left = self.draw_arm_left(qp, head)     # 画左手臂
+        arm_right = self.draw_arm_right(qp, head)     # 画右手臂
+        self.draw_hand(qp, arm_left, r)   # 画左拳头
+        self.draw_hand(qp, arm_right, r)   # 画右拳头
+        self.draw_bell(qp, neck)    # 画铃铛
 
 
 if __name__ == '__main__':
