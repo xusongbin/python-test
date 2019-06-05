@@ -90,7 +90,7 @@ class PuzzleShow(QWidget):
             event.setDropAction(Qt.MoveAction)
             event.accept()
 
-            if location == QPoint(square.x() / self.fun_piece_size(), square.y() / self.fun_piece_size()):
+            if location == QPoint(int(square.x() / self.fun_piece_size()), int(square.y() / self.fun_piece_size())):
                 self.inPlace += 1
                 if self.inPlace == 25:
                     self.puzzle_completed.emit()
@@ -114,7 +114,7 @@ class PuzzleShow(QWidget):
         del self.piecePixmaps[found]
         del self.pieceRects[found]
 
-        if location == QPoint(square.x() / self.fun_piece_size(), square.y() / self.fun_piece_size()):
+        if location == QPoint(int(square.x() / self.fun_piece_size()), int(square.y() / self.fun_piece_size())):
             self.inPlace -= 1
 
         self.update(square)
@@ -138,7 +138,7 @@ class PuzzleShow(QWidget):
             self.pieceRects.insert(found, square)
             self.update(self.fun_target_square(event.pos()))
 
-            if location == QPoint(square.x() / self.fun_piece_size(), square.y() / self.fun_piece_size()):
+            if location == QPoint(int(square.x() / self.fun_piece_size()), int(square.y() / self.fun_piece_size())):
                 self.inPlace += 1
 
     def paintEvent(self, event):
@@ -303,7 +303,7 @@ class Jigsaw(QMainWindow):
 
         self.init_ui()
 
-        self.puzzle_image = QPixmap("./img/Peppa.png")
+        self.puzzle_image = QPixmap("./img/thomas.png")
         self.save_data = self.fun_load_time()
 
         self.timer = QTimer()
@@ -421,7 +421,7 @@ class Jigsaw(QMainWindow):
         """
         选择图片并开始游戏
         """
-        file = self.work_filedialog.getOpenFileName(self, "打开文件", "./img", ("Images (*.png *.jpg)"))
+        file = self.work_filedialog.getOpenFileName(self, "打开文件", "./img", "Images (*.png *.jpg)")
         path = file[0]
         if path:
             self.puzzle_image = QPixmap(path)
