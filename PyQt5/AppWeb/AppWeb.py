@@ -223,8 +223,9 @@ class Web(QMainWindow):
         if self.wui.tabWidget.currentWidget().title() == "about:blank":
             self.wui.tabWidget.currentWidget().load(url)
         else:
-            view = QWebEngineView()            self.new_tab(view)
+            view = QWebEngineView()
             view.load(url)
+            self.new_tab(view)
 
     def __del__(self):
         self.view.deleteLater()
