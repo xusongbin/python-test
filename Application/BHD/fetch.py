@@ -78,6 +78,7 @@ def parse_data(data):
         '33NZ7dPrUZALy2LkRjQEe1WhMKGZyTaHtc': 'HDPool',
         '363iEUsQFzcWuwoajSQwz7YZkxTfbqhwkB': 'HDPool ECO',
         '3HHo4j1dbpWrX2YvQjsjNAZqbpXThKvXWW': 'ONEPool ECO',
+        '37ahFaegsA5662VVCt4dgy2fS1Rz8w9Csg': 'AWPool'
     }
     count = {}
     addr = {}
