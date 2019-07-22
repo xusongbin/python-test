@@ -22,16 +22,21 @@ def write_log(_str):
 
 
 class DiskDump(object):
-    json_file = 'DiskDump.json'
+    dump_json_path = 'DiskDump.json'
+    dump_xlsx_path = 'DiskDump.xlsx'
+    scavenger_bhd_file = 'scavenger/bhd.xlsx'
+    scavenger_boom_file = 'scavenger/boom.xlsx'
+    scavenger_burst_file = 'scavenger/burst.xlsx'
 
     def __init__(self):
         self.file_path = self.get_file_path()
         self.nonce_to_excel()
+        self.count_nonce_dl(self.scavenger_bhd_file)
 
     def get_file_path(self):
         try:
             js = ''
-            with open(self.json_file, 'r') as f:
+            with open(self.dump_json_path, 'r') as f:
                 while f.readable():
                     line = f.readline()
                     if not line:
@@ -65,10 +70,32 @@ class DiskDump(object):
                 pass
         try:
             dirs_frame = pd.DataFrame(dirs_dict, columns=['path', 'id', 'nonce', 'size'], dtype=str)
-            dirs_frame.to_excel('DiskDump.xlsx')
+            dirs_frame.to_excel(self.dump_xlsx_path)
             write_log('nonce_to_excel done.')
         except Exception as e:
             write_log('nonce_to_excel except: %s' % e)
+
+    def count_nonce_dl(self, path):
+        # need run scavenger.py first!
+        if not os.path.isfile(path):
+            write_log('RERROR: need run scavenger.py first!')
+            return False
+        write_log('count_nonce_dl:{}'.format(path))
+        try:
+            disk_info = pd.read_excel(self.dump_xlsx_path)
+            disk_info['count'] = [0 for _ in range(disk_info['nonce'].size)]
+            disk_info['dl'] = [31536000 for _ in range(disk_info['nonce'].size)]
+
+            data_frame = pd.read_excel(path)
+            for data_idx, data_nonce in enumerate(data_frame['nonce']):
+                for disk_idx, disk_nonce in enumerate(disk_info['nonce']):
+                    if disk_nonce <= data_nonce < (disk_nonce + disk_info.loc[disk_idx, 'size']):
+                        disk_info.loc[disk_idx, 'count'] += 1
+                        if disk_info.loc[disk_idx, 'dl'] > data_frame.loc[data_idx, 'deadline']:
+                            disk_info.loc[disk_idx, 'dl'] = data_frame.loc[data_idx, 'deadline']
+            disk_info.to_excel('result_' + path)
+        except Exception as e:
+            write_log('count_nonce_dl except: %s' % e)
 
 
 if __name__ == '__main__':
