@@ -16,6 +16,7 @@ class App(object):
         self.limit_deadline = 10000
         self.path_base = 'scavenger/'
         self.path_log = self.path_base + 'scavenger.1.log'
+        self.path_xlsx_all = self.path_base + 'all.xlsx'
         self.path_xlsx_bhd = self.path_base + 'bhd.xlsx'
         self.path_xlsx_burst = self.path_base + 'burst.xlsx'
         self.path_xlsx_boom = self.path_base + 'boom.xlsx'
@@ -37,9 +38,12 @@ class App(object):
     def log_to_xlsx(self):
         # parse log file, save to bhd.xlsx boom.xlsx burst.xlsx
         try:
+            path_csv_all = self.path_base + 'all.csv'
             path_csv_bhd = self.path_base + 'bhd.csv'
             path_csv_burst = self.path_base + 'burst.csv'
             path_csv_boom = self.path_base + 'boom.csv'
+            with open(path_csv_all, 'w') as cf:
+                cf.write('time,account,nonce,deadline,block\n')
             with open(path_csv_bhd, 'w') as cf:
                 cf.write('time,account,nonce,deadline,block\n')
             with open(path_csv_boom, 'w') as cf:
@@ -71,9 +75,13 @@ class App(object):
                         save_path = path_csv_bhd
                     with open(save_path, 'a+') as cf:
                         cf.write(line_data)
+                    with open(path_csv_all, 'a+') as cf:
+                        cf.write(line_data)
+            pd.read_csv(path_csv_all, dtype=str).to_excel(self.path_xlsx_all)
             pd.read_csv(path_csv_bhd, dtype=str).to_excel(self.path_xlsx_bhd)
             pd.read_csv(path_csv_boom, dtype=str).to_excel(self.path_xlsx_boom)
             pd.read_csv(path_csv_burst, dtype=str).to_excel(self.path_xlsx_burst)
+            os.remove(path_csv_all)
             os.remove(path_csv_bhd)
             os.remove(path_csv_boom)
             os.remove(path_csv_burst)
