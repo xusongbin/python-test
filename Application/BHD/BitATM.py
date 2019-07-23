@@ -7,7 +7,20 @@ import random
 import requests
 from urllib.parse import quote
 from hashlib import md5
-from time import strftime, localtime, time
+from time import time, strftime, localtime, mktime, strptime
+
+
+def write_log(_str):
+    _data = strftime("%Y-%m-%d %H:%M:%S", localtime())
+    _data += '.%03d ' % (int(time() * 1000) % 1000)
+    _data += _str
+    try:
+        print(_data)
+        with open('out.log', 'a+') as f:
+            f.write(_data + '\n')
+            f.flush()
+    except Exception as e:
+        print('write log exception %s' % e)
 
 
 class BitAtm(object):
@@ -26,11 +39,19 @@ class BitAtm(object):
     def __init__(self):
         self.access_key = ''
         self.secret_key = ''
+        try:
+            with open('BitATM.log', 'r') as f:
+                key = json.load(f)
+            self.access_key = key['Access_key']
+            self.secret_key = key['Secret_key']
+        except Exception as e:
+            write_log('Load key except: %s' % e)
         self.type_name = 'Content-Type'
         self.type_get = 'application/x-www-form-urlencoded'
         self.type_post = 'application/json'
         self.url = 'https://open.bitatm.com'
 
+    # 获取签名
     def get_signature(self, randstr, timestamp):
         signatue_key = 'accesskey={}&randstr={}&timestamp={}&secretkey={}'.format(
             self.access_key,
@@ -45,6 +66,7 @@ class BitAtm(object):
         signatue_str = md5_maker.hexdigest()
         return signatue_str
 
+    # 获取历史K线
     def get_history_kline(self, periol, count, ):
         headers = {self.type_name: self.type_get}
         symbol = 'burstbhd'     # btcusdt,bchbtc,rcneth…
@@ -67,6 +89,7 @@ class BitAtm(object):
                 )
             )
 
+    # 滚动24小时交易和最优报价聚合行情
     def get_detail_merged(self):
         headers = {self.type_name: self.type_get}
         symbol = 'burstbhd'     # btcusdt,bchbtc,rcneth…
@@ -185,14 +208,14 @@ class BitAtm(object):
 def main():
     ba = BitAtm()
     # ba.get_history_kline('1min', 5)
-    # ba.get_detail_merged()
+    ba.get_detail_merged()
     # ba.get_detail()
     # ba.get_tickers()
-    ba.get_depth()
-    ba.get_trade()
+    # ba.get_depth()
+    # ba.get_trade()
     # ba.get_rate()
     # ba.get_accounts()
-    ba.get_balance()
+    # ba.get_balance()
 
 
 if __name__ == '__main__':

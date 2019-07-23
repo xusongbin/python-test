@@ -25,6 +25,9 @@ class Pool(object):
         'AppleWebKit/537.36 (KHTML, like Gecko) '
         'Chrome/70.0.3538.25 Safari/537.36 Core/1.70.3676.400 QQBrowser/10.4.3469.400'
     )
+    power_rate = 1.5
+    power_waste = 150
+    machine_price = 25000
 
     def __init__(self):
         self.bhd_url = 'http://onepool.cc/eco_bhd/user/getincomeinquiry.html'
@@ -38,8 +41,10 @@ class Pool(object):
         write_log('BOOM price:{}'.format(self.price_boom))
         write_log('BURST price:{}'.format(self.price_burst))
 
-        self.date_income('2019-07-23', details=True)
-        self.date_income('2019-07-18', '2019-07-23', details=True)
+        today = strftime("%Y-%m-%d", localtime())
+        self.day_income(today, boom=False)
+        num, rate = self.day_income('2019-07-18', today)
+        self.back_cycle(rate/num)
 
     def get_price(self, symbol):
         headers = {
@@ -125,7 +130,7 @@ class Pool(object):
             write_log('post_onepool except: %s' % e)
         return []
 
-    def date_income(self, t_start, t_stop='', details=False, bhd=True, boom=True, burst=True):
+    def day_income(self, t_start, t_stop='', details=False, bhd=True, boom=True, burst=True):
         if not t_stop:
             t_stop = t_start
         bhd_amount = 0
@@ -167,7 +172,24 @@ class Pool(object):
         t_stop_ts = int(mktime(strptime(t_stop, "%Y-%m-%d")))
         day_count = int((t_stop_ts - t_start_ts) / (24*60*60)) + 1
         write_log('Time:{}~{} Days:{} Income:{} Average:{}'.format(t_start, t_stop, day_count, income, income/day_count))
-        return income
+        return day_count, income
+
+    def day_profit(self, day_income):
+        power_pay = self.power_waste * self.power_rate * 24 / 1000
+        return day_income - power_pay
+
+    def month_profit(self, day_income):
+        return self.day_profit(day_income) * 30
+
+    def back_cycle(self, day_income):
+        month_pay = self.power_waste * self.power_rate * 24 * 30 / 1000
+        write_log('Month pay:{}'.format(month_pay))
+        month_income = day_income * 30
+        write_log('Month income:{}'.format(month_income))
+        month_profit = month_income - month_pay
+        write_log('Month profit:{}'.format(month_profit))
+        month_cycle = self.machine_price / month_profit
+        write_log('Month bcycle:{:.1f}'.format(month_cycle))
 
 
 if __name__ == '__main__':
