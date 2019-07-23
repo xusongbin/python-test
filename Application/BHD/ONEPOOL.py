@@ -106,20 +106,23 @@ class Pool(object):
         try:
             t_start_ts = int(mktime(strptime(t_start, "%Y-%m-%d")))
             t_stop_ts = int(mktime(strptime(t_stop, "%Y-%m-%d")))
+            day_list = [strftime("%Y-%m-%d", localtime(x)) for x in range(t_start_ts, t_stop_ts+1, 24*60*60)]
             rt_data = []
-            for ts in range(t_start_ts, t_stop_ts+1, 24*60*60):
-                c_time = strftime("%Y-%m-%d", localtime(ts))
-                data = {'page': 1, 'start': c_time, 'stop': c_time}
+            page_idx = 1
+            page_total = 1
+            while page_idx <= page_total:
+                data = {'page': page_idx, 'start': t_start, 'stop': t_stop}
                 session = requests.session()
                 req = session.post(cur_url, data=data, headers=headers, cookies=cookies)
-                js_data = json.loads(req.text)
-                js_data = js_data['data']['data']     # list
-                for data in js_data:
-                    if data['profit_date'] == c_time:
+                js_data = json.loads(req.text)['data']
+                for data in js_data['data']:
+                    if data['profit_date'] in day_list:
                         rt_data.append(data)
+                page_total = js_data['last_page']
+                page_idx += 1
             return rt_data
         except Exception as e:
-            write_log('post_bhd except: %s' % e)
+            write_log('post_onepool except: %s' % e)
         return []
 
     def date_income(self, t_start, t_stop='', details=False, bhd=True, boom=True, burst=True):
