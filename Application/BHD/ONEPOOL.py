@@ -28,6 +28,9 @@ class Pool(object):
     power_rate = 1.5
     power_waste = 150
     machine_price = 25000
+    wallet_bhd = 0.58527846 + 2.71179041 + 1.50780000 + 0.34834086     # wallet + hdpool + onepool + bitatm
+    wallet_boom = 56.66628199 + 13.67252244     # wallet + onepool
+    wallet_burst = 25.20733461 + 496.92741351   # wallet + onepool
 
     def __init__(self):
         self.bhd_url = 'http://onepool.cc/eco_bhd/user/getincomeinquiry.html'
@@ -182,13 +185,17 @@ class Pool(object):
         return self.day_profit(day_income) * 30
 
     def back_cycle(self, day_income):
+        local_profit = self.wallet_bhd * self.price_bhd
+        local_profit += self.wallet_boom * self.price_boom
+        local_profit += self.wallet_burst * self.price_burst
+        write_log('Local profit:{}'.format(local_profit))
         month_pay = self.power_waste * self.power_rate * 24 * 30 / 1000
         write_log('Month pay:{}'.format(month_pay))
         month_income = day_income * 30
         write_log('Month income:{}'.format(month_income))
         month_profit = month_income - month_pay
         write_log('Month profit:{}'.format(month_profit))
-        month_cycle = self.machine_price / month_profit
+        month_cycle = (self.machine_price - local_profit) / month_profit
         write_log('Month bcycle:{:.1f}'.format(month_cycle))
 
 
