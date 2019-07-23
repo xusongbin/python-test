@@ -5,6 +5,7 @@
 *.db
 *.xls
 *.csv
+*.log
 
 si
 .idea
