@@ -38,12 +38,8 @@ class Pool(object):
         write_log('BOOM price:{}'.format(self.price_boom))
         write_log('BURST price:{}'.format(self.price_burst))
 
-        self.date_income('2019-07-18')
-        self.date_income('2019-07-19')
-        self.date_income('2019-07-20')
-        self.date_income('2019-07-21')
-
-        self.date_income('2019-07-18', '2019-07-21')
+        self.date_income('2019-07-23', details=True)
+        self.date_income('2019-07-18', '2019-07-23', details=True)
 
     def get_price(self, symbol):
         headers = {
@@ -107,20 +103,20 @@ class Pool(object):
             cur_url = self.burst_url
         else:
             return []
-        data = {'page': 1, 'start': t_start, 'stop': t_stop}
-        session = requests.session()
-        t_start_ts = int(mktime(strptime(t_start, "%Y-%m-%d")))
-        t_stop_ts = int(mktime(strptime(t_stop, "%Y-%m-%d")))
         try:
-            req = session.post(cur_url, data=data, headers=headers, cookies=cookies)
-            # print(req.text)
-            js_data = json.loads(req.text)
-            js_data = js_data['data']['data']     # list
+            t_start_ts = int(mktime(strptime(t_start, "%Y-%m-%d")))
+            t_stop_ts = int(mktime(strptime(t_stop, "%Y-%m-%d")))
             rt_data = []
-            for data in js_data:
-                d_ts = int(mktime(strptime(data['profit_date'], "%Y-%m-%d")))
-                if t_start_ts <= d_ts <= t_stop_ts:
-                    rt_data.append(data)
+            for ts in range(t_start_ts, t_stop_ts+1, 24*60*60):
+                c_time = strftime("%Y-%m-%d", localtime(ts))
+                data = {'page': 1, 'start': c_time, 'stop': c_time}
+                session = requests.session()
+                req = session.post(cur_url, data=data, headers=headers, cookies=cookies)
+                js_data = json.loads(req.text)
+                js_data = js_data['data']['data']     # list
+                for data in js_data:
+                    if data['profit_date'] == c_time:
+                        rt_data.append(data)
             return rt_data
         except Exception as e:
             write_log('post_bhd except: %s' % e)
@@ -167,7 +163,7 @@ class Pool(object):
         t_start_ts = int(mktime(strptime(t_start, "%Y-%m-%d")))
         t_stop_ts = int(mktime(strptime(t_stop, "%Y-%m-%d")))
         day_count = int((t_stop_ts - t_start_ts) / (24*60*60)) + 1
-        write_log('Time:{}~{} Income:{} Average:{}'.format(t_start, t_stop, income, income/day_count))
+        write_log('Time:{}~{} Days:{} Income:{} Average:{}'.format(t_start, t_stop, day_count, income, income/day_count))
         return income
 
 
