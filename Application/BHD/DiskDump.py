@@ -31,8 +31,8 @@ class DiskDump(object):
 
     def __init__(self):
         self.file_path = self.get_file_path()
-        self.nonce_to_excel()
-        self.count_nonce_dl(self.scavenger_bhd_file)
+        # self.nonce_to_excel()
+        self.count_nonce_dl(self.scavenger_all_file)
 
     def get_file_path(self):
         try:
@@ -58,19 +58,16 @@ class DiskDump(object):
         if not self.file_path:
             write_log('nonce_to_excel file path not exist!')
         # load file to dict, keys is the file path
-        dirs_dict = {}
+        dirs_list = []
         for path in self.file_path:
             try:
-                if path not in dirs_dict.keys():
-                    dirs_dict[path] = []
                 for d in os.listdir(path):
                     if re.match(r'\d+_\d+_\d+', d):
-                        dirs_dict[path].append(path)
-                        dirs_dict[path].append(d.split('_'))
+                        dirs_list.append([path] + d.split('_'))
             except:
                 pass
         try:
-            dirs_frame = pd.DataFrame(dirs_dict, columns=['path', 'id', 'nonce', 'size'], dtype=str)
+            dirs_frame = pd.DataFrame(dirs_list, columns=['path', 'id', 'nonce', 'size'], dtype=str)
             dirs_frame.to_excel(self.dump_xlsx_path)
             write_log('nonce_to_excel done.')
         except Exception as e:
@@ -94,7 +91,10 @@ class DiskDump(object):
                         disk_info.loc[disk_idx, 'count'] += 1
                         if disk_info.loc[disk_idx, 'dl'] > data_frame.loc[data_idx, 'deadline']:
                             disk_info.loc[disk_idx, 'dl'] = data_frame.loc[data_idx, 'deadline']
-            disk_info.to_excel('result_' + path)
+            disk_info.to_excel('result_' + os.path.basename(path))
+            print()
+            capacity_info = disk_info[['path', 'size', 'count']]
+            print(capacity_info.groupby('path').sum())
         except Exception as e:
             write_log('count_nonce_dl except: %s' % e)
 

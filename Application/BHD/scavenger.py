@@ -13,7 +13,7 @@ pd.set_option('display.max_columns', None)
 class App(object):
     def __init__(self):
         self.max_deadline = 31536000
-        self.limit_deadline = 10000
+        self.limit_deadline = 1000000
         self.path_base = 'scavenger/'
         self.path_log = self.path_base + 'scavenger.1.log'
         self.path_xlsx_all = self.path_base + 'all.xlsx'
@@ -50,7 +50,7 @@ class App(object):
                 cf.write('time,account,nonce,deadline,block\n')
             with open(path_csv_burst, 'w') as cf:
                 cf.write('time,account,nonce,deadline,block\n')
-            with open(self.path_log, 'r') as lf:
+            with open(self.path_log, 'r', encoding='utf-8') as lf:
                 block = 0
                 while lf.readable():
                     line = lf.readline()
@@ -73,9 +73,9 @@ class App(object):
                         save_path = path_csv_burst
                     else:
                         save_path = path_csv_bhd
-                    with open(save_path, 'a+') as cf:
+                    with open(save_path, 'a+', encoding='utf-8') as cf:
                         cf.write(line_data)
-                    with open(path_csv_all, 'a+') as cf:
+                    with open(path_csv_all, 'a+', encoding='utf-8') as cf:
                         cf.write(line_data)
             pd.read_csv(path_csv_all, dtype=str).to_excel(self.path_xlsx_all)
             pd.read_csv(path_csv_bhd, dtype=str).to_excel(self.path_xlsx_bhd)
@@ -105,5 +105,8 @@ class App(object):
 
 
 if __name__ == '__main__':
-    app = App()
+    try:
+        app = App()
+    except Exception as e:
+        print('app except: %s' % e)
 
