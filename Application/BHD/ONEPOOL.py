@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import re
 import json
 import requests
 from time import time, strftime, localtime, mktime, strptime
@@ -28,26 +29,36 @@ class Pool(object):
     power_rate = 1.5
     power_waste = 150
     machine_price = 25000
-    wallet_bhd = 0.58527846 + 2.71179041 + 1.50780000 + 0.34834086     # wallet + hdpool + onepool + bitatm
-    wallet_boom = 56.66628199 + 13.67252244     # wallet + onepool
-    wallet_burst = 25.20733461 + 496.92741351   # wallet + onepool
+    wallet_bhd = 0.58527846 + 2.71179041 + 0.34834086     # wallet + hdpool + bitatm
+    wallet_boom = 56.66628199     # wallet
+    wallet_burst = 25.20733461   # wallet
 
     def __init__(self):
-        self.bhd_url = 'http://onepool.cc/eco_bhd/user/getincomeinquiry.html'
-        self.burst_url = 'http://www.onepool.cc/burst/user/getincomeinquiry.html'
-        self.boom_url = 'http://www.onepool.cc/eco_boom/user/getincomeinquiry.html'
-
         self.price_bhd = self.get_price('BHD')
         self.price_boom = self.get_price('BOOM')
         self.price_burst = self.get_price('BURST')
         write_log('BHD price:{}'.format(self.price_bhd))
         write_log('BOOM price:{}'.format(self.price_boom))
         write_log('BURST price:{}'.format(self.price_burst))
+        write_log('')
+
+        self.property_bhd = self.get_onepool('BHD')
+        self.property_boom = self.get_onepool('BOOM')
+        self.property_burst = self.get_onepool('BURST')
+        property_all = self.property_bhd * self.price_bhd
+        property_all += self.property_boom * self.price_boom
+        property_all += self.property_burst * self.price_burst
+        write_log('BHD property:{}'.format(self.property_bhd))
+        write_log('BOOM property:{}'.format(self.property_boom))
+        write_log('BURST property:{}'.format(self.property_burst))
+        write_log('TOTAL property:{}'.format(property_all))
 
         today = strftime("%Y-%m-%d", localtime())
-        self.day_income(today, boom=False)
-        num, rate = self.day_income('2019-07-18', today)
+        self.day_income(today, details=False)
+        num, rate = self.day_income('2019-07-18', today, details=False)
+        write_log('')
         self.back_cycle(rate/num)
+        write_log('')
 
     def get_price(self, symbol):
         headers = {
@@ -70,7 +81,51 @@ class Pool(object):
             return data
         except Exception as e:
             write_log('get_burst_price except: %s' % e)
-        return None
+        return 0
+
+    def get_onepool(self, symbol):
+        headers = {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Encoding': 'gzip, deflate',
+            'Accept-Language': 'zh-CN,zh;q=0.9',
+            'Cache-Control': 'max-age=0',
+            'Connection': 'keep-alive',
+            'Host': 'www.onepool.cc',
+            'User-Agent': self.user_agent,
+            'Upgrade-Insecure-Requests': '1'
+        }
+        cookies = {
+            'loginName': 'mark3333520%40163.com',
+            'loginPwd': (
+                'f3in2oWmp61%2FdHqnfanUzo6oqWKMjKnOl4h%2BmK7LlNyMi6zN'
+                'hsy3rX9igmOKqLbcg6W4qoCvg8qAZ3%2FPv7WVzYyhq9qGtrtoiq'
+                'qSp324q86BqLmega97zoBne8u%2FpZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf'
+            )
+        }
+        if symbol == 'BHD':
+            cur_url = 'http://www.onepool.cc/eco-bhd/user/asset.html'
+        elif symbol == 'BOOM':
+            cur_url = 'http://www.onepool.cc/eco-boom/user/asset.html'
+        elif symbol == 'BURST':
+            cur_url = 'http://www.onepool.cc/burst/user/asset.html'
+        else:
+            return 0
+        try:
+            session = requests.session()
+            req = session.get(cur_url, headers=headers, cookies=cookies)
+            req = str(req.text)
+            if '总资产' not in req:
+                print('Not found property')
+                return 0
+            req = req[:req.find('总资产')]
+            req = req[req.rfind('asset-num'):]
+            data = 0
+            for d in re.findall(r'asset-num\">(\d+\.\d+)<.*', req):
+                data = d
+            return float(data)
+        except Exception as e:
+            write_log('get_onepool except: %s' % e)
+        return 0
 
     def post_onepool(self, symbol, t_start, t_stop):
         headers = {
@@ -98,17 +153,17 @@ class Pool(object):
             headers['Host'] = 'onepool.cc'
             headers['Origin'] = 'http://onepool.cc'
             headers['Referer'] = 'http://onepool.cc/eco-bhd/user/income_inquiry.html'
-            cur_url = self.bhd_url
+            cur_url = 'http://onepool.cc/eco_bhd/user/getincomeinquiry.html'
         elif symbol == 'BOOM':
             headers['Host'] = 'www.onepool.cc'
             headers['Origin'] = 'http://www.onepool.cc'
             headers['Referer'] = 'http://www.onepool.cc/eco-boom/user/income_inquiry.html'
-            cur_url = self.boom_url
+            cur_url = 'http://www.onepool.cc/eco_boom/user/getincomeinquiry.html'
         elif symbol == 'BURST':
             headers['Host'] = 'www.onepool.cc'
             headers['Origin'] = 'http://www.onepool.cc'
             headers['Referer'] = 'http://www.onepool.cc/burst/user/income_inquiry.html'
-            cur_url = self.burst_url
+            cur_url = 'http://www.onepool.cc/burst/user/getincomeinquiry.html'
         else:
             return []
         try:
@@ -126,7 +181,10 @@ class Pool(object):
                 for data in js_data['data']:
                     if data['profit_date'] in day_list:
                         rt_data.append(data)
-                page_total = js_data['last_page']
+                try:
+                    page_total = js_data['last_page']
+                except:
+                    pass
                 page_idx += 1
             return rt_data
         except Exception as e:
@@ -185,9 +243,9 @@ class Pool(object):
         return self.day_profit(day_income) * 30
 
     def back_cycle(self, day_income):
-        local_profit = self.wallet_bhd * self.price_bhd
-        local_profit += self.wallet_boom * self.price_boom
-        local_profit += self.wallet_burst * self.price_burst
+        local_profit = (self.wallet_bhd + self.property_bhd) * self.price_bhd
+        local_profit += (self.wallet_boom + self.property_boom) * self.price_boom
+        local_profit += (self.wallet_burst + self.property_burst) * self.price_burst
         write_log('Local profit:{}'.format(local_profit))
         month_pay = self.power_waste * self.power_rate * 24 * 30 / 1000
         write_log('Month pay:{}'.format(month_pay))
