@@ -7,7 +7,7 @@ import random
 import requests
 from urllib.parse import quote
 from hashlib import md5
-from time import time, strftime, localtime
+from time import time
 
 
 class BitAtm(object):
@@ -42,6 +42,24 @@ class BitAtm(object):
     user_withdraw_revoke = '/v1/user/withdraw/revoke'   # 撤销提币申请
     user_query_deposit = '/v1/user/query/deposit-withdraw'  # 查询充提记录
 
+    # 错误代码
+    code_error = {
+        -1: '业务执行失败',
+        -99: '系统异常',
+        -40001: '授权错误',
+        -40003: '缺少必要的参数',
+        -40004: '非法参数(类型错误)',
+        -5001: '数据签名校验失败',
+        -9000: '错误的请求',
+        -9001: '参数取值范围错误',
+        -9002: '交易对不存在',
+        -9003: '币种不存在',
+        -9004: '错误的日期格式',
+        -9005: '余额不足无法冻结',
+        -9006: '错误的签名方法',
+        9000: '请求数据有效'
+    }
+
     def __init__(self):
         self.access_key = ''
         self.secret_key = ''
@@ -59,9 +77,22 @@ class BitAtm(object):
 
     @staticmethod
     def do_random():
-        random_str = ''.join(random.sample(string.ascii_letters, 10))
+        random_str = ''.join(random.sample(string.ascii_letters, random.randint(10, 20)))
         tms = int(time() * 1000)
         return random_str, tms
+
+    def do_error_check(self, rd):
+        try:
+            code = int(rd['code'])
+            if code == 200 and 'OK' in rd['msg'].upper():
+                return rd['data']
+            else:
+                if code in self.code_error.keys():
+                    print(self.code_error[code])
+                print(rd)
+        except Exception as e:
+            print('do_error_check:%s' % e)
+        return None
 
     # 获取签名
     def do_signature(self, randstr, timestamp):
@@ -96,10 +127,7 @@ class BitAtm(object):
         # Timestamp=1561628611&
         # Signature=54771913787c7e4390acc0fccbd51ffe
         signatue_key = 'accesskey={}&randstr={}&timestamp={}&secretkey={}'.format(
-            self.access_key,
-            randstr,
-            timestamp,
-            self.secret_key
+            self.access_key, randstr, timestamp, self.secret_key
         )
         url_str = quote(signatue_key).lower()
         url_byte = url_str.encode()
@@ -137,11 +165,7 @@ class BitAtm(object):
         value = '?Symbol={}&Period={}&Size={}'.format(symbol, period, size)
         try:
             resp = requests.get(self.url + self.market_history_kline + value, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_market_history_kline:%s' % e)
         return None
@@ -173,11 +197,7 @@ class BitAtm(object):
         value = '?Symbol={}'.format(symbol)
         try:
             resp = requests.get(self.url + self.market_detail_merged + value, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_market_detail_merged:%s' % e)
         return None
@@ -209,11 +229,7 @@ class BitAtm(object):
         value = '?Symbol={}'.format(symbol)
         try:
             resp = requests.get(self.url + self.market_detail + value, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_market_detail:%s' % e)
         return None
@@ -243,11 +259,7 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         try:
             resp = requests.get(self.url + self.market_tickers, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_market_tickers:%s' % e)
         return None
@@ -275,11 +287,7 @@ class BitAtm(object):
         value = '?Symbol={}'.format(symbol)
         try:
             resp = requests.get(self.url + self.market_depth + value, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_market_depth:%s' % e)
         return None
@@ -308,11 +316,7 @@ class BitAtm(object):
         value = '?Symbol={}'.format(symbol)
         try:
             resp = requests.get(self.url + self.market_trade + value, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_market_trade:%s' % e)
         return None
@@ -342,11 +346,7 @@ class BitAtm(object):
         value = '?Symbol={}&Size={}'.format(symbol, size)
         try:
             resp = requests.get(self.url + self.market_history_trade + value, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_market_history_trade:%s' % e)
         return None
@@ -375,11 +375,7 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         try:
             resp = requests.get(self.url + self.common_symbols, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_common_symbols:%s' % e)
         return None
@@ -404,11 +400,7 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         try:
             resp = requests.get(self.url + self.common_currencies, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_common_currencies:%s' % e)
         return None
@@ -434,11 +426,7 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         try:
             resp = requests.get(self.url + self.common_rate, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_common_rate:%s' % e)
         return None
@@ -460,11 +448,7 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         try:
             resp = requests.get(self.url + self.common_timestamp, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_common_timestamp:%s' % e)
         return None
@@ -499,18 +483,11 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         signature = self.do_signature(random_str, tms)
         value = '?AccessKey={}&RandStr={}&Timestamp={}&Signature={}'.format(
-            self.access_key,
-            random_str,
-            tms,
-            signature
+            self.access_key, random_str, tms, signature
         )
         try:
             resp = requests.get(self.url + self.account_accounts + value, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_market_history_kline:%s' % e)
         return None
@@ -545,18 +522,11 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         signature = self.do_signature(random_str, tms)
         value = '?AccessKey={}&RandStr={}&Timestamp={}&Signature={}'.format(
-            self.access_key,
-            random_str,
-            tms,
-            signature
+            self.access_key, random_str, tms, signature
         )
         try:
             resp = requests.get(self.url + self.account_balance + value, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_account_balance:%s' % e)
         return None
@@ -616,11 +586,7 @@ class BitAtm(object):
         try:
             session = requests.session()
             resp = session.post(self.url + self.order_create, data=value, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_order_create:%s' % e)
         return None
@@ -663,20 +629,405 @@ class BitAtm(object):
         try:
             session = requests.session()
             resp = session.post(self.url + self.order_cancel, data=value, headers=headers)
-            rd = json.loads(resp.text)
-            if rd['code'] == '200' and rd['msg'].upper() == 'OK.':
-                return rd['data']
-            else:
-                print(rd)
+            return self.do_error_check(json.loads(resp.text))
         except Exception as e:
             print('do_order_cancel:%s' % e)
+        return None
+
+    # POST/v1/order/batch.cancel按orderid批量撤销订单(max:30)
+    def do_order_batch_cancel(self, orderid):
+        # 请求参数：
+        # 参数名称  是否必须 类型             描述                 默认值     取值范围
+        # OrderID   True    Integer($int64) 订单ID
+        # AccessKey True    String          API访问KEY
+        # RandStr   True    String          随机字符串
+        # Timestamp True    Integer($int64) 时间戳（UTC时区）
+        # Signature True    String          签名结果（非签名字段）
+        #
+        # 请求实例：
+        # POST  /v1/order/batch.cancel {
+        #  "orderid":[
+        # 1000300224,
+        # 1000300225
+        #  ],
+        #  "accesskey":"e12b3b62-8a2a-4bb0-a526-a63695485113",
+        #  "randstr":"89320394",
+        #  "timestamp":1534409404916,
+        #  "signature":"xxxxxxxxxxxxxxxxxxxxx "
+        # }
+        #
+        # 响应参数：
+        # 参数名称  是否必须     类型             描述                      取值范围
+        # code      True        String          请求处理响应码
+        # msg       True        String          请求处理响应消息
+        # ts        True        Integer($int64) 服务器响应时间戳(UTC,毫秒)
+        # data      True        List[Object]    成功返回订单ID集合
+        random_str, tms = self.do_random()
+        headers = {self.type_name: self.type_post}
+        signature = self.do_signature(random_str, tms)
+        value = {
+            'orderid': orderid,
+            'accesskey': self.access_key,
+            'randstr': random_str,
+            'timestamp': tms,
+            'signature': signature
+        }
+        try:
+            session = requests.session()
+            resp = session.post(self.url + self.order_batch_cancel, data=value, headers=headers)
+            return self.do_error_check(json.loads(resp.text))
+        except Exception as e:
+            print('do_order_batch_cancel:%s' % e)
+        return None
+
+    # GET/v1/order/detail根据orderid查询订单详情
+    def do_order_detail(self, orderid):
+        # 请求参数：
+        # 参数名称  是否必须 类型             描述                  默认值     取值范围
+        # OrderID   True    Integer($int64) 订单ID
+        # AccessKey True    String          API访问KEY
+        # RandStr   True    String          随机字符串
+        # Timestamp True    Integer($int64) 时间戳（UTC时区）
+        # Signature True    String          签名结果（非签名字段）
+        #
+        # 请求实例：
+        # GET/v1/order/detail?
+        # OrderID=1000300224&
+        # AccessKey=e12b3b62-8a2a-4bb0-a526-a63695485113&
+        # RandStr=89320394&
+        # Timestamp=1534409404916&
+        # Signature=xxxxxxxxxxxxxxxxxxxxx
+        #
+        # 响应参数：
+        # 参数名称      是否必须    类型          描述                      取值范围
+        # code          True    String          请求处理响应码
+        # msg           True    String          请求处理响应消息
+        # ts            True    Integer($int64) 服务器响应时间戳(UTC,毫秒)
+        # data          True    Object          成功返回订单信息
+        # data数据结构说明
+        # orderid       True    Integer($int64) 订单ID
+        # ordertype     True    Integer($int32) 订单类型(1:限价单,2:市价单,3:止盈止损单)
+        # direction     True    Integer($int32) 交易方向(1:买入,-1:卖出)
+        # price         True    Number($double) 委托价
+        # amount        True    Number($double) 委托量
+        # transactionamount True    Number($double) 成交量
+        # fee           True    Number($double) 手续费率
+        # symbol        True    String          交易对                     btcusdt,bchbtc,rcneth…
+        # orderstatus   True    Integer($int32) 订单状态
+        # 订单状态(0:已提交，1:部分成交，2:已撤单，3:全部成交，4:部分成交已撤单，5：系统自动撤单)
+        # updatetime    True    String($date-time)  最后成交时间（UTC时区）
+        # createtime    True    String($date-time)  委托时间（UTC时区）
+        # basecurrency  True    String          基础货币
+        # quotecurrency True    String          计价货币
+        random_str, tms = self.do_random()
+        headers = {self.type_name: self.type_get}
+        signature = self.do_signature(random_str, tms)
+        value = '?OrderID={}&AccessKey={}&RandStr={}&Timestamp={}&Signature={}'.format(
+            orderid, self.access_key, random_str, tms, signature
+        )
+        try:
+            resp = requests.get(self.url + self.order_detail + value, headers=headers)
+            return self.do_error_check(json.loads(resp.text))
+        except Exception as e:
+            print('do_order_detail:%s' % e)
+        return None
+
+    # GET/v1/order/orders查询用户当前委托、或历史委托订单
+    def do_order_orders(
+            self, orderid=None, orderpye=None, orderstatus=None,
+            symbol=None, direction=None, starttime=None, endtime=None,
+            pageindex=1, pagesize=30
+    ):
+        # 请求参数：
+        # 参数名称      是否必须 类型             描述      默认值         取值范围
+        # OrderID       False   Integer($int64) 订单ID
+        # OrderType     False   String          订单类型                Limit：限价单，Market：市价单
+        # OrderStatus   False   String          订单状态
+        # (0:已提交，1:部分成交，2:已撤单，3:全部成交，4:部分成交已撤单，5：系统自动撤单)例如：查询进行中的订单传0,1
+        # Symbol        False   String          交易对                  btcusdt,bchbtc,rcneth…
+        # Direction     False   String          交易方向                Buy：买入,Sell：卖出
+        # StartTime     False   String          委托开始时间（UTC）
+        # EndTime       False   String          委托结束时间（UTC）
+        # PageIndex     False   Integer($int32) 当前页         1
+        # PageSize      False   Integer($int32) 页大小         30          [30~500]
+        # AccessKey True    String          API访问KEY
+        # RandStr   True    String          随机字符串
+        # Timestamp True    Integer($int64) 时间戳（UTC时区）
+        # Signature True    String          签名结果（非签名字段）
+        #
+        # 请求实例：
+        # GET/v1/order/orders?
+        # OrderID=1000300224&
+        # OrderType=Limit&
+        # OrderStatus=0,1&
+        # Symbol=btcusdt&
+        # Direction=Buy&
+        # StartTime=2018-08-27T08:38:56.003ZEndTime=2018-08-28T08:38:56.003Z&
+        # PageIndex=1&
+        # PageSize=30&
+        # AccessKey=e12b3b62-8a2a-4bb0-a526-a63695485113&
+        # RandStr=89320394&
+        # Timestamp=1534409404916&
+        # Signature=xxxxxxxxxxxxxxxxxxxxx
+        #
+        # 响应参数：
+        # 参数名称      是否必须    类型                  描述                      取值范围
+        # code          True    String                  请求处理响应码
+        # msg           True    String                  请求处理响应消息
+        # ts            True    Integer($int64)         服务器响应时间戳(UTC,毫秒)
+        # data          True    Object                  成功返回订单信息
+        # data数据结构说明
+        # currentpageindex  True    Integer($int32)     当前页
+        # pagesize          True    Integer($int32)     页大小
+        # totalitemcount    True    Integer($int32)     总记录数
+        # totalpagecount    True    Integer($int32)     总页数
+        # haspreviouspage   True    Bool                是否有上一页
+        # hasnextpage       True    Bool                是否有下一页
+        # pagedata          True    Object              分页数据
+        # pagedata数据结构说明
+        # orderid           True    Integer($int64)     订单ID
+        # ordertype         True    Integer($int32)     订单类型(1:限价单,2:市价单,3:止盈止损单)
+        # direction         True    Integer($int32)     交易方向(1:买入,-1:卖出)
+        # price             True    Number($double)     委托价
+        # amount            True    Number($double)     委托量
+        # transactionamount True    Number($double)     成交量
+        # fee               True    Number($double)     手续费率
+        # symbol            True    String              交易对         btcusdt,bchbtc,rcneth…
+        # orderstatus       True    Integer($int32)     订单状态
+        # 订单状态(0:已提交，1:部分成交，2:已撤单，3:全部成交，4:部分成交已撤单，5：系统自动撤单)
+        # updatetime        True    String($date-time)  最后成交时间（UTC时区）
+        # createtime        True    String($date-time)  委托时间（UTC时区）
+        # basecurrency      True    String              基础货币
+        # quotecurrency     True    String              计价货币
+        random_str, tms = self.do_random()
+        headers = {self.type_name: self.type_get}
+        signature = self.do_signature(random_str, tms)
+        value = '?'
+        if orderid:
+            value += 'OrderID={}&'.format(orderid)
+        if orderpye:
+            value += 'OrderType={}&'.format(orderpye)
+        if orderstatus:
+            value += 'OrderStatus={}&'.format(orderstatus)
+        if symbol:
+            value += 'Symbol={}&'.format(symbol)
+        if direction:
+            value += 'Direction={}&'.format(direction)
+        if starttime and endtime:
+            value += 'StartTime={}EndTime={}&'.format(starttime, endtime)
+        if pageindex:
+            value += 'PageIndex={}&'.format(pageindex)
+        if pagesize:
+            value += 'PageSize={}&'.format(pagesize)
+        value += 'AccessKey={}&RandStr={}&Timestamp={}&Signature={}'.format(
+            self.access_key, random_str, tms, signature
+        )
+        try:
+            resp = requests.get(self.url + self.order_orders + value, headers=headers)
+            return self.do_error_check(json.loads(resp.text))
+        except Exception as e:
+            print('do_order_orders:%s' % e)
+        return None
+
+    # POST/v1/user/withdraw/create申请提币
+    def do_user_withdraw_create(self, currency, address, amount, fee=0, addresstag=None):
+        # 请求参数：
+        # 参数名称  是否必须 类型             描述                 默认值     取值范围
+        # Currency  True    String          币种                          btc,eth,ont...
+        # Address   True    String          提币地址
+        # Amount    True    Number($double) 提币数量
+        # Fee       False   Number($double) 手续费
+        # AddressTag    False   String      地址标签
+        # AccessKey True    String          API访问KEY
+        # RandStr   True    String          随机字符串
+        # Timestamp True    Integer($int64) 时间戳（UTC时区）
+        # Signature True    String          签名结果（非签名字段）
+        #
+        # 请求实例：
+        # POST /v1/user/withdraw/create {
+        #  "currency":"btc",
+        #  "address": "13QtP7x9kbhyJCrf3UeHNgUEMoHbXhEvSt",
+        #  "amount":10,
+        #  "fee":0,
+        #  "addresstag":"",
+        #  "accesskey":"e12b3b62-8a2a-4bb0-a526-a63695485113",
+        #  "randstr":"89320394",
+        #  "timestamp":1534409404916,
+        #  "signature":"xxxxxxxxxxxxxxxxxxxxx"
+        # }
+        #
+        # 响应参数：
+        # 参数名称  是否必须     类型             描述                      取值范围
+        # code      True        String          请求处理响应码
+        # msg       True        String          请求处理响应消息
+        # ts        True        Integer($int64) 服务器响应时间戳(UTC,毫秒)
+        # data      True        Integer($int64) 成功返回订单ID
+        # data数据结构说明
+        # succeed       True    Bool            true:操作成功,false:操作失败
+        # withdrawid    True    Integer($int64) 提币ID
+        random_str, tms = self.do_random()
+        headers = {self.type_name: self.type_post}
+        signature = self.do_signature(random_str, tms)
+        value = {
+            'currency': currency,
+            'address': address,
+            'amount': amount,
+            'fee': fee,
+            'addresstag': addresstag,
+            'accesskey': self.access_key,
+            'randstr': random_str,
+            'timestamp': tms,
+            'signature': signature
+        }
+        try:
+            session = requests.session()
+            resp = session.post(self.url + self.user_withdraw_create, data=value, headers=headers)
+            return self.do_error_check(json.loads(resp.text))
+        except Exception as e:
+            print('do_user_withdraw_create:%s' % e)
+        return None
+
+    # POST/v1/user/withdraw/revoke撤销提币申请
+    def do_user_withdraw_revoke(self, withdrawid):
+        # 请求参数：
+        # 参数名称      是否必须 类型             描述                 默认值     取值范围
+        # WithdrawID    True    Integer($int64) 提币ID
+        # AccessKey     True    String          API访问KEY
+        # RandStr       True    String          随机字符串
+        # Timestamp     True    Integer($int64) 时间戳（UTC时区）
+        # Signature     True    String          签名结果（非签名字段）
+        #
+        # 请求实例：
+        # POST /v1/user/withdraw/revoke {
+        #  "withdrawid":245038294992,
+        #  "accesskey":"e12b3b62-8a2a-4bb0-a526-a63695485113",
+        #  "randstr":"89320394",
+        #  "timestamp":1534409404916,
+        #  "signature":"xxxxxxxxxxxxxxxxxxxxx"
+        # }
+        #
+        # 响应参数：
+        # 参数名称  是否必须     类型             描述                      取值范围
+        # code      True        String          请求处理响应码
+        # msg       True        String          请求处理响应消息
+        # ts        True        Integer($int64) 服务器响应时间戳(UTC,毫秒)
+        # data      True        Object          成功返回订单信息
+        # data数据结构说明
+        # succeed   True        Bool            true:操作成功,false:操作失败
+        random_str, tms = self.do_random()
+        headers = {self.type_name: self.type_post}
+        signature = self.do_signature(random_str, tms)
+        value = {
+            'withdrawid': withdrawid,
+            'accesskey': self.access_key,
+            'randstr': random_str,
+            'timestamp': tms,
+            'signature': signature
+        }
+        try:
+            session = requests.session()
+            resp = session.post(self.url + self.user_withdraw_create, data=value, headers=headers)
+            return self.do_error_check(json.loads(resp.text))
+        except Exception as e:
+            print('do_user_withdraw_create:%s' % e)
+        return None
+
+    # GET/v1/user/query/deposit-withdraw查询充提记录
+    def do_user_query_withdraw(self, currency, type, pageindex=1, pagesize=30):
+        # 请求参数：
+        # 参数名称      是否必须     类型             描述              默认值     取值范围
+        # Currency      True        String          币种
+        # Type          True        String          类型                          deposit：充值、withdraw：提币
+        # PageIndex     False       Integer($int32) 当前页             1
+        # PageSize      False       Integer($int32) 页大小             30          [30~500]
+        # AccessKey     True        String          API访问KEY
+        # RandStr       True        String          随机字符串
+        # Timestamp     True        Integer($int64) 时间戳（UTC时区）
+        # Signature     True        String          签名结果（非签名字段）
+        #
+        # 请求实例：
+        # GET/v1/user/query/deposit-withdraw?
+        # Currency=btc&
+        # Type=deposit&
+        # PageIndex=1&
+        # PageSize=30&
+        # AccessKey=e12b3b62-8a2a-4bb0-a526-a63695485113&
+        # RandStr=89320394&
+        # Timestamp=1534409404916&
+        # Signature=xxxxxxxxxxxxxxxxxxxxx
+        #
+        # 响应参数：
+        # 参数名称  是否必须     类型             描述                      取值范围
+        # code      True        String          请求处理响应码
+        # msg       True        String          请求处理响应消息
+        # ts        True        Integer($int64) 服务器响应时间戳(UTC,毫秒)
+        # data      True        Object          成功返回订单信息
+        # data数据结构说明
+        # currentpageindex  True    Integer($int32)     当前页
+        # pagesize          True    Integer($int32)     页大小
+        # totalitemcount    True    Integer($int32)     总记录数
+        # totalpagecount    True    Integer($int32)     总页数
+        # haspreviouspage   True    Bool                是否有上一页
+        # hasnextpage       True    Bool                是否有下一页
+        # pagedata          True    Object              分页数据
+        # pagedata数据结构说明
+        # id        True        Integer($int64) 提币ID/充值ID
+        # type      True        String          类型          deposit：充值、withdraw：提币
+        # currency  True        String          币种          btc,eth,ont...
+        # txhash    True        String          交易哈希
+        # amount    True        Number($double) 量
+        # factamount    True    Number($double) 成功到账量
+        # address       True    String          地址
+        # addresstag    True    String          地址标签
+        # comfirmnode   True    Integer($int32) 确认节点数
+        # fee           True    Number($double) 手续费
+        # status        True    Integer($int32) 充值/提币状态
+        # 充币状态（0:待处理,1:充币成功,2:充币失败）
+        # 提币状态（0:待处理,1:提币成功,2:提币失败,3:提币审核中,4:审核不通过,5:已撤销）
+        # updatetime    True    String($date-time)  最后成交时间（UTC时区）
+        # createtime    True    String($date-time)  委托时间（UTC时区）
+        random_str, tms = self.do_random()
+        headers = {self.type_name: self.type_get}
+        signature = self.do_signature(random_str, tms)
+        value = ('?Currency={}&Type={}&PageIndex={}&PageSize={}&'
+                 'AccessKey={}&RandStr={}&Timestamp={}&Signature={}').format(
+            currency, type, pageindex, pagesize,
+            self.access_key, random_str, tms, signature
+        )
+        try:
+            resp = requests.get(self.url + self.user_query_deposit, data=value, headers=headers)
+            return self.do_error_check(json.loads(resp.text))
+        except Exception as e:
+            print('do_user_query_withdraw:%s' % e)
         return None
 
 
 def main():
     bit = BitAtm()
-    sta = bit.do_order_create(symbol='burstbhd', amount=1, ordertype='Limit', direction='Buy', price=0.0001)
+    # sta = bit.do_market_history_kline()
+    # sta = bit.do_market_detail_merged()
+    # sta = bit.do_market_detail()
+    # sta = bit.do_market_tickers()
+    # sta = bit.do_market_depth()
+    # sta = bit.do_market_trade()
+    # sta = bit.do_market_history_trade()
+    # print(sta)
+
+    # sta = bit.do_common_symbols()
+    # sta = bit.do_common_currencies()
+    # sta = bit.do_common_rate()
+    # sta = bit.do_common_timestamp()
+    # print(sta)
+
+    # sta = bit.do_account_accounts()
     # sta = bit.do_account_balance()
+    # print(sta)
+
+    # sta = bit.do_order_create(symbol='burstbhd', amount=1, ordertype='Limit', direction='Buy', price=0.0002)
+    # sta = bit.do_order_cancel(1)
+    # sta = bit.do_order_batch_cancel([1, 2])
+    # sta = bit.do_order_detail(1)
+    sta = bit.do_order_orders()
     print(sta)
 
 
