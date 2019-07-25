@@ -29,9 +29,9 @@ class Pool(object):
     power_rate = 1.5
     power_waste = 150
     machine_price = 25000
-    wallet_bhd = 0.58527846 + 2.71179041 + 0.34834086     # wallet + hdpool + bitatm
-    wallet_boom = 56.66628199     # wallet
-    wallet_burst = 25.20733461   # wallet
+    wallet_bhd = 1          # wallet + hdpool + bitatm
+    wallet_boom = 0         # wallet
+    wallet_burst = 0        # wallet
 
     def __init__(self):
         self.price_bhd = self.get_price('BHD')
