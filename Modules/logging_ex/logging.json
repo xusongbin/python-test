@@ -1,0 +1,49 @@
+{
+    "version":1,
+    "disable_existing_loggers":false,
+    "formatters":{
+        "simple":{
+            "format":"[%(asctime)s - %(levelname)s  - line(%(lineno)d) - %(filename)s]: %(message)s"
+        }
+    },
+    "handlers":{
+        "console":{
+            "class":"logging.StreamHandler",
+            "level":"DEBUG",
+            "formatter":"simple",
+            "stream":"ext://sys.stdout"
+        },
+        "info_file_handler":{
+            "class":"logging.handlers.TimedRotatingFileHandler",
+            "level":"DEBUG",
+            "formatter":"simple",
+            "filename":"log/info.log",
+            "when":"H",
+            "interval":1,
+            "backupCount":50,
+            "encoding":"utf8"
+        },
+        "error_file_handler":{
+            "class":"logging.handlers.TimedRotatingFileHandler",
+            "level":"ERROR",
+            "formatter":"simple",
+            "filename":"log/error.log",
+            "when":"H",
+            "interval":1,
+            "backupCount":50,
+            "encoding":"utf8"
+        }
+    },
+    "loggers":{
+        "my_module":{
+            "level":"ERROR",
+            "handlers":["info_file_handler"],
+            "propagate":"no"
+        }
+    },
+    "root":{
+        "level":"DEBUG",
+        "handlers":["console", "info_file_handler", "error_file_handler"]
+    },
+    "path": "log/"
+}
