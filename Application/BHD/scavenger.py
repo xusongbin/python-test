@@ -4,10 +4,25 @@
 import os
 import re
 import pandas as pd
+from time import strptime, mktime, strftime, localtime, time
+
 
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
+
+
+def write_log(_str):
+    _data = strftime("%Y-%m-%d %H:%M:%S", localtime())
+    _data += '.%03d ' % (int(time() * 1000) % 1000)
+    _data += _str
+    try:
+        print(_data)
+        with open('out.log', 'a+') as f:
+            f.write(_data + '\n')
+            f.flush()
+    except Exception as e:
+        print('write log exception %s' % e)
 
 
 class App(object):
@@ -32,10 +47,10 @@ class App(object):
             r', scoop=\d+'
         )
 
-        self.log_to_xlsx()
+        self.log_to_xlsx('2019-7-24 00:00:00')
         self.parse_xlsx(self.path_xlsx_bhd)
 
-    def log_to_xlsx(self):
+    def log_to_xlsx(self, start=None, stop=None):
         # parse log file, save to bhd.xlsx boom.xlsx burst.xlsx
         try:
             path_csv_all = self.path_base + 'all.csv'
@@ -64,6 +79,16 @@ class App(object):
                         block = int(line.split('=')[1].split(',')[0])
                     if not re.match(self.data_rule, line):
                         continue
+                    cur_time = line[:19]
+                    cur_ts = int(mktime(strptime(cur_time, "%Y-%m-%d %H:%M:%S")))
+                    if start:
+                        start_ts = int(mktime(strptime(start, "%Y-%m-%d %H:%M:%S")))
+                        if start_ts > cur_ts:
+                            continue
+                    if stop:
+                        stop_ts = int(mktime(strptime(stop, "%Y-%m-%d %H:%M:%S")))
+                        if stop_ts < cur_ts:
+                            continue
                     split_rule = r',|=|\['
                     line_list = re.split(split_rule, line)
                     line_data = '{},{},{},{},{}\n'.format(line_list[0], line_list[2], line_list[4], line_list[6], block)
@@ -86,27 +111,30 @@ class App(object):
             os.remove(path_csv_boom)
             os.remove(path_csv_burst)
         except Exception as e:
-            print('conversion_format except:%s' % e)
+            write_log('log_to_xlsx:%s' % e)
 
     def parse_xlsx(self, path_xlsx):
-        data_frame = pd.read_excel(path_xlsx)
-        nonces = data_frame['nonce']
-        deadline = data_frame['deadline']
-        dl_dict = {}
-        for idx, ns in enumerate(nonces):
-            if ns not in dl_dict.keys():
-                dl_dict[ns] = 0
-            dl = int(deadline[idx])
-            if dl > self.limit_deadline:
-                continue
-            dl_dict[ns] += self.max_deadline - dl
-        dl_frame = pd.DataFrame(dl_dict.items(), columns=['nonce', 'deadline'])
-        print(dl_frame.sort_values('deadline', ascending=False))
+        try:
+            data_frame = pd.read_excel(path_xlsx)
+            nonces = data_frame['nonce']
+            deadline = data_frame['deadline']
+            dl_dict = {}
+            for idx, ns in enumerate(nonces):
+                if ns not in dl_dict.keys():
+                    dl_dict[ns] = 0
+                dl = int(deadline[idx])
+                if dl > self.limit_deadline:
+                    continue
+                dl_dict[ns] += self.max_deadline - dl
+            dl_frame = pd.DataFrame(dl_dict.items(), columns=['nonce', 'deadline'])
+            print(dl_frame.sort_values('deadline', ascending=False))
+        except Exception as e:
+            write_log('parse_xlsx:%s' % e)
 
 
 if __name__ == '__main__':
     try:
         app = App()
     except Exception as e:
-        print('app except: %s' % e)
+        write_log('app: %s' % e)
 

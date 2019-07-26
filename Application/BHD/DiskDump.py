@@ -24,15 +24,19 @@ def write_log(_str):
 class DiskDump(object):
     dump_json_path = 'DiskDump.json'
     dump_xlsx_path = 'DiskDump.xlsx'
-    scavenger_all_file = 'scavenger/all.xlsx'
-    scavenger_bhd_file = 'scavenger/bhd.xlsx'
-    scavenger_boom_file = 'scavenger/boom.xlsx'
-    scavenger_burst_file = 'scavenger/burst.xlsx'
+    base_path = 'scavenger/'
+    scavenger_all_file = base_path + 'all.xlsx'
+    scavenger_bhd_file = base_path + 'bhd.xlsx'
+    scavenger_boom_file = base_path + 'boom.xlsx'
+    scavenger_burst_file = base_path + 'burst.xlsx'
 
     def __init__(self):
-        self.file_path = self.get_file_path()
+        # self.file_path = self.get_file_path()
         # self.nonce_to_excel()
         self.count_nonce_dl(self.scavenger_all_file)
+        self.count_nonce_dl(self.scavenger_bhd_file)
+        self.count_nonce_dl(self.scavenger_boom_file)
+        self.count_nonce_dl(self.scavenger_burst_file)
 
     def get_file_path(self):
         try:
@@ -91,10 +95,9 @@ class DiskDump(object):
                         disk_info.loc[disk_idx, 'count'] += 1
                         if disk_info.loc[disk_idx, 'dl'] > data_frame.loc[data_idx, 'deadline']:
                             disk_info.loc[disk_idx, 'dl'] = data_frame.loc[data_idx, 'deadline']
-            disk_info.to_excel('result_' + os.path.basename(path))
-            print()
+            disk_info.to_excel(self.base_path + 'result_' + os.path.basename(path))
             capacity_info = disk_info[['path', 'size', 'count']]
-            print(capacity_info.groupby('path').sum())
+            capacity_info.groupby('path').sum().to_excel(self.base_path + 'count_' + os.path.basename(path))
         except Exception as e:
             write_log('count_nonce_dl except: %s' % e)
 
