@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import json
-import requests
-from urllib.parse import quote
+from urllib import request
+from urllib import parse
 from hashlib import md5
 from time import time
 
@@ -38,7 +38,7 @@ class Aex(object):
     def get_md5(self, ts):
         # md5(key_用戶ID_skey_time)
         un_str = '{}_{}_{}_{}'.format(self.access_key, self.account_id, self.secret_key, ts)
-        lw_str = quote(un_str).lower()
+        lw_str = parse.quote(un_str).lower()
         encryptor = md5()
         encryptor.update(lw_str.encode())
         en_str = encryptor.hexdigest()
@@ -53,9 +53,10 @@ class Aex(object):
             'time': ts,
             'md5': en_str
         }
-        session = requests.session()
-        resp = session.post(url, headers=self.headers, data=data)
-        print(resp.text)
+        data = parse.urlencode(data).encode('utf-8')
+        req = request.Request(url, headers=self.headers, data=data)
+        resp = request.urlopen(req).read()
+        print(resp.decode('utf-8'))
 
 
 if __name__ == '__main__':

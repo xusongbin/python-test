@@ -4,8 +4,8 @@
 import json
 import string
 import random
-import requests
-from urllib.parse import quote
+from urllib import request
+from urllib import parse
 from hashlib import md5
 from time import time
 
@@ -129,7 +129,7 @@ class BitAtm(object):
         signatue_key = 'accesskey={}&randstr={}&timestamp={}&secretkey={}'.format(
             self.access_key, randstr, timestamp, self.secret_key
         )
-        url_str = quote(signatue_key).lower()
+        url_str = parse.quote(signatue_key).lower()
         url_byte = url_str.encode()
         md5_maker = md5()
         md5_maker.update(url_byte)
@@ -164,8 +164,8 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         value = '?Symbol={}&Period={}&Size={}'.format(symbol, period, size)
         try:
-            resp = requests.get(self.url + self.market_history_kline + value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.market_history_kline + value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_market_history_kline:%s' % e)
         return None
@@ -196,8 +196,8 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         value = '?Symbol={}'.format(symbol)
         try:
-            resp = requests.get(self.url + self.market_detail_merged + value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.market_detail_merged + value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_market_detail_merged:%s' % e)
         return None
@@ -228,8 +228,8 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         value = '?Symbol={}'.format(symbol)
         try:
-            resp = requests.get(self.url + self.market_detail + value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.market_detail + value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_market_detail:%s' % e)
         return None
@@ -258,8 +258,8 @@ class BitAtm(object):
         # ts        True        Integer($int64) 时间戳
         headers = {self.type_name: self.type_get}
         try:
-            resp = requests.get(self.url + self.market_tickers, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.market_tickers, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_market_tickers:%s' % e)
         return None
@@ -286,8 +286,8 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         value = '?Symbol={}'.format(symbol)
         try:
-            resp = requests.get(self.url + self.market_depth + value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.market_depth + value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_market_depth:%s' % e)
         return None
@@ -315,8 +315,8 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         value = '?Symbol={}'.format(symbol)
         try:
-            resp = requests.get(self.url + self.market_trade + value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.market_trade + value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_market_trade:%s' % e)
         return None
@@ -345,8 +345,8 @@ class BitAtm(object):
         headers = {self.type_name: self.type_get}
         value = '?Symbol={}&Size={}'.format(symbol, size)
         try:
-            resp = requests.get(self.url + self.market_history_trade + value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.market_history_trade + value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_market_history_trade:%s' % e)
         return None
@@ -374,8 +374,8 @@ class BitAtm(object):
         # amountprecision   True    String      数量精度位数（0为各位）
         headers = {self.type_name: self.type_get}
         try:
-            resp = requests.get(self.url + self.common_symbols, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.common_symbols, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_common_symbols:%s' % e)
         return None
@@ -399,8 +399,8 @@ class BitAtm(object):
         # currencyname  True    String          币种名称
         headers = {self.type_name: self.type_get}
         try:
-            resp = requests.get(self.url + self.common_currencies, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.common_currencies, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_common_currencies:%s' % e)
         return None
@@ -425,8 +425,8 @@ class BitAtm(object):
         # ts            True    Integer($int64) 更新时间戳
         headers = {self.type_name: self.type_get}
         try:
-            resp = requests.get(self.url + self.common_rate, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.common_rate, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_common_rate:%s' % e)
         return None
@@ -447,8 +447,8 @@ class BitAtm(object):
         # data      True        Object          响应数据(当前系统时间戳UTC)
         headers = {self.type_name: self.type_get}
         try:
-            resp = requests.get(self.url + self.common_timestamp, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.common_timestamp, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_common_timestamp:%s' % e)
         return None
@@ -486,8 +486,8 @@ class BitAtm(object):
             self.access_key, random_str, tms, signature
         )
         try:
-            resp = requests.get(self.url + self.account_accounts + value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.account_accounts + value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_market_history_kline:%s' % e)
         return None
@@ -525,8 +525,8 @@ class BitAtm(object):
             self.access_key, random_str, tms, signature
         )
         try:
-            resp = requests.get(self.url + self.account_balance + value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.account_balance + value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_account_balance:%s' % e)
         return None
@@ -584,9 +584,9 @@ class BitAtm(object):
             'signature': signature
         }
         try:
-            session = requests.session()
-            resp = session.post(self.url + self.order_create, data=value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            value = parse.urlencode(value).encode('utf-8')
+            resp = request.urlopen(request.Request(self.url + self.order_create, data=value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_order_create:%s' % e)
         return None
@@ -627,9 +627,9 @@ class BitAtm(object):
             'signature': signature
         }
         try:
-            session = requests.session()
-            resp = session.post(self.url + self.order_cancel, data=value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            value = parse.urlencode(value).encode('utf-8')
+            resp = request.urlopen(request.Request(self.url + self.order_cancel, data=value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_order_cancel:%s' % e)
         return None
@@ -673,9 +673,9 @@ class BitAtm(object):
             'signature': signature
         }
         try:
-            session = requests.session()
-            resp = session.post(self.url + self.order_batch_cancel, data=value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            value = parse.urlencode(value).encode('utf-8')
+            resp = request.urlopen(request.Request(self.url + self.order_batch_cancel, data=value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_order_batch_cancel:%s' % e)
         return None
@@ -726,8 +726,8 @@ class BitAtm(object):
             orderid, self.access_key, random_str, tms, signature
         )
         try:
-            resp = requests.get(self.url + self.order_detail + value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.order_detail + value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_order_detail:%s' % e)
         return None
@@ -823,8 +823,8 @@ class BitAtm(object):
             self.access_key, random_str, tms, signature
         )
         try:
-            resp = requests.get(self.url + self.order_orders + value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.order_orders + value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_order_orders:%s' % e)
         return None
@@ -880,9 +880,9 @@ class BitAtm(object):
             'signature': signature
         }
         try:
-            session = requests.session()
-            resp = session.post(self.url + self.user_withdraw_create, data=value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            value = parse.urlencode(value).encode('utf-8')
+            resp = request.urlopen(request.Request(self.url + self.user_withdraw_create, data=value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_user_withdraw_create:%s' % e)
         return None
@@ -925,15 +925,15 @@ class BitAtm(object):
             'signature': signature
         }
         try:
-            session = requests.session()
-            resp = session.post(self.url + self.user_withdraw_create, data=value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            value = parse.urlencode(value).encode('utf-8')
+            resp = request.urlopen(request.Request(self.url + self.user_withdraw_create, data=value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_user_withdraw_create:%s' % e)
         return None
 
     # GET/v1/user/query/deposit-withdraw查询充提记录
-    def do_user_query_withdraw(self, currency, type, pageindex=1, pagesize=30):
+    def do_user_query_withdraw(self, currency, _type, pageindex=1, pagesize=30):
         # 请求参数：
         # 参数名称      是否必须     类型             描述              默认值     取值范围
         # Currency      True        String          币种
@@ -991,12 +991,12 @@ class BitAtm(object):
         signature = self.do_signature(random_str, tms)
         value = ('?Currency={}&Type={}&PageIndex={}&PageSize={}&'
                  'AccessKey={}&RandStr={}&Timestamp={}&Signature={}').format(
-            currency, type, pageindex, pagesize,
+            currency, _type, pageindex, pagesize,
             self.access_key, random_str, tms, signature
         )
         try:
-            resp = requests.get(self.url + self.user_query_deposit, data=value, headers=headers)
-            return self.do_error_check(json.loads(resp.text))
+            resp = request.urlopen(request.Request(self.url + self.user_query_deposit, data=value, headers=headers))
+            return self.do_error_check(json.loads(resp.read().decode()))
         except Exception as e:
             print('do_user_query_withdraw:%s' % e)
         return None
@@ -1004,7 +1004,7 @@ class BitAtm(object):
 
 def main():
     bit = BitAtm()
-    # sta = bit.do_market_history_kline()
+    sta = bit.do_market_history_kline()
     # sta = bit.do_market_detail_merged()
     # sta = bit.do_market_detail()
     # sta = bit.do_market_tickers()
@@ -1013,22 +1013,22 @@ def main():
     # sta = bit.do_market_history_trade()
     # print(sta)
 
-    # sta = bit.do_common_symbols()
+    sta = bit.do_common_symbols()
     # sta = bit.do_common_currencies()
     # sta = bit.do_common_rate()
     # sta = bit.do_common_timestamp()
-    # print(sta)
+    print(sta)
 
-    # sta = bit.do_account_accounts()
-    # sta = bit.do_account_balance()
-    # print(sta)
+    sta = bit.do_account_accounts()
+    sta = bit.do_account_balance()
+    print(sta)
 
     # sta = bit.do_order_create(symbol='burstbhd', amount=1, ordertype='Limit', direction='Buy', price=0.0002)
     # sta = bit.do_order_cancel(1)
     # sta = bit.do_order_batch_cancel([1, 2])
     # sta = bit.do_order_detail(1)
-    sta = bit.do_order_orders()
-    print(sta)
+    # sta = bit.do_order_orders()
+    # print(sta)
 
 
 if __name__ == '__main__':
