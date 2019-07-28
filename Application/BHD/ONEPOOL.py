@@ -54,7 +54,8 @@ class Pool(object):
         write_log('TOTAL property:{}'.format(property_all))
 
         today = strftime("%Y-%m-%d", localtime())
-        self.day_income(today, details=False)
+        # today = '2019-07-25'
+        self.day_income(today, details=True)
         num, rate = self.day_income('2019-07-18', today, details=False)
         write_log('')
         self.back_cycle(rate/num)
