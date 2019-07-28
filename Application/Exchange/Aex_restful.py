@@ -2,13 +2,17 @@
 # -*- coding: utf-8 -*-
 
 import json
+import logging
 from urllib import request
 from urllib import parse
 from hashlib import md5
 from time import time
 
 import traceback
-from md_logging import Logging
+from md_logging import setup_log
+
+setup_log()
+write_log = logging.getLogger('AEX_RESTFUL')
 
 
 class Aex(object):
@@ -26,7 +30,6 @@ class Aex(object):
         self.access_key = ''
         self.secret_key = ''
         self.account_id = 0
-        self.log = Logging('AEX')
         try:
             with open('Aex.log', 'r') as f:
                 key = json.load(f)
@@ -34,8 +37,8 @@ class Aex(object):
             self.secret_key = key['Secret_key']
             self.account_id = key['Account_id']
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
-        self.log.debug('Key:{} Skey:{} Id:{}'.format(self.access_key, self.secret_key, self.account_id))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
+        write_log.debug('Key:{} Skey:{} Id:{}'.format(self.access_key, self.secret_key, self.account_id))
 
     def do_md5(self, ts):
         try:
@@ -46,7 +49,7 @@ class Aex(object):
             en_str = encryptor.hexdigest()
             return en_str
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return ''
 
     # 返回自己當前的賬戶余額，包含系統支持的所有幣種。
@@ -66,7 +69,7 @@ class Aex(object):
             data = json.loads(resp)
             return data
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return {}
 
     # 返回最高、最低交易行情和交易量，每15秒鐘更新
@@ -78,7 +81,7 @@ class Aex(object):
             data = json.loads(resp)
             return data
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return {}
 
     # 返回當前市場深度（委托掛單），其中 asks 是委賣單, bids 是委買單。返回30條。
@@ -90,7 +93,7 @@ class Aex(object):
             data = json.loads(resp)
             return data
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return {}
 
     # 返回系統支持的歷史成交記錄，返回最新30條。
@@ -102,7 +105,7 @@ class Aex(object):
             data = json.loads(resp)
             return data
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return {}
 
     # 進行系統支持的所有數字貨幣的買賣操作。
@@ -138,7 +141,7 @@ class Aex(object):
             data = resp
             return data
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return {}
 
     # 進行自己委單的撤銷操作。
@@ -168,7 +171,7 @@ class Aex(object):
             data = resp
             return data
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return {}
 
     # 返回自己當前沒有成交的委單,已成交的掛單會顯示在成交記錄中。
@@ -198,7 +201,7 @@ class Aex(object):
             data = resp
             return data
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return {}
 
     # 返回自己的歷史成交記錄，每頁顯示30條。
@@ -229,7 +232,7 @@ class Aex(object):
             data = resp
             return data
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return {}
 
 
@@ -238,9 +241,10 @@ if __name__ == '__main__':
     # print(aex.do_get_mybalance())
     # print(aex.do_get_ticker())
     # print(aex.do_get_depth())
-    # print(aex.do_get_trades())
+    print(aex.do_get_trades())
 
-    print(aex.do_submit_order(100, 1))
-    # print(aex.do_cancel_order(100, 1))
+    # print(aex.do_submit_order(100, 1))
+    # print(aex.do_cancel_order(516384))
+    # print(aex.do_get_orderlist())
     # print(aex.do_get_tradelist())
 
