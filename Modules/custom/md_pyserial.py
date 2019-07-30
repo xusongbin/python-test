@@ -2,14 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import threading
-import traceback
 from queue import Queue
 from time import sleep, time
 
 import serial
 from serial.tools import list_ports
 
-from md_logging import Logging
+import logging
+import traceback
+from md_logging import setup_log
+
+setup_log()
+write_log = logging.getLogger('pyserial')
 
 
 class ThreadSerial(object):
@@ -19,20 +23,18 @@ class ThreadSerial(object):
             com='', hid='', thread=True, period=0.1, timeout=0.02, qqlen=50,
             enter=False, wakeup=False
     ):
-        self.log = Logging('ThreadSerial')
-
         self.baudrate = baudrate
         self.byte = byte
         self.parity = parity
         self.stopbits = stopbits
         self.port = serial.Serial()
-        self.log.debug('Rate:{} Byte:{} Parity:{} Stop:{}'.format(
+        write_log.debug('Rate:{} Byte:{} Parity:{} Stop:{}'.format(
             self.baudrate, self.byte, self.parity, self.stopbits
         ))
 
         self.serial_hid = hid
         self.serial_com = com
-        self.log.debug('COM:{} HID:{}'.format(
+        write_log.debug('COM:{} HID:{}'.format(
             self.serial_com, self.serial_hid
         ))
 
@@ -42,7 +44,7 @@ class ThreadSerial(object):
         self.period = period
         self.timeout = timeout
         self.qq_len = qqlen
-        self.log.debug('CRLF:{} Wakeup:{} Thread:{} Period:{} Timeout:{} QueueSize:{}'.format(
+        write_log.debug('CRLF:{} Wakeup:{} Thread:{} Period:{} Timeout:{} QueueSize:{}'.format(
             self.enter, self.wakeup, self.thread, self.period, self.timeout, self.qq_len
         ))
 
@@ -62,8 +64,8 @@ class ThreadSerial(object):
             for _describe in list_ports.comports():
                 port_list.append(str(_describe).split('-')[0].strip())
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
-        self.log.debug('serial_list:{}'.format(port_list))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
+        write_log.debug('serial_list:{}'.format(port_list))
         return port_list
 
     def find_by_hid(self, hid):
@@ -74,7 +76,7 @@ class ThreadSerial(object):
                 if hid in _describe.hwid:
                     return str(_describe).split('-')[0].strip()
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return ''
 
     def close(self):
@@ -83,7 +85,7 @@ class ThreadSerial(object):
                 self.port.close()
             return True
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return False
 
     def open(self, com='', hid=''):
@@ -103,10 +105,10 @@ class ThreadSerial(object):
                 stopbits=self.stopbits,
                 parity=self.parity,
                 timeout=0)
-            self.log.info('open: successful!')
+            write_log.info('open: successful!')
             return True
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return False
 
     def send(self, tx, clear=False):
@@ -114,10 +116,10 @@ class ThreadSerial(object):
             if clear:
                 self.qq_tx.queue.clear()
             self.qq_tx.put(tx)
-            self.log.debug('send:{}'.format(tx))
+            write_log.debug('send:{}'.format(tx))
             return True
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return False
 
     def receive(self, onerow=False, clear=False):
@@ -128,13 +130,13 @@ class ThreadSerial(object):
                 if onerow:
                     if clear:
                         self.qq_rx.queue.clear()
-                    self.log.debug('receive:{}'.format(rx_str))
+                    write_log.debug('receive:{}'.format(rx_str))
                     return rx_str
-            self.log.debug('receive:{}'.format(rx_str))
+            write_log.debug('receive:{}'.format(rx_str))
             return rx_str
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
-        self.log.debug('receive:None')
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
+        write_log.debug('receive:None')
         return ''
 
     def send_wait_return(self, tx, timeout):
@@ -149,9 +151,9 @@ class ThreadSerial(object):
             if self.wakeup:
                 self.port.write(b'\xff\xff\xff\xff')
             self.port.write(tx.encode('utf-8', 'ignore'))
-            self.log.debug('send_wait_return tx:{}'.format(tx))
+            write_log.debug('send_wait_return tx:{}'.format(tx))
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
             self.close()
         try:
             rx_ts = time()
@@ -162,10 +164,10 @@ class ThreadSerial(object):
                 rx_str += rx_byte.decode("utf-8", "ignore")
                 rx_ts = time()
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
             self.close()
         rx_str = rx_str.strip()
-        self.log.debug('send_wait_return rx:{}'.format(rx_str))
+        write_log.debug('send_wait_return rx:{}'.format(rx_str))
         return rx_str
 
     def on_serial_thread(self):
@@ -181,9 +183,9 @@ class ThreadSerial(object):
                     if self.wakeup:
                         self.port.write(b'\xff\xff\xff\xff')
                     self.port.write(tx.encode('utf-8', 'ignore'))
-                    self.log.debug('on_serial_thread tx:{}'.format(tx))
+                    write_log.debug('on_serial_thread tx:{}'.format(tx))
                 except Exception as e:
-                    self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+                    write_log.error('{}\n{}'.format(e, traceback.format_exc()))
                     self.close()
             try:
                 rx_line = ''
@@ -199,15 +201,15 @@ class ThreadSerial(object):
                 rx_line = rx_line.strip()
                 if rx_line:
                     self.qq_rx.put(rx_line)
-                    self.log.debug('on_serial_thread rx:{}'.format(rx_line))
+                    write_log.debug('on_serial_thread rx:{}'.format(rx_line))
             except Exception as e:
-                self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+                write_log.error('{}\n{}'.format(e, traceback.format_exc()))
                 self.close()
             while self.qq_tx.qsize() > self.qq_len:
-                self.log.debug('on_serial_thread tx queue full')
+                write_log.debug('on_serial_thread tx queue full')
                 self.qq_tx.get()
             while self.qq_rx.qsize() > self.qq_len:
-                self.log.debug('on_serial_thread rx queue full')
+                write_log.debug('on_serial_thread rx queue full')
                 self.qq_rx.get()
             sleep(self.period)
 

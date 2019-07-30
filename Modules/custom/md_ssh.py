@@ -5,21 +5,23 @@ import os
 import re
 import sys
 import paramiko
-import traceback
 
-from md_logging import Logging
+import logging
+import traceback
+from md_logging import setup_log
+
+setup_log()
+write_log = logging.getLogger('ssh')
 
 
 class Ssh(object):
     def __init__(self, ip, port, username, password, timeout=1):
-        self.log = Logging('Ssh')
-
         self.ip = ip
         self.port = port
         self.username = username
         self.password = password
         self.timeout = timeout
-        self.log.debug('IP:{} Port:{} Username:{} Password:{} Timeout:{}'.format(
+        write_log.debug('IP:{} Port:{} Username:{} Password:{} Timeout:{}'.format(
             self.ip, self.port, self.username, self.password, self.timeout
         ))
 
@@ -29,10 +31,10 @@ class Ssh(object):
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy)
             ssh_client.connect(self.ip, self.port, self.username, self.password, timeout=self.timeout)
             paramiko.SFTPClient.from_transport(ssh_client.get_transport())
-            self.log.debug('connect successful!')
+            write_log.debug('connect successful!')
             return ssh_client
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return None
 
     def exec_command(self, cmd):
@@ -43,9 +45,9 @@ class Ssh(object):
         try:
             stdin, stdout, stderr = ssh_client.exec_command(cmd)
             data = str(stdout.read().decode('utf-8', 'ignore'))
-            self.log.debug('exec_command:{}'.format(cmd))
+            write_log.debug('exec_command:{}'.format(cmd))
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         ssh_client.close()
         return data
 
@@ -65,7 +67,7 @@ class Ssh(object):
                 sftp.get(remote, local)
             status = True
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         ssh_client.close()
         return status
 
@@ -131,7 +133,7 @@ class Ssh(object):
                 self.on_get_directory(sftp, local, remote)
             status = True
         except Exception as e:
-            self.log.error('{}\n{}'.format(e, traceback.format_exc()))
+            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         ssh_client.close()
         return status
 
