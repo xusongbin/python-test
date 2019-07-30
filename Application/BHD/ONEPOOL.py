@@ -278,6 +278,29 @@ class Pool(object):
         target_date = strftime('%Y-%m-%d', localtime(target_date))
         write_log('Target date:{}'.format(target_date))
 
+        write_log('')
+        day_bcycle = month_cycle * 30
+        tmp_profit = local_profit
+        disk_capacity = 134
+        disk_ratio = day_income / disk_capacity
+        disk_count = 16
+        disk_income = disk_ratio * 134
+        tmp_day = 0
+        for i in range(1, int(day_bcycle + 1)):
+            if tmp_profit >= 1050 and disk_count < 32:
+                tmp_profit -= 1050
+                disk_count += 1
+                disk_capacity += 8
+                disk_income = disk_ratio * disk_capacity
+            tmp_profit += disk_income
+            if tmp_profit >= self.machine_price:
+                tmp_day = i
+                break
+        write_log('Invest bcycle:{:.1f}'.format(tmp_day/30))
+        tmp_date = time() + tmp_day * 24 * 60 * 60
+        tmp_date = strftime('%Y-%m-%d', localtime(tmp_date))
+        write_log('Invest date:{}'.format(tmp_date))
+
 
 if __name__ == '__main__':
     app = Pool()
