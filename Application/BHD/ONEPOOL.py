@@ -29,6 +29,7 @@ class Pool(object):
     power_rate = 1.5
     power_waste = 150
     machine_price = 25000
+    sales_profit = 572 + 216
     wallet_bhd = 1          # wallet + hdpool + bitatm
     wallet_boom = 0         # wallet
     wallet_burst = 0        # wallet
@@ -54,9 +55,10 @@ class Pool(object):
         write_log('TOTAL property:{}'.format(property_all))
 
         today = strftime("%Y-%m-%d", localtime())
-        # today = '2019-07-25'
+        yesterday = strftime("%Y-%m-%d", localtime(time()-24*60*60))
+        # today = '2019-07-29'
         self.day_income(today, details=True)
-        num, rate = self.day_income('2019-07-18', today, details=False)
+        num, rate = self.day_income('2019-07-18', yesterday, details=False)
         write_log('')
         self.back_cycle(rate/num)
         write_log('')
@@ -248,14 +250,18 @@ class Pool(object):
         local_profit += (self.wallet_boom + self.property_boom) * self.price_boom
         local_profit += (self.wallet_burst + self.property_burst) * self.price_burst
         write_log('Local profit:{}'.format(local_profit))
+        write_log('Sales profit:{}'.format(self.sales_profit))
         month_pay = self.power_waste * self.power_rate * 24 * 30 / 1000
         write_log('Month pay:{}'.format(month_pay))
         month_income = day_income * 30
         write_log('Month income:{}'.format(month_income))
         month_profit = month_income - month_pay
         write_log('Month profit:{}'.format(month_profit))
-        month_cycle = (self.machine_price - local_profit) / month_profit
+        month_cycle = (self.machine_price - local_profit - self.sales_profit) / month_profit
         write_log('Month bcycle:{:.1f}'.format(month_cycle))
+        target_date = time() + month_cycle * 30 * 24 * 60 * 60
+        target_date = strftime('%Y-%m-%d', localtime(target_date))
+        write_log('Target date:{}'.format(target_date))
 
 
 if __name__ == '__main__':
