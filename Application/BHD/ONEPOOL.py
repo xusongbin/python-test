@@ -3,7 +3,9 @@
 
 import re
 import json
-import requests
+import gzip
+from urllib import request
+from urllib import parse
 from time import time, strftime, localtime, mktime, strptime
 
 
@@ -69,21 +71,22 @@ class Pool(object):
         }
         if symbol == 'BOOM' or symbol == 'BURST':
             headers['Host'] = 'www.qbtc.ink'
-            url = 'https://www.qbtc.ink/json/topQuotations.do?tradeMarket=CNYT&symbol={}'.format(symbol)
+            url = 'http://www.qbtc.ink/json/depthTable.do?tradeMarket=CNYT&symbol={}'.format(symbol)
             qbct = True
         else:
-            url = 'https://api.aex.zone/ticker.php?c={}&mk_type=cnc'.format(symbol)
+            url = 'https://api.aex.zone/depth.php?c={}&mk_type=cnc'.format(symbol)
             qbct = False
         try:
-            rep = requests.get(url, headers=headers)
-            data = json.loads(rep.text)
+            req = request.Request(url=url, headers=headers)
+            resp = request.urlopen(req, timeout=5)
+            data = json.loads(resp.read().decode('utf-8'))
             if qbct:
-                data = float(data['result']['last'])
+                data = float(data['result']['buy'][0]['price'])
             else:
-                data = float(data['ticker']['last'])
+                data = float(data['bids'][0][0])
             return data
         except Exception as e:
-            write_log('get_burst_price except: %s' % e)
+            write_log('get_price except: %s' % e)
         return 0
 
     def get_onepool(self, symbol):
@@ -91,39 +94,48 @@ class Pool(object):
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Encoding': 'gzip, deflate',
             'Accept-Language': 'zh-CN,zh;q=0.9',
-            'Cache-Control': 'max-age=0',
             'Connection': 'keep-alive',
-            'Host': 'www.onepool.cc',
+            'Cookie': (
+                'loginName=mark3333520%40163.com; '
+                'loginPwd=f3in2oWmp61%2F'
+                'dHqnfanUzo6oqWKMjKnOl4h%2B'
+                'mK7LlNyMi6zNhsy3rX9igmOKqLbcg6W4qoCvg8qAZ3%2F'
+                'Pv7WVzYyhq9qGtrtoiqqSp324q86BqLmega97zoBne8u%2F'
+                'pZySgXu3mJHPrKN%2'
+                'FqoJkic6rz47LvZ98o2Wf; '
+                'language=zh-CN;'
+            ),
             'User-Agent': self.user_agent,
             'Upgrade-Insecure-Requests': '1'
         }
-        cookies = {
-            'loginName': 'mark3333520%40163.com',
-            'loginPwd': (
-                'f3in2oWmp61%2FdHqnfanUzo6oqWKMjKnOl4h%2BmK7LlNyMi6zN'
-                'hsy3rX9igmOKqLbcg6W4qoCvg8qAZ3%2FPv7WVzYyhq9qGtrtoiq'
-                'qSp324q86BqLmega97zoBne8u%2FpZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf'
-            )
-        }
         if symbol == 'BHD':
+            headers['Host'] = 'onepool.cc'
+            headers['Referer'] = 'http://onepool.cc/eco-bhd/user/income_inquiry.html'
             cur_url = 'http://www.onepool.cc/eco-bhd/user/asset.html'
         elif symbol == 'BOOM':
+            headers['Host'] = 'www.onepool.cc'
+            headers['Referer'] = 'http://www.onepool.cc/eco-boom/user/income_inquiry.html'
             cur_url = 'http://www.onepool.cc/eco-boom/user/asset.html'
         elif symbol == 'BURST':
+            headers['Host'] = 'www.onepool.cc'
+            headers['Referer'] = 'http://www.onepool.cc/burst/user/income_inquiry.html'
             cur_url = 'http://www.onepool.cc/burst/user/asset.html'
         else:
             return 0
         try:
-            session = requests.session()
-            req = session.get(cur_url, headers=headers, cookies=cookies)
-            req = str(req.text)
-            if '总资产' not in req:
+            req = request.Request(cur_url, headers=headers)
+            resp = request.urlopen(req)
+            if resp.info().get('Content-Encoding') == 'gzip':
+                resp = gzip.decompress(resp.read()).decode('utf-8')
+            else:
+                resp = resp.read().decode('utf-8')
+            if 'user_asset_avai_balance' not in resp:
                 print('Not found property')
                 return 0
-            req = req[:req.find('总资产')]
-            req = req[req.rfind('asset-num'):]
+            resp = resp[:resp.find('user_asset_avai_balance')]
+            resp = resp[resp.rfind('asset-num'):]
             data = 0
-            for d in re.findall(r'asset-num\">(\d+\.\d+)<.*', req):
+            for d in re.findall(r'asset-num\">(\d+\.\d+)<.*', resp):
                 data = d
             return float(data)
         except Exception as e:
@@ -142,14 +154,16 @@ class Pool(object):
             'Origin': '',
             'Referer': '',
             'User-Agent': self.user_agent,
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-        cookies = {
-            'loginName': 'mark3333520%40163.com',
-            'loginPwd': (
-                'f3in2oWmp61%2FdHqnfanUzo6oqWKMjKnOl4h%2BmK7LlNyMi6zN'
-                'hsy3rX9igmOKqLbcg6W4qoCvg8qAZ3%2FPv7WVzYyhq9qGtrtoiq'
-                'qSp324q86BqLmega97zoBne8u%2FpZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf'
+            'X-Requested-With': 'XMLHttpRequest',
+            'Cookie': (
+                'loginName=mark3333520%40163.com; '
+                'loginPwd=f3in2oWmp61%2F'
+                'dHqnfanUzo6oqWKMjKnOl4h%2B'
+                'mK7LlNyMi6zNhsy3rX9igmOKqLbcg6W4qoCvg8qAZ3%2F'
+                'Pv7WVzYyhq9qGtrtoiqqSp324q86BqLmega97zoBne8u%2F'
+                'pZySgXu3mJHPrKN%2'
+                'FqoJkic6rz47LvZ98o2Wf; '
+                'language=zh-CN;'
             )
         }
         if symbol == 'BHD':
@@ -178,9 +192,10 @@ class Pool(object):
             page_total = 1
             while page_idx <= page_total:
                 data = {'page': page_idx, 'start': t_start, 'stop': t_stop}
-                session = requests.session()
-                req = session.post(cur_url, data=data, headers=headers, cookies=cookies)
-                js_data = json.loads(req.text)['data']
+                data = parse.urlencode(data).encode('utf-8')
+                req = request.Request(cur_url, data=data, headers=headers)
+                resp = request.urlopen(req).read().decode('utf-8')
+                js_data = json.loads(resp)['data']
                 for data in js_data['data']:
                     if data['profit_date'] in day_list:
                         rt_data.append(data)
