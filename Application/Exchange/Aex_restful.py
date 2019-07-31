@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import json
-import logging
+import re
 from urllib import request
 from urllib import parse
 from hashlib import md5
 from time import time
 
-import traceback
-from md_logging import setup_log
+from md_logging import *
 
 setup_log()
 write_log = logging.getLogger('AEX_RESTFUL')
@@ -66,6 +64,9 @@ class Aex(object):
             data = parse.urlencode(data).encode('utf-8')
             req = request.Request(url, headers=self.headers, data=data)
             resp = request.urlopen(req).read().decode('utf-8')
+            if re.match(r'\d+\.\d+\.\d+\.\d+ is not allowed', resp):
+                write_log.error(resp)
+                return {}
             data = json.loads(resp)
             return data
         except Exception as e:
@@ -238,10 +239,10 @@ class Aex(object):
 
 if __name__ == '__main__':
     aex = Aex()
-    # print(aex.do_get_mybalance())
+    print(aex.do_get_mybalance())
     # print(aex.do_get_ticker())
     # print(aex.do_get_depth())
-    print(aex.do_get_trades())
+    # print(aex.do_get_trades())
 
     # print(aex.do_submit_order(100, 1))
     # print(aex.do_cancel_order(516384))
