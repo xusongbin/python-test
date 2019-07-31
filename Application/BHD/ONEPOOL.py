@@ -31,13 +31,15 @@ class Pool(object):
     power_rate = 1.5
     power_waste = 150
     machine_price = 25000
+    machine_disk = 16
+    machine_capacity = 134
     sales_profit = 572 + 216
     wallet_bhd = 1          # wallet + hdpool + bitatm
     wallet_boom = 0         # wallet
     wallet_burst = 0        # wallet
 
     def __init__(self):
-        self.get_machine_invest()
+        self.get_wacai()
 
         self.price_bhd = self.get_price('BHD')
         self.price_boom = self.get_price('BOOM')
@@ -67,7 +69,7 @@ class Pool(object):
         self.back_cycle(rate/num)
         write_log('')
 
-    def get_machine_invest(self):
+    def get_wacai(self):
         tms = int(time() * 1000)
         url = 'https://www.wacai.com/setting/account_list.action?timesamp={}'.format(tms)
         headers = {
@@ -114,26 +116,38 @@ class Pool(object):
             'pageInfo.pageIndex': '1',
             'hidden': 'false'
         }
-        data = parse.urlencode(data).encode('utf-8')
-        req = request.Request(url, data, headers)
-        resp = request.urlopen(req)
+        try:
+            data = parse.urlencode(data).encode('utf-8')
+            req = request.Request(url, data, headers)
+            resp = request.urlopen(req)
 
-        if resp.info().get('Content-Encoding') == 'gzip':
-            resp = gzip.decompress(resp.read()).decode('utf-8')
-        else:
-            resp = resp.read().encode('utf-8')
+            if resp.info().get('Content-Encoding') == 'gzip':
+                resp = gzip.decompress(resp.read()).decode('utf-8')
+            else:
+                resp = resp.read().encode('utf-8')
 
-        resp_dict = json.loads(resp)
-        value = 0
-        for account in resp_dict['accountTypeSum']:
-            if 'accTypeName' not in account.keys():
-                continue
-            if account['accTypeName'] == '投资账户':
-                for accs in account['accs']:
-                    if accs['name'] == '矿工':
-                        value = accs['balance']
-        if value > 0:
-            self.machine_price = value
+            resp_dict = json.loads(resp)
+            value = 0
+            disk = 0
+            capacity = 0
+            for account in resp_dict['accountTypeSum']:
+                if 'accTypeName' not in account.keys():
+                    continue
+                if account['accTypeName'] == '投资账户':
+                    for accs in account['accs']:
+                        if accs['name'] == '矿工':
+                            value = accs['balance']
+                            comment = accs['comment'].split('\n')
+                            disk = int(comment[0].split('=')[1])
+                            capacity = int(comment[1].split('=')[1])
+            if value > 0:
+                self.machine_price = value
+            if disk > 0:
+                self.machine_disk = disk
+            if capacity > 0:
+                self.machine_capacity = capacity
+        except Exception as e:
+            write_log('get_wacai except:%s' % e)
 
     def get_price(self, symbol):
         headers = {
@@ -351,10 +365,10 @@ class Pool(object):
         write_log('')
         day_bcycle = month_cycle * 30
         tmp_profit = local_profit
-        disk_capacity = 134
+        disk_capacity = self.machine_capacity
         disk_ratio = day_income / disk_capacity
-        disk_count = 16
-        disk_income = disk_ratio * 134
+        disk_count = self.machine_disk
+        disk_income = disk_ratio * disk_capacity
         tmp_day = 0
         for i in range(1, int(day_bcycle + 1)):
             if tmp_profit >= 1050 and disk_count < 32:
@@ -366,6 +380,8 @@ class Pool(object):
             if tmp_profit >= self.machine_price:
                 tmp_day = i
                 break
+        write_log('Invest disk:{:.1f}'.format(self.machine_disk))
+        write_log('Invest capacity:{:.1f}'.format(self.machine_capacity))
         write_log('Invest machine:{:.1f}'.format(self.machine_price))
         write_log('Invest bcycle:{:.1f}'.format(tmp_day/30))
         tmp_date = time() + tmp_day * 24 * 60 * 60
