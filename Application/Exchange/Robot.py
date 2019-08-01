@@ -3,6 +3,7 @@
 
 import sys
 import threading
+import pandas as pd
 from time import time, sleep, strftime, localtime
 
 from PyQt5.QtGui import *
@@ -18,6 +19,9 @@ write_log = logging.getLogger('ROBOT')
 
 
 class Robot(QWidget):
+    coin_market = ['cnc', 'usdt']
+    coin_table = ['btc', 'eos', 'eth', 'doge', 'etc', 'bts', 'xlm']
+
     def __init__(self):
         super().__init__()
         self.my_balance = {}
@@ -27,6 +31,7 @@ class Robot(QWidget):
         self.work_ui.tableWidget.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
 
         self.aex = Aex()
+        # print(self.do_get_ticker_vol())
 
         self.timer_work_ui = QTimer()
         self.timer_work_ui.timeout.connect(self.on_timer_work_ui)
@@ -64,14 +69,57 @@ class Robot(QWidget):
             self.my_balance[coin] = [balance, lock]
         return True
 
-    def do_get_ticker(self):
+    def do_get_ticker_vol(self):
         ticker = self.aex.do_get_ticker('all', 'cnc')
-        print(ticker)
+        volume = []
+        coin = [x for x in ticker.keys()]
+        for key in coin:
+            vol = ticker[key]['ticker']['vol'] * ticker[key]['ticker']['last']
+            volume.append(vol)
+        cnc_pd = pd.DataFrame({'cnc': coin, 'vol': volume})
+        cnc_pd.sort_values(by='vol', inplace=True, ascending=False)
+        cnc_pd.reset_index(inplace=True, drop=True)
+        cnc_pd.drop(['vol'], axis=1, inplace=True)
+        ticker = self.aex.do_get_ticker('all', 'usdt')
+        volume = []
+        coin = [x for x in ticker.keys()]
+        for key in coin:
+            vol = ticker[key]['ticker']['vol'] * ticker[key]['ticker']['last']
+            volume.append(vol)
+        usdt_pd = pd.DataFrame({'usdt': coin, 'vol': volume})
+        usdt_pd.sort_values(by='vol', inplace=True, ascending=False)
+        usdt_pd.reset_index(inplace=True, drop=True)
+        usdt_pd.drop(['vol'], axis=1, inplace=True)
+        ticker = self.aex.do_get_ticker('all', 'btc')
+        volume = []
+        coin = [x for x in ticker.keys()]
+        for key in coin:
+            vol = ticker[key]['ticker']['vol'] * ticker[key]['ticker']['last']
+            volume.append(vol)
+        btc_pd = pd.DataFrame({'btc': coin, 'vol': volume})
+        btc_pd.sort_values(by='vol', inplace=True, ascending=False)
+        btc_pd.reset_index(inplace=True, drop=True)
+        btc_pd.drop(['vol'], axis=1, inplace=True)
+        ticker = self.aex.do_get_ticker('all', 'eth')
+        volume = []
+        coin = [x for x in ticker.keys()]
+        for key in coin:
+            vol = ticker[key]['ticker']['vol'] * ticker[key]['ticker']['last']
+            volume.append(vol)
+        eth_pd = pd.DataFrame({'eth': coin, 'vol': volume})
+        eth_pd.sort_values(by='vol', inplace=True, ascending=False)
+        eth_pd.reset_index(inplace=True, drop=True)
+        eth_pd.drop(['vol'], axis=1, inplace=True)
+        print(cnc_pd)
+        total_pd = cnc_pd
+        total_pd['usdt'] = usdt_pd['usdt']
+        total_pd['btc'] = btc_pd['btc']
+        total_pd['eth'] = eth_pd['eth']
+        return total_pd.head(20)
 
     def on_thread_work(self):
         while True:
             self.do_get_balance()
-            self.do_get_ticker()
             sleep(1)
 
 
