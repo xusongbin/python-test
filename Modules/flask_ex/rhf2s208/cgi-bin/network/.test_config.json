@@ -1,0 +1,6 @@
+{
+    "test_conf": {
+        "spi": 0,
+        "full_duplex": false
+    }
+}
