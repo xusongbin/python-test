@@ -3,19 +3,19 @@
 
 import json
 import queue
-import logging
+import threading
 from urllib import parse
 from hashlib import md5
-from time import time
+from time import time, sleep
 
-import asyncio
-from aiowebsocket.converses import AioWebSocket
+import websocket
 
+import logging
 import traceback
 from md_logging import setup_log
 
 setup_log()
-write_log = logging.getLogger('AEX_AIOWEBSOCKET')
+write_log = logging.getLogger('AEX_WEBSOCKET')
 
 
 class Aex(object):
@@ -92,42 +92,36 @@ class Aex(object):
             write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         write_log.debug('Key:{} Skey:{} Id:{}'.format(self.access_key, self.secret_key, self.account_id))
 
+        websocket.enableTrace(True)
+        self.ws = websocket.WebSocketApp(self.url, on_message=self.on_message, on_open=self.on_open)
+
         self.qq_tx = queue.Queue()
         self.qq_rx = queue.Queue()
 
-        self.do_command2(1, [
-            {"market": "cnc", "coin": "btc"},
-            {"market": "cnc", "coin": "eos"},
-            {"market": "cnc", "coin": "eth"},
-            {"market": "cnc", "coin": "doge"},
-            {"market": "cnc", "coin": "etc"},
-            {"market": "usdt", "coin": "btc"},
-            {"market": "usdt", "coin": "eos"},
-            {"market": "usdt", "coin": "eth"},
-            {"market": "usdt", "coin": "doge"},
-            {"market": "usdt", "coin": "etc"}
-        ])
-        # self.do_command4()
-        # self.do_command5()
+        self.thread_run = threading.Thread(target=self.on_thread_run)
+        self.thread_run.setDaemon(True)
 
-        self.run()
+        self.thread_work = threading.Thread(target=self.on_thread_work)
+        self.thread_work.setDaemon(True)
 
-    async def startup(self):
-        async with AioWebSocket(self.url) as aws:
-            converse = aws.manipulator
-            while True:
-                if not self.qq_tx.empty():
-                    data = self.qq_tx.get()
-                    await converse.send(data)
-                msg = await converse.receive()
-                if msg:
-                    self.qq_rx.put(msg)
+    def start(self):
+        self.thread_run.start()
 
-    def run(self):
-        try:
-            asyncio.get_event_loop().run_until_complete(self.startup())
-        except Exception as e:
-            logging.error('{}\n{}'.format(e, traceback.format_exc()))
+    def on_message(self, message):
+        print(message)
+        self.qq_rx.put(message)
+
+    def on_open(self):
+        self.thread_work.start()
+
+    def on_thread_run(self):
+        self.ws.run_forever(ping_interval=60, ping_timeout=5)
+
+    def on_thread_work(self):
+        while True:
+            if not self.qq_tx.empty():
+                data = self.qq_tx.get()
+                self.ws.send(data)
 
     def do_md5(self, ts):
         try:
@@ -313,4 +307,20 @@ class Aex(object):
 
 if __name__ == '__main__':
     aex = Aex()
-
+    aex.do_command2(1, [
+        {"market": "cnc", "coin": "btc"},
+        {"market": "cnc", "coin": "eos"},
+        {"market": "cnc", "coin": "eth"},
+        {"market": "cnc", "coin": "doge"},
+        {"market": "cnc", "coin": "etc"},
+        {"market": "usdt", "coin": "btc"},
+        {"market": "usdt", "coin": "eos"},
+        {"market": "usdt", "coin": "eth"},
+        {"market": "usdt", "coin": "doge"},
+        {"market": "usdt", "coin": "etc"}
+    ])
+    # aex.do_command4()
+    # aex.do_command5()
+    aex.start()
+    while True:
+        sleep(1)
