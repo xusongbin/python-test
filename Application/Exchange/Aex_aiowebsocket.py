@@ -95,9 +95,21 @@ class Aex(object):
         self.qq_tx = queue.Queue()
         self.qq_rx = queue.Queue()
 
-        self.do_command2(1, [{"market": "cnc", "coin": "bhd"}])
-        self.do_command4()
-        self.do_command5()
+        self.do_command2(1, [
+            {"market": "cnc", "coin": "btc"},
+            {"market": "cnc", "coin": "eos"},
+            {"market": "cnc", "coin": "eth"},
+            {"market": "cnc", "coin": "doge"},
+            {"market": "cnc", "coin": "etc"},
+            {"market": "usdt", "coin": "btc"},
+            {"market": "usdt", "coin": "eos"},
+            {"market": "usdt", "coin": "eth"},
+            {"market": "usdt", "coin": "doge"},
+            {"market": "usdt", "coin": "etc"}
+        ])
+        # self.do_command4()
+        # self.do_command5()
+
         self.run()
 
     async def startup(self):
@@ -109,13 +121,13 @@ class Aex(object):
                     await converse.send(data)
                 msg = await converse.receive()
                 if msg:
-                    print(self.do_parse_respond(msg))
+                    self.qq_rx.put(msg)
 
     def run(self):
         try:
             asyncio.get_event_loop().run_until_complete(self.startup())
-        except KeyboardInterrupt as exc:
-            logging.info('Quit.')
+        except Exception as e:
+            logging.error('{}\n{}'.format(e, traceback.format_exc()))
 
     def do_md5(self, ts):
         try:
