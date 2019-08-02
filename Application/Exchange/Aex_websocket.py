@@ -108,7 +108,6 @@ class Aex(object):
         self.thread_run.start()
 
     def on_message(self, message):
-        print(message)
         self.qq_rx.put(message)
 
     def on_open(self):
@@ -134,23 +133,6 @@ class Aex(object):
         except Exception as e:
             write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return ''
-
-    def do_parse_respond(self, resp):
-        try:
-            data = json.loads(resp)
-            cmd = data['cmd']['type']
-            error_num = data['cmd']['eno']
-            if cmd not in self.cmd.keys():
-                return '命令不存在'
-            if error_num != 0:
-                if error_num not in self.error.keys():
-                    return '错误号未识别'
-                else:
-                    return self.error[error_num]
-        except Exception as e:
-            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
-            return '解析数据异常'
-        return data
 
     # 添加想要关注的交易对，删除已经关注的交易对
     def do_command2(self, _type, pairs):
@@ -319,7 +301,7 @@ if __name__ == '__main__':
         {"market": "usdt", "coin": "doge"},
         {"market": "usdt", "coin": "etc"}
     ])
-    # aex.do_command4()
+    aex.do_command4()
     # aex.do_command5()
     aex.start()
     while True:

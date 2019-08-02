@@ -6,59 +6,166 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>768</width>
-    <height>507</height>
+    <width>935</width>
+    <height>664</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>935</width>
+    <height>335</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>935</width>
+    <height>99999</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QTableWidget" name="tableWidget">
-   <property name="geometry">
-    <rect>
-     <x>15</x>
-     <y>15</y>
-     <width>410</width>
-     <height>471</height>
-    </rect>
-   </property>
-   <property name="lineWidth">
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
     <number>0</number>
    </property>
-   <property name="verticalScrollBarPolicy">
-    <enum>Qt::ScrollBarAsNeeded</enum>
+   <property name="topMargin">
+    <number>0</number>
    </property>
-   <property name="horizontalScrollBarPolicy">
-    <enum>Qt::ScrollBarAlwaysOff</enum>
+   <property name="rightMargin">
+    <number>0</number>
    </property>
-   <property name="editTriggers">
-    <set>QAbstractItemView::NoEditTriggers</set>
+   <property name="bottomMargin">
+    <number>0</number>
    </property>
-   <attribute name="horizontalHeaderDefaultSectionSize">
-    <number>120</number>
-   </attribute>
-   <attribute name="horizontalHeaderMinimumSectionSize">
-    <number>30</number>
-   </attribute>
-   <attribute name="verticalHeaderMinimumSectionSize">
-    <number>30</number>
-   </attribute>
-   <column>
-    <property name="text">
-     <string>名称</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>余额</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>锁定</string>
-    </property>
-   </column>
-  </widget>
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <item row="0" column="0">
+    <widget class="QTableWidget" name="tableWidget">
+     <property name="lineWidth">
+      <number>0</number>
+     </property>
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAsNeeded</enum>
+     </property>
+     <property name="horizontalScrollBarPolicy">
+      <enum>Qt::ScrollBarAlwaysOff</enum>
+     </property>
+     <property name="editTriggers">
+      <set>QAbstractItemView::NoEditTriggers</set>
+     </property>
+     <attribute name="horizontalHeaderVisible">
+      <bool>false</bool>
+     </attribute>
+     <attribute name="horizontalHeaderDefaultSectionSize">
+      <number>120</number>
+     </attribute>
+     <attribute name="horizontalHeaderMinimumSectionSize">
+      <number>120</number>
+     </attribute>
+     <attribute name="verticalHeaderVisible">
+      <bool>true</bool>
+     </attribute>
+     <attribute name="verticalHeaderMinimumSectionSize">
+      <number>30</number>
+     </attribute>
+     <row>
+      <property name="text">
+       <string>名称</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>余额</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>锁定</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>CNC买单价格</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>CNC买单数量</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>CNC卖单价格</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>CNC卖单数量</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>USDT买单价格</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>USDT买单数量</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>USDT卖单价格</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>USDT卖单数量</string>
+      </property>
+     </row>
+     <column>
+      <property name="text">
+       <string>New Column</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>New Column</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>New Column</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>New Column</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>New Column</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>New Column</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>New Column</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QPlainTextEdit" name="plainTextEdit"/>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>
