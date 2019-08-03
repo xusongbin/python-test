@@ -323,7 +323,7 @@ if __name__ == '__main__':
     # ])
     aex.do_command4()
     aex.do_command5()
-    aex.do_command6(74000, 0.007, 0, 'cnc', 'btc', 1)
+    aex.do_command6(6.5, 73.92492564, 0, 'cnc', 'usdt', 2)
     aex.start()
     while True:
         while not aex.qq_rx.empty():

@@ -52,6 +52,8 @@ class Robot(QWidget):
         super().__init__()
         self.balance_now = None
         self.balance_per = None
+        self.balance_sta = False
+        self.balance_tms = time()
         self.work_status = 'SIGN'
         self.work_substa = 0
         self.depth_qq = queue.Queue()
@@ -61,7 +63,7 @@ class Robot(QWidget):
             self.strategy_im[coin] = [0.0, 0.0]
         self.order_flow = None
 
-        self.aex = Aex(False)
+        self.aex = Aex(True)
         self.aex.start()
 
         self.work_ui = Ui_Form()
@@ -137,15 +139,19 @@ class Robot(QWidget):
             balance_now = 150
             bid_price = self.coin_info[coin]['cnc']['asks'][0]['price']
             bid_amount = self.coin_info[coin]['cnc']['asks'][0]['amount']
-            ask_price = self.coin_info[coin]['usdt']['bids'][1]['price']
-            ask_amount = self.coin_info[coin]['usdt']['bids'][1]['amount']
+            ask_price = self.coin_info[coin]['usdt']['bids'][0]['price']
+            ask_amount = self.coin_info[coin]['usdt']['bids'][0]['amount']
+            bid_price = float('{:.6f}'.format(bid_price))
+            bid_amount = float('{:.6f}'.format(bid_amount))
+            ask_price = float('{:.6f}'.format(ask_price))
+            ask_amount = float('{:.6f}'.format(ask_amount))
             if ask_amount == 0 or bid_amount == 0:
                 return False
             balance_amount = balance_now / bid_price
             balance_amount = balance_amount * (1 - 0.001)
             now_amount = ask_amount if bid_amount > ask_amount else bid_amount
             now_amount = now_amount if balance_amount > now_amount else balance_amount
-            now_amount = float('{:.8f}'.format(now_amount))
+            now_amount = float('{:.6f}'.format(now_amount))
             bid_money = bid_price * now_amount * (1 + 0.001)
             ask_money = ask_price * now_amount * (1 - 0.001) * self.usdt_bid
             inc_money = ask_money - bid_money
@@ -153,22 +159,23 @@ class Robot(QWidget):
                 return False
             if inc_money != self.strategy_im[coin][0]:
                 self.strategy_im[coin][0] = inc_money
-                bid_money = '{:.8f}'.format(bid_money)
-                ask_money = '{:.8f}'.format(ask_money)
-                inc_money = '{:.8f}'.format(inc_money)
-                ctl_amount = '{:.8f}'.format(now_amount)
+                bid_money = '{:.6f}'.format(bid_money)
+                ask_money = '{:.6f}'.format(ask_money)
+                inc_money = '{:.6f}'.format(inc_money)
+                ctl_amount = '{:.6f}'.format(now_amount)
                 ts = strftime("%Y-%m-%d %H:%M:%S", localtime())
                 tag = int(time() * 1000)
-                msg = '{} CNC->{}->USDT 买：{:<17} 卖：{:<17} 量：{:<17} 盈利：{:<17} TAG：{}'.format(
+                msg = '{} CNC->{}->USDT 买：{:<13} 卖：{:<13} 量：{:<13} 盈利：{:<13} TAG：{}'.format(
                     ts, coin.upper(), bid_money, ask_money, ctl_amount, inc_money, tag
                 )
                 write_log.info(msg)
                 self.do_display_message(msg)
                 order_flow = [
                     {'method': 'bid', 'market': 'cnc', 'coin': coin, 'price': bid_price, 'amount': now_amount, 'tag': 0},
-                    {'method': 'ask', 'market': 'usdt', 'coin': coin, 'price': ask_price, 'amount': now_amount, 'tag': 0}
+                    {'method': 'ask', 'market': 'usdt', 'coin': coin, 'price': ask_price, 'amount': now_amount - 0.000001, 'tag': 0}
                 ]
                 self.order_flow = order_flow
+                write_log.debug('获取CNC-USDT策略成功')
                 return True
         except:
             return False
@@ -182,15 +189,19 @@ class Robot(QWidget):
             balance_now = 15
             bid_price = self.coin_info[coin]['usdt']['asks'][0]['price']
             bid_amount = self.coin_info[coin]['usdt']['asks'][0]['amount']
-            ask_price = self.coin_info[coin]['cnc']['bids'][1]['price']
-            ask_amount = self.coin_info[coin]['cnc']['bids'][1]['amount']
+            ask_price = self.coin_info[coin]['cnc']['bids'][0]['price']
+            ask_amount = self.coin_info[coin]['cnc']['bids'][0]['amount']
+            bid_price = float('{:.6f}'.format(bid_price))
+            bid_amount = float('{:.6f}'.format(bid_amount))
+            ask_price = float('{:.6f}'.format(ask_price))
+            ask_amount = float('{:.6f}'.format(ask_amount))
             if ask_amount == 0 or bid_amount == 0:
                 return False
             balance_amount = balance_now / bid_price
             balance_amount = balance_amount * (1 - 0.001)
             now_amount = ask_amount if bid_amount > ask_amount else bid_amount
             now_amount = now_amount if balance_amount > now_amount else balance_amount
-            now_amount = float('{:.8f}'.format(now_amount))
+            now_amount = float('{:.6f}'.format(now_amount))
             bid_money = bid_price * now_amount * (1 + 0.001) * self.usdt_ask
             ask_money = ask_price * now_amount * (1 - 0.001)
             inc_money = ask_money - bid_money
@@ -198,22 +209,23 @@ class Robot(QWidget):
                 return False
             if inc_money != self.strategy_im[coin][1]:
                 self.strategy_im[coin][1] = inc_money
-                bid_money = '{:.8f}'.format(bid_money)
-                ask_money = '{:.8f}'.format(ask_money)
-                inc_money = '{:.8f}'.format(inc_money)
-                ctl_amount = '{:.8f}'.format(now_amount)
+                bid_money = '{:.6f}'.format(bid_money)
+                ask_money = '{:.6f}'.format(ask_money)
+                inc_money = '{:.6f}'.format(inc_money)
+                ctl_amount = '{:.6f}'.format(now_amount)
                 ts = strftime("%Y-%m-%d %H:%M:%S", localtime())
                 tag = int(time() * 1000)
-                msg = '{} USDT->{}->CNC 买：{:<17} 卖：{:<17} 量：{:<17} 盈利：{:<17} TAG：{}'.format(
+                msg = '{} USDT->{}->CNC 买：{:<13} 卖：{:<13} 量：{:<13} 盈利：{:<13} TAG：{}'.format(
                     ts, coin.upper(), bid_money, ask_money, ctl_amount, inc_money, tag
                 )
                 write_log.info(msg)
                 self.do_display_message(msg)
                 order_flow = [
                     {'method': 'bid', 'market': 'cnc', 'coin': coin, 'price': bid_price, 'amount': now_amount, 'tag': 0},
-                    {'method': 'ask', 'market': 'usdt', 'coin': coin, 'price': ask_price, 'amount': now_amount, 'tag': 0}
+                    {'method': 'ask', 'market': 'usdt', 'coin': coin, 'price': ask_price, 'amount': now_amount - 0.000001, 'tag': 0}
                 ]
                 self.order_flow = order_flow
+                write_log.debug('获取USDT-CNC策略成功')
                 return True
         except:
             return False
@@ -223,17 +235,17 @@ class Robot(QWidget):
         while True:
             self.do_parse_message()
             if self.work_status == 'IDLE':
+                if (time() - self.balance_tms) >= 30:
+                    self.balance_tms = time()
+                    self.work_status = 'BALANCE'
+                    continue
                 # 策略实现思路：
                 # 1、获取CNC市场上BTC的卖单价格BP和数量BA，获取USDT市场上BTC的买单价格AP和数量AA
                 # 2、计算买卖单的数量NA=BA>AA?AA:BA，账户可买
                 # 3、计算买入BTC需要的资金BM=BP*NA*(1+0.001)
                 # 4、计算卖出BTC获取到的资金AM=AP*NA*(1-0.001)*UTC     UTC=usdt_cny
                 # 5、计算盈利IM=AM-BM，IM为正数表示盈利，IM为负数表示亏损
-                try:
-                    if self.balance_per['usdt']['val'] > 0.1:
-                        self.aex.do_command6(6, self.balance_per['usdt']['val'], 0, 'usdt', 'cnc', 1)
-                except:
-                    pass
+                # pass
                 for coin in self.coin_table:
                     if self.on_income_cnc_usdt(coin):
                         self.work_status = 'ORDER'
@@ -245,6 +257,7 @@ class Robot(QWidget):
                         continue
             elif self.work_status == 'ORDER':
                 if self.work_substa == 1:
+                    write_log.debug('工作流程：下买单')
                     self.aex.do_command6(
                         self.order_flow[0]['price'],
                         self.order_flow[0]['amount'],
@@ -253,21 +266,26 @@ class Robot(QWidget):
                         self.order_flow[0]['coin'],
                         1 if self.order_flow[0]['method'] == 'bid' else 2
                     )
-                    self.work_substa = 0
-                elif self.work_substa == 2:
+                    self.work_substa = 2
+                elif self.work_substa == 3:
+                    write_log.debug('工作流程：下卖单')
                     self.aex.do_command6(
-                        self.order_flow[1]['price'] * 0.95,
+                        self.order_flow[1]['price'] * 0.8,
                         self.order_flow[1]['amount'],
                         self.order_flow[1]['tag'],
                         self.order_flow[1]['market'],
                         self.order_flow[1]['coin'],
                         1 if self.order_flow[1]['method'] == 'bid' else 2
                     )
+                    self.work_substa = 4
+                elif self.work_substa > 4:
                     self.work_status = 'BALANCE'
             elif self.work_status == 'SIGN':
+                write_log.debug('工作流程：签名')
                 self.aex.do_command4()
                 self.work_status = 'FOCUS'
             elif self.work_status == 'FOCUS':
+                write_log.debug('工作流程：关注交易对')
                 pairs = []
                 for market in self.coin_market:
                     for coin in self.coin_table:
@@ -276,13 +294,33 @@ class Robot(QWidget):
                 self.aex.do_command2(1, pairs)
                 self.work_status = 'BALANCE'
             elif self.work_status == 'BALANCE':
+                write_log.debug('工作流程：获取钱包信息')
+                self.balance_sta = False
                 self.aex.do_command5()
-                self.work_status = 'IDLE'
+                self.work_status = 'UTC'
+            elif self.work_status == 'UTC':
+                if not self.balance_sta:
+                    continue
+                try:
+                    usdt_val = self.balance_now['usdt']['val']
+                    cnc_val = self.balance_now['cnc']['val']
+                    if usdt_val * self.usdt_ask > cnc_val:
+                        write_log.debug('工作流程：需要操作卖出USDT')
+                        usdt_val = usdt_val / 2
+                        usdt_val = float('{:.6f}'.format(usdt_val)) - 0.000001
+                        self.aex.do_command6(6.7, usdt_val, 0, 'cnc', 'usdt', 2)
+                        self.work_status = 'BALANCE'
+                    else:
+                        write_log.debug('工作流程：获取钱包信息存在金额')
+                        self.work_status = 'IDLE'
+                except:
+                    pass
             # sleep(0.01)
 
     def do_parse_message(self):
         if self.aex.qq_rx.empty():
             return
+        self.balance_tms = time()
         try:
             msg = json.loads(self.aex.qq_rx.get())
         except Exception as e:
@@ -309,10 +347,12 @@ class Robot(QWidget):
             self.do_msg_my_balance(msg)
         elif cmd['type'] == 1:
             self.do_msg_depth_change(msg)
+        elif cmd['type'] == 7:
+            self.work_substa += 1
 
     def do_msg_order_record(self, msg):
         data = msg['data']
-        msg = '市场：{:<5} 币：{:<5} 方向：{} 订单号：{:<10} 价格：{:<10} 数量：{:<17}'.format(
+        msg = '全部成交 市场：{:<5} 币：{:<5} 方向：{} 订单号：{:<10} 价格：{:<10} 数量：{:<17}'.format(
             data['market'], data['coin'], '买入' if data['type'] == 1 else '卖出',
             data['tradeid'], data['price'], data['amount']
         )
@@ -322,13 +362,14 @@ class Robot(QWidget):
 
     def do_msg_order_commit(self, msg):
         data = msg['data']
-        msg = '市场：{:<5} 币：{:<5} 方向：{} 订单号：{:<10} 价格：{:<10} 数量：{:<17}'.format(
+        msg = '部分成交 市场：{:<5} 币：{:<5} 方向：{} 订单号：{:<10} 价格：{:<10} 数量：{:<17}'.format(
             data['market'], data['coin'], '买入' if data['type'] == 1 else '卖出',
             data['orderid'], data['price'], data['amount']
         )
         write_log.info(msg)
         self.do_display_message(msg)
-        self.work_substa += 1
+        # self.aex.do_command7(data['orderid'], data['market'], data['coin'])
+        # self.work_substa += 1
 
     def do_msg_my_balance(self, msg):
         balances = msg['balances']
@@ -337,7 +378,10 @@ class Robot(QWidget):
             balance_dict[info['coin']] = {'val': info['val'], 'locked': info['locked']}
         if balance_dict != self.balance_now:
             self.balance_now = balance_dict
-            self.do_display_message('更新钱包信息成功:{}'.format(balance_dict))
+            self.do_display_message('更新钱包信息成功： CNC={} USDT={}'.format(
+                balance_dict['cnc']['val'], balance_dict['usdt']['val']
+            ))
+            self.balance_sta = True
 
     def do_msg_depth_change(self, msg):
         # market = msg['market']
