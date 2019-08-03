@@ -78,10 +78,11 @@ class Aex(object):
         15: '查询指定交易对或者指定市场的行情数据'
     }
 
-    def __init__(self):
+    def __init__(self, debug=False):
         self.access_key = ''
         self.secret_key = ''
         self.account_id = 0
+        self.debug = debug
         try:
             with open('Aex.log', 'r') as f:
                 key = json.load(f)
@@ -92,8 +93,14 @@ class Aex(object):
             write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         write_log.debug('Key:{} Skey:{} Id:{}'.format(self.access_key, self.secret_key, self.account_id))
 
-        websocket.enableTrace(True)
-        self.ws = websocket.WebSocketApp(self.url, on_message=self.on_message, on_open=self.on_open)
+        websocket.enableTrace(self.debug)
+        self.ws = websocket.WebSocketApp(
+            self.url,
+            on_message=self.on_message,
+            on_error=self.on_error,
+            on_close=self.on_close
+        )
+        self.ws.on_open = self.on_open
 
         self.qq_tx = queue.Queue()
         self.qq_rx = queue.Queue()
@@ -104,11 +111,22 @@ class Aex(object):
         self.thread_work = threading.Thread(target=self.on_thread_work)
         self.thread_work.setDaemon(True)
 
+        # self.do_command2(1, [{"market": "cnc", "coin": "btc"}])
+        # self.ws.run_forever(ping_interval=60, ping_timeout=5)
+
     def start(self):
         self.thread_run.start()
 
     def on_message(self, message):
+        # if self.debug:
+        #     print(message)
         self.qq_rx.put(message)
+
+    def on_error(self, error):
+        print('error:{}'.format(error))
+
+    def on_close(self):
+        print('close')
 
     def on_open(self):
         self.thread_work.start()
@@ -120,6 +138,8 @@ class Aex(object):
         while True:
             if not self.qq_tx.empty():
                 data = self.qq_tx.get()
+                if self.debug:
+                    print(data)
                 self.ws.send(data)
 
     def do_md5(self, ts):
@@ -289,20 +309,23 @@ class Aex(object):
 
 if __name__ == '__main__':
     aex = Aex()
-    aex.do_command2(1, [
-        {"market": "cnc", "coin": "btc"},
-        {"market": "cnc", "coin": "eos"},
-        {"market": "cnc", "coin": "eth"},
-        {"market": "cnc", "coin": "doge"},
-        {"market": "cnc", "coin": "etc"},
-        {"market": "usdt", "coin": "btc"},
-        {"market": "usdt", "coin": "eos"},
-        {"market": "usdt", "coin": "eth"},
-        {"market": "usdt", "coin": "doge"},
-        {"market": "usdt", "coin": "etc"}
-    ])
+    # aex.do_command2(1, [
+    #     {"market": "cnc", "coin": "btc"},
+    #     {"market": "cnc", "coin": "eos"},
+    #     {"market": "cnc", "coin": "eth"},
+    #     {"market": "cnc", "coin": "doge"},
+    #     {"market": "cnc", "coin": "etc"},
+    #     {"market": "usdt", "coin": "btc"},
+    #     {"market": "usdt", "coin": "eos"},
+    #     {"market": "usdt", "coin": "eth"},
+    #     {"market": "usdt", "coin": "doge"},
+    #     {"market": "usdt", "coin": "etc"}
+    # ])
     aex.do_command4()
-    # aex.do_command5()
+    aex.do_command5()
+    aex.do_command6(74000, 0.007, 0, 'cnc', 'btc', 1)
     aex.start()
     while True:
-        sleep(1)
+        while not aex.qq_rx.empty():
+            print(aex.qq_rx.get())
+        sleep(0.01)

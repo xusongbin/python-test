@@ -121,6 +121,7 @@ class Aex(object):
                     await converse.send(data)
                 msg = await converse.receive()
                 if msg:
+                    print(msg)
                     self.qq_rx.put(msg)
 
     def run(self):
