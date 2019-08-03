@@ -132,91 +132,91 @@ class Robot(QWidget):
     def on_income_cnc_usdt(self, coin):
         try:
             balance_now = self.balance_now['cnc']['val']
+            if balance_now < 150:
+                return False
+            balance_now = 150
+            bid_price = self.coin_info[coin]['cnc']['asks'][0]['price']
+            bid_amount = self.coin_info[coin]['cnc']['asks'][0]['amount']
+            ask_price = self.coin_info[coin]['usdt']['bids'][1]['price']
+            ask_amount = self.coin_info[coin]['usdt']['bids'][1]['amount']
+            if ask_amount == 0 or bid_amount == 0:
+                return False
+            balance_amount = balance_now / bid_price
+            balance_amount = balance_amount * (1 - 0.001)
+            now_amount = ask_amount if bid_amount > ask_amount else bid_amount
+            now_amount = now_amount if balance_amount > now_amount else balance_amount
+            now_amount = float('{:.8f}'.format(now_amount))
+            bid_money = bid_price * now_amount * (1 + 0.001)
+            ask_money = ask_price * now_amount * (1 - 0.001) * self.usdt_bid
+            inc_money = ask_money - bid_money
+            if inc_money < 0.1:
+                return False
+            if inc_money != self.strategy_im[coin][0]:
+                self.strategy_im[coin][0] = inc_money
+                bid_money = '{:.8f}'.format(bid_money)
+                ask_money = '{:.8f}'.format(ask_money)
+                inc_money = '{:.8f}'.format(inc_money)
+                ctl_amount = '{:.8f}'.format(now_amount)
+                ts = strftime("%Y-%m-%d %H:%M:%S", localtime())
+                tag = int(time() * 1000)
+                msg = '{} CNC->{}->USDT 买：{:<17} 卖：{:<17} 量：{:<17} 盈利：{:<17} TAG：{}'.format(
+                    ts, coin.upper(), bid_money, ask_money, ctl_amount, inc_money, tag
+                )
+                write_log.info(msg)
+                self.do_display_message(msg)
+                order_flow = [
+                    {'method': 'bid', 'market': 'cnc', 'coin': coin, 'price': bid_price, 'amount': now_amount, 'tag': 0},
+                    {'method': 'ask', 'market': 'usdt', 'coin': coin, 'price': ask_price, 'amount': now_amount, 'tag': 0}
+                ]
+                self.order_flow = order_flow
+                return True
         except:
             return False
-        if balance_now < 150:
-            return False
-        balance_now = 150
-        bid_price = self.coin_info[coin]['cnc']['asks'][0]['price']
-        bid_amount = self.coin_info[coin]['cnc']['asks'][0]['amount']
-        ask_price = self.coin_info[coin]['usdt']['bids'][0]['price']
-        ask_amount = self.coin_info[coin]['usdt']['bids'][0]['amount']
-        if ask_amount == 0 or bid_amount == 0:
-            return False
-        balance_amount = balance_now / bid_price
-        balance_amount = balance_amount * (1 - 0.001)
-        now_amount = ask_amount if bid_amount > ask_amount else bid_amount
-        now_amount = now_amount if balance_amount > now_amount else balance_amount
-        now_amount = float('{:.8f}'.format(now_amount))
-        bid_money = bid_price * now_amount * (1 + 0.001)
-        ask_money = ask_price * now_amount * (1 - 0.001) * self.usdt_bid
-        inc_money = ask_money - bid_money
-        if inc_money < 0.1:
-            return False
-        if inc_money != self.strategy_im[coin][0]:
-            self.strategy_im[coin][0] = inc_money
-            bid_money = '{:.8f}'.format(bid_money)
-            ask_money = '{:.8f}'.format(ask_money)
-            inc_money = '{:.8f}'.format(inc_money)
-            ctl_amount = '{:.8f}'.format(now_amount)
-            ts = strftime("%Y-%m-%d %H:%M:%S", localtime())
-            tag = int(time() * 1000)
-            msg = '{} CNC->{}->USDT 买：{:<17} 卖：{:<17} 量：{:<17} 盈利：{:<17} TAG：{}'.format(
-                ts, coin.upper(), bid_money, ask_money, ctl_amount, inc_money, tag
-            )
-            write_log.info(msg)
-            self.do_display_message(msg)
-            order_flow = [
-                {'method': 'bid', 'market': 'cnc', 'coin': coin, 'price': bid_price, 'amount': now_amount, 'tag': 0},
-                {'method': 'ask', 'market': 'usdt', 'coin': coin, 'price': ask_price, 'amount': now_amount, 'tag': 0}
-            ]
-            self.order_flow = order_flow
-            return True
         return False
 
     def on_income_usdt_cnc(self, coin):
         try:
             balance_now = self.balance_now['usdt']['val']
+            if balance_now < 20:
+                return False
+            balance_now = 15
+            bid_price = self.coin_info[coin]['usdt']['asks'][0]['price']
+            bid_amount = self.coin_info[coin]['usdt']['asks'][0]['amount']
+            ask_price = self.coin_info[coin]['cnc']['bids'][1]['price']
+            ask_amount = self.coin_info[coin]['cnc']['bids'][1]['amount']
+            if ask_amount == 0 or bid_amount == 0:
+                return False
+            balance_amount = balance_now / bid_price
+            balance_amount = balance_amount * (1 - 0.001)
+            now_amount = ask_amount if bid_amount > ask_amount else bid_amount
+            now_amount = now_amount if balance_amount > now_amount else balance_amount
+            now_amount = float('{:.8f}'.format(now_amount))
+            bid_money = bid_price * now_amount * (1 + 0.001) * self.usdt_ask
+            ask_money = ask_price * now_amount * (1 - 0.001)
+            inc_money = ask_money - bid_money
+            if inc_money < 0.1:
+                return False
+            if inc_money != self.strategy_im[coin][1]:
+                self.strategy_im[coin][1] = inc_money
+                bid_money = '{:.8f}'.format(bid_money)
+                ask_money = '{:.8f}'.format(ask_money)
+                inc_money = '{:.8f}'.format(inc_money)
+                ctl_amount = '{:.8f}'.format(now_amount)
+                ts = strftime("%Y-%m-%d %H:%M:%S", localtime())
+                tag = int(time() * 1000)
+                msg = '{} USDT->{}->CNC 买：{:<17} 卖：{:<17} 量：{:<17} 盈利：{:<17} TAG：{}'.format(
+                    ts, coin.upper(), bid_money, ask_money, ctl_amount, inc_money, tag
+                )
+                write_log.info(msg)
+                self.do_display_message(msg)
+                order_flow = [
+                    {'method': 'bid', 'market': 'cnc', 'coin': coin, 'price': bid_price, 'amount': now_amount, 'tag': 0},
+                    {'method': 'ask', 'market': 'usdt', 'coin': coin, 'price': ask_price, 'amount': now_amount, 'tag': 0}
+                ]
+                self.order_flow = order_flow
+                return True
         except:
             return False
-        if balance_now < 20:
-            return False
-        balance_now = 15
-        bid_price = self.coin_info[coin]['usdt']['asks'][0]['price']
-        bid_amount = self.coin_info[coin]['usdt']['asks'][0]['amount']
-        ask_price = self.coin_info[coin]['cnc']['bids'][0]['price']
-        ask_amount = self.coin_info[coin]['cnc']['bids'][0]['amount']
-        if ask_amount == 0 or bid_amount == 0:
-            return False
-        balance_amount = balance_now / bid_price
-        balance_amount = balance_amount * (1 - 0.001)
-        now_amount = ask_amount if bid_amount > ask_amount else bid_amount
-        now_amount = now_amount if balance_amount > now_amount else balance_amount
-        now_amount = float('{:.8f}'.format(now_amount))
-        bid_money = bid_price * now_amount * (1 + 0.001) * self.usdt_ask
-        ask_money = ask_price * now_amount * (1 - 0.001)
-        inc_money = ask_money - bid_money
-        if inc_money < 0.1:
-            return False
-        if inc_money != self.strategy_im[coin][1]:
-            self.strategy_im[coin][1] = inc_money
-            bid_money = '{:.8f}'.format(bid_money)
-            ask_money = '{:.8f}'.format(ask_money)
-            inc_money = '{:.8f}'.format(inc_money)
-            ctl_amount = '{:.8f}'.format(now_amount)
-            ts = strftime("%Y-%m-%d %H:%M:%S", localtime())
-            tag = int(time() * 1000)
-            msg = '{} USDT->{}->CNC 买：{:<17} 卖：{:<17} 量：{:<17} 盈利：{:<17} TAG：{}'.format(
-                ts, coin.upper(), bid_money, ask_money, ctl_amount, inc_money, tag
-            )
-            write_log.info(msg)
-            self.do_display_message(msg)
-            order_flow = [
-                {'method': 'bid', 'market': 'cnc', 'coin': coin, 'price': bid_price, 'amount': now_amount, 'tag': 0},
-                {'method': 'ask', 'market': 'usdt', 'coin': coin, 'price': ask_price, 'amount': now_amount, 'tag': 0}
-            ]
-            self.order_flow = order_flow
-            return True
         return False
 
     def on_thread_work(self):
@@ -229,6 +229,11 @@ class Robot(QWidget):
                 # 3、计算买入BTC需要的资金BM=BP*NA*(1+0.001)
                 # 4、计算卖出BTC获取到的资金AM=AP*NA*(1-0.001)*UTC     UTC=usdt_cny
                 # 5、计算盈利IM=AM-BM，IM为正数表示盈利，IM为负数表示亏损
+                try:
+                    if self.balance_per['usdt']['val'] > 0.1:
+                        self.aex.do_command6(6, self.balance_per['usdt']['val'], 0, 'usdt', 'cnc', 1)
+                except:
+                    pass
                 for coin in self.coin_table:
                     if self.on_income_cnc_usdt(coin):
                         self.work_status = 'ORDER'
@@ -251,7 +256,7 @@ class Robot(QWidget):
                     self.work_substa = 0
                 elif self.work_substa == 2:
                     self.aex.do_command6(
-                        self.order_flow[1]['price'],
+                        self.order_flow[1]['price'] * 0.95,
                         self.order_flow[1]['amount'],
                         self.order_flow[1]['tag'],
                         self.order_flow[1]['market'],
