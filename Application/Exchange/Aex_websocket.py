@@ -123,16 +123,16 @@ class Aex(object):
         self.qq_rx.put(message)
 
     def on_error(self, error):
-        print('error:{}'.format(error))
+        write_log.error('on_error: {}'.format(error))
 
     def on_close(self):
-        print('close')
+        write_log.error('on_close')
 
     def on_open(self):
         self.thread_work.start()
 
     def on_thread_run(self):
-        self.ws.run_forever(ping_interval=60, ping_timeout=5)
+        self.ws.run_forever(ping_interval=15)
 
     def on_thread_work(self):
         while True:
@@ -190,7 +190,7 @@ class Aex(object):
         self.qq_tx.put(json.dumps(data))
 
     # 下订单
-    def do_command6(self, price, amount, tag, market='cnc', coin='bhd', _type=1):
+    def do_command6(self, price, amount, market='cnc', coin='bhd', _type=1, tag=0):
         data = {
             'cmd': {
                 'type': 6   # 挂单
