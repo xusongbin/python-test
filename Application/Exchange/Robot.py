@@ -24,10 +24,10 @@ class Robot(QWidget):
     # coin_table = ['btc', 'eos', 'eth', 'doge', 'etc', 'bts', 'xlm']
     coin_table = ['btc', 'eos', 'eth', 'bts', 'etc']
     coin_count = coin_market + coin_table
-    usdt_to_ask = 6.88
-    usdt_to_bid = 6.98
-    # usdt_to_ask = 6.949
-    # usdt_to_bid = 6.951
+    # usdt_to_ask = 6.88
+    # usdt_to_bid = 6.98
+    usdt_to_ask = 6.945
+    usdt_to_bid = 6.945
     coin_info = {}
     for coin in coin_table:
         coin_info[coin] = {
@@ -163,6 +163,7 @@ class Robot(QWidget):
             if inc_money < -1:       # 盈利小于一定范围不考虑实施量化交易
                 return False
             ask_price = bid_money / rel_amount          # 成本价卖出：市场会以最优价成交，此价格有效提高成交率
+            ask_price = ask_price / self.usdt_to_bid
             if inc_money != self.strategy_im[coin][0]:
                 self.strategy_im[coin][0] = inc_money
                 show_bid_price = '{:.6f}'.format(bid_price)
@@ -220,6 +221,7 @@ class Robot(QWidget):
             if inc_money < -1:       # 盈利小于一定范围不考虑实施量化交易
                 return False
             ask_price = bid_money / rel_amount          # 成本价卖出：市场会以最优价成交，此价格有效提高成交率
+            ask_price = ask_price * self.usdt_to_ask
             if inc_money != self.strategy_im[coin][0]:
                 self.strategy_im[coin][0] = inc_money
                 show_bid_price = '{:.6f}'.format(bid_price)
