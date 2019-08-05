@@ -18,20 +18,35 @@ class AutoImage(object):
     local_path = 'img/'
     record_path = 'csv/'
     src_path = record_path + 'image_src.csv'
+    headers = {
+        'User-Agent': (
+                'Mozilla/5.0 '
+                '(Windows NT 6.1; WOW64) '
+                'AppleWebKit/537.36 '
+                '(KHTML, like Gecko) '
+                'Chrome/70.0.3538.25 '
+                'Safari/537.36 Core/1.70.3722.400 '
+                'QQBrowser/10.5.3738.400'
+            )
+    }
 
     def __init__(self):
         if not os.path.isdir(self.local_path):
             os.mkdir(self.local_path)
         if not os.path.isdir(self.record_path):
             os.mkdir(self.record_path)
+        # 使用代理
+        # proxy_support = request.ProxyHandler({'http': '115.29.170.58:8118'})
+        # opener = request.build_opener(proxy_support)
+        # request.install_opener(opener)
         # 从网页获取所有主题的内容
-        # for theme in self.theme_list:
-        #     self.get_theme_index(theme, True)
+        for theme in self.theme_list:
+            self.get_theme_index(theme, True)
         # 从文件获取所有主题的内容
         all_index = self.read_theme_index()
         # 从内容主页的列表获取图片链接
-        for index in all_index:
-            self.get_image_src(index, True)
+        # for index in all_index:
+        #     self.get_image_src(index, True)
         # 从文件读取图片链接并下载
         # self.read_src_to_download()
 
@@ -41,12 +56,14 @@ class AutoImage(object):
         write_log.debug('获取主题：{} 的所有专辑'.format(theme))
         index_list = []
         try:
-            respond = request.urlopen(cur_url)
+            req = request.Request(cur_url, headers=self.headers)
+            respond = request.urlopen(req)
             page_source = respond.read().decode('utf-8')
             page_tree = etree.HTML(page_source)
             page_last_html = page_tree.xpath('//div[@class="page-show"]/ul/li/a[text()="末页"]/@href')[0]
             page_last = int(re.findall(r'\d+', page_last_html)[0])
         except Exception as e:
+            write_log.error('cur_url:{}'.format(cur_url))
             write_log.error('{}\n{}'.format(e, traceback.format_exc()))
             return index_list
         if save:
@@ -54,14 +71,15 @@ class AutoImage(object):
                 f.write('{},{},{}\n'.format('地址', '数量', '名称'))
         for idx in range(1, page_last + 1):
             try:
-                respond = request.urlopen(cur_url + '{}.html'.format(idx))
+                req = request.Request(cur_url + '{}.html'.format(idx), headers=self.headers)
+                respond = request.urlopen(req)
                 page_source = respond.read().decode('utf-8')
                 page_tree = etree.HTML(page_source)
                 for li in page_tree.xpath('//ul[@class="detail-list"]/li'):
                     addr = li.xpath('a/@href')[0]
                     num = re.findall(r'\d+', li.xpath('div/span/text()')[0])[0]
                     name = li.xpath('a/@title')[0]
-                    write_log.debug('地址：{} 数量：{} 名称：{}'.format(addr, num, name))
+                    write_log.debug('地址：{} 数量：{} 名称：{}'.format(addr, num, ''))
                     if save:
                         with open(record_name, 'a+') as f:
                             f.write('{},{},{}\n'.format(addr, num, name))
@@ -76,7 +94,7 @@ class AutoImage(object):
             for theme in self.theme_list:
                 record_name = self.record_path + '{}.csv'.format(theme.replace('/', ''))
                 if not os.path.isfile(record_name):
-                    write_log.debug('read_theme_index {} not exist'.format(theme))
+                    write_log.debug('read_theme_index {} not exist'.format(record_name))
                     continue
                 with open(record_name, 'r') as f:
                     while True:
@@ -105,7 +123,8 @@ class AutoImage(object):
             write_log.debug('get_image_src by:{}'.format(page_url))
             page_source = ''
             try:
-                respond = request.urlopen(page_url, timeout=3)
+                req = request.Request(page_url, headers=self.headers)
+                respond = request.urlopen(req, timeout=3)
                 page_source = respond.read().decode('utf-8')
                 if 'bigpic' not in page_source:
                     continue
