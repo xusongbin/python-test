@@ -48,19 +48,19 @@ class AutoImage(object):
         # for theme in self.theme_list:
         #     self.get_theme_index(theme, True)
         # 从文件获取所有主题的内容
-        data_list = self.read_theme_index()
+        # data_list = self.read_theme_index()
         # 从内容主页的列表获取图片链接
         # self.test()
         # for index, name in data_list:
         #     self.get_image_src(index, name, False)
-        t = []
-        for idx, data in enumerate(data_list):
-            t.append(gevent.spawn(self.get_image_src, data[0], data[1], True))
-            if ((idx % 2) == 0 or idx == (len(data_list) - 1)) and len(t) > 0:
-                gevent.joinall(t)
-                t = []
+        # t = []
+        # for idx, data in enumerate(data_list):
+        #     t.append(gevent.spawn(self.get_image_src, data[0], data[1], True))
+        #     if ((idx % 2) == 0 or idx == (len(data_list) - 1)) and len(t) > 0:
+        #         gevent.joinall(t)
+        #         t = []
         # 从文件读取图片链接并下载
-        # self.read_src_to_download()
+        self.read_src_to_download()
 
     def get_source_by_url(self, surl, retry=4, method='GET'):
         while retry > 0:
@@ -210,10 +210,10 @@ class AutoImage(object):
                 line = f.readline().strip()
                 if not line:
                     break
-                if not re.match(r'/uploads/allimg/\d+/.*\..*', line):
+                if not re.match(r'.*\.jpg', line):
                     continue
-                download_url = self.web_url + line
-                download_name = os.path.basename(download_url)
+                download_url = line
+                download_name = os.path.basename(line)
                 sta = self.download_image(download_url, download_name)
                 result = '成功' if sta else '失败'
                 write_log.debug('download_name: {} {}'.format(download_name, result))
