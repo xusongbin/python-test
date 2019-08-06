@@ -1,11 +1,11 @@
 
 *.pyc
-*.spec
-*.txt
 *.db
-*.xls
-*.csv
 *.log
+*.txt
+*.csv
+*.xls
+*.xlsx
 
 si
 .idea
@@ -13,8 +13,8 @@ si
 output
 build
 dist
+log
 logs
 venv
 __pycache__
 firmware
-test
