@@ -14,11 +14,12 @@ write_log = logging.getLogger('Dimage')
 
 
 class AutoImage(object):
-    web_url = 'https://rtys6.com'
-    theme_list = ['/ArtZG/', '/ArtOM/', '/ArtRB/', '/ArtDD/', '/ArtZXY/', 'ArtMET']
-    local_path = 'img/'
-    record_path = 'csv/rtys6_record.csv'
-    src_path = 'csv/rtys6_src.csv'
+    web_url = 'http://rtys6.com'
+    theme_list = ['/ArtZG/', '/ArtOM/', '/ArtRB/', '/ArtDD/', '/ArtZXY/', '/ArtMET/']
+    img_base_path = 'img/'
+    csv_base_path = 'csv/'
+    record_path = csv_base_path + 'rtys6_record.csv'
+    src_path = csv_base_path + 'rtys6_src.csv'
     headers = {
         'User-Agent': (
                 'Mozilla/5.0 '
@@ -32,24 +33,28 @@ class AutoImage(object):
     }
 
     def __init__(self):
-        if not os.path.isdir(self.local_path):
-            os.mkdir(self.local_path)
-        if not os.path.isdir(self.record_path):
-            os.mkdir(self.record_path)
+        if not os.path.isdir(self.img_base_path):
+            os.mkdir(self.img_base_path)
+        if not os.path.isdir(self.csv_base_path):
+            os.mkdir(self.csv_base_path)
         # 使用代理
         # proxy_support = request.ProxyHandler({'http': '112.95.207.53:8888'})
         # opener = request.build_opener(proxy_support)
         # request.install_opener(opener)
         # 从网页获取所有主题的内容
-        for theme in self.theme_list:
-            self.get_theme_index(theme, True)
+        # for theme in self.theme_list:
+        #     self.get_theme_index(theme, True)
         # 从文件获取所有主题的内容
         # data_list = self.read_theme_index()
         # 从内容主页的列表获取图片链接
-        # for index, num, name in data_list:
-        #     self.get_image_src(index, num, name, True)
+        # test_url = self.web_url + data_list[0][0]
+        # print('打开连接：{}'.format(test_url))
+        # print(self.get_source_by_url(test_url))
+        # for index, name in data_list:
+        #     self.get_image_src(index, name, True)
         # 从文件读取图片链接并下载
         # self.read_src_to_download()
+        # self.download_image('https://p.666ho.com/pic/2018/0601/678-lp.jpg', '1.jpg')
 
     def get_source_by_url(self, surl, retry=4, method='GET'):
         while retry > 0:
@@ -79,12 +84,11 @@ class AutoImage(object):
 
     def get_theme_index(self, theme, save=False):
         root_url = self.web_url + theme
-        record_name = self.record_path
         write_log.debug('获取主题：{} 的所有专辑'.format(theme))
         index_list = []
         if save:
-            if not os.path.isfile(record_name):
-                with open(record_name, 'w') as f:
+            if not os.path.isfile(self.record_path):
+                with open(self.record_path, 'w') as f:
                     f.write('{},{},{}\n'.format('地址', '数量', '名称'))
         cur_url = root_url
         while cur_url:
@@ -96,7 +100,7 @@ class AutoImage(object):
                     return index_list
                 page_tree = etree.HTML(page_source)
                 page_next_html = page_tree.xpath('//div[@class="pagelist"]/a[text()="下一页"]/@href')[0]
-                print('下一页：{}'.format(page_next_html))
+                # print('下一页：{}'.format(page_next_html))
                 cur_url = root_url + page_next_html
             except:
                 break
@@ -106,7 +110,7 @@ class AutoImage(object):
                     name = li.xpath('a/img/@alt')[0]
                     write_log.debug('地址：{} 名称：{}'.format(addr, name))
                     if save:
-                        with open(record_name, 'a+') as f:
+                        with open(self.record_path, 'a+') as f:
                             f.write('{},{}\n'.format(addr, name))
                     index_list.append(addr)
             except Exception as e:
@@ -116,23 +120,22 @@ class AutoImage(object):
 
     def read_theme_index(self):
         data_list = []
-        record_name = self.record_path
         try:
-            with open(record_name, 'r') as f:
+            with open(self.record_path, 'r') as f:
                 while True:
                     line = f.readline().strip()
                     if not line:
                         break
-                    if not re.match(r'.*\.html.*', line):
+                    if not re.match(r'/.*/\d+/', line):
                         continue
                     line_list = line.split(',')
-                    data_list.append((line_list[0], line_list[1], line_list[2]))
-                    print('read_theme_index: {} {} {}'.format(line_list[0], line_list[1], line_list[2]))
+                    data_list.append((line_list[0], line_list[1]))
+                    print('read_theme_index: {} {}'.format(line_list[0], line_list[1]))
         except Exception as e:
             write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return data_list
 
-    def get_image_src(self, image_url, num, name, save=False):
+    def get_image_src(self, image_url, name, save=False):
         src_list = []
         page_theme, page_suffix = os.path.split(image_url)
         page_theme += '/'
@@ -140,7 +143,7 @@ class AutoImage(object):
             if not os.path.isfile(self.src_path):
                 with open(self.src_path, 'w') as f:
                     f.write('IMAGE_SRC\n')
-        write_log.debug('get_image_src:{} {} {}'.format(image_url, num, name))
+        write_log.debug('get_image_src:{} {}'.format(image_url, name))
         while re.match(r'\d+.*\.html', page_suffix):
             page_url = self.web_url + page_theme + page_suffix
             page_source = ''
@@ -167,7 +170,7 @@ class AutoImage(object):
         return src_list
 
     def download_image(self, dl_url, save_path, retry=5):
-        save_path = self.local_path + save_path
+        save_path = self.img_base_path + save_path
         try:
             while retry > 0:
                 retry -= 1
