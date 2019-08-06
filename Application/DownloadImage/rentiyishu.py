@@ -16,7 +16,7 @@ write_log = logging.getLogger('Dimage')
 class AutoImage(object):
     web_url = 'http://www.rentiyishu.in'
     theme_list = ['/zgrenti/', '/rbrenti/', '/omrenti/', '/ddrenti/', '/mnrenti/']
-    img_base_path = 'img/'
+    img_base_path = 'rentiyishu/'
     csv_base_path = 'csv/'
     record_path = csv_base_path + 'rentiyishu_record.csv'
     src_path = csv_base_path + 'rentiyishu_src.csv'
