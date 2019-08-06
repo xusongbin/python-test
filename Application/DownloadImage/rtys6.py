@@ -17,8 +17,8 @@ class AutoImage(object):
     web_url = 'https://rtys6.com'
     theme_list = ['/ArtZG/', '/ArtOM/', '/ArtRB/', '/ArtDD/', '/ArtZXY/', 'ArtMET']
     local_path = 'img/'
-    record_path = 'csv/'
-    src_path = record_path + 'rtys6_src.csv'
+    record_path = 'csv/rtys6_record.csv'
+    src_path = 'csv/rtys6_src.csv'
     headers = {
         'User-Agent': (
                 'Mozilla/5.0 '
@@ -78,61 +78,56 @@ class AutoImage(object):
         return None
 
     def get_theme_index(self, theme, save=False):
-        cur_url = self.web_url + theme
-        record_name = self.record_path + '{}.csv'.format(theme.replace('/', ''))
+        root_url = self.web_url + theme
+        record_name = self.record_path
         write_log.debug('获取主题：{} 的所有专辑'.format(theme))
         index_list = []
-        try:
-            page_source = self.get_source_by_url(cur_url)
-            if not page_source:
-                write_log.error('get_theme_index: get source failure')
-                return index_list
-            page_tree = etree.HTML(page_source)
-            page_last_html = page_tree.xpath('//div[@class="pagelist"]/a[text()="末页"]/@href')[0]
-            page_last = int(re.findall(r'\d+', page_last_html)[0])
-        except Exception as e:
-            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
-            return index_list
         if save:
-            with open(record_name, 'a+') as f:
-                f.write('{},{},{}\n'.format('地址', '数量', '名称'))
-        for idx in range(1, page_last + 1):
+            if not os.path.isfile(record_name):
+                with open(record_name, 'w') as f:
+                    f.write('{},{},{}\n'.format('地址', '数量', '名称'))
+        cur_url = root_url
+        while cur_url:
             try:
-                page_source = self.get_source_by_url(cur_url + '{}.html'.format(idx))
+                page_source = self.get_source_by_url(cur_url)
+                # print(page_source)
                 if not page_source:
                     write_log.error('get_theme_index: get source failure')
                     return index_list
                 page_tree = etree.HTML(page_source)
+                page_next_html = page_tree.xpath('//div[@class="pagelist"]/a[text()="下一页"]/@href')[0]
+                print('下一页：{}'.format(page_next_html))
+                cur_url = root_url + page_next_html
+            except:
+                break
+            try:
                 for li in page_tree.xpath('//div[@class="fzltp"]/ul/li'):
                     addr = li.xpath('a/@href')[0]
-                    name = li.xpath('a/@alt')[0]
+                    name = li.xpath('a/img/@alt')[0]
                     write_log.debug('地址：{} 名称：{}'.format(addr, name))
                     if save:
                         with open(record_name, 'a+') as f:
                             f.write('{},{}\n'.format(addr, name))
                     index_list.append(addr)
             except Exception as e:
-                write_log.error('{}\n{}'.format(e, traceback.format_exc()))
+                print('{}\n{}'.format(e, traceback.format_exc()))
+                cur_url = None
         return index_list
 
     def read_theme_index(self):
         data_list = []
+        record_name = self.record_path
         try:
-            for theme in self.theme_list:
-                record_name = self.record_path + '{}.csv'.format(theme.replace('/', ''))
-                if not os.path.isfile(record_name):
-                    write_log.debug('read_theme_index {} not exist'.format(record_name))
-                    continue
-                with open(record_name, 'r') as f:
-                    while True:
-                        line = f.readline().strip()
-                        if not line:
-                            break
-                        if not re.match(r'.*\.html.*', line):
-                            continue
-                        line_list = line.split(',')
-                        data_list.append((line_list[0], line_list[1], line_list[2]))
-                        print('read_theme_index: {} {} {}'.format(line_list[0], line_list[1], line_list[2]))
+            with open(record_name, 'r') as f:
+                while True:
+                    line = f.readline().strip()
+                    if not line:
+                        break
+                    if not re.match(r'.*\.html.*', line):
+                        continue
+                    line_list = line.split(',')
+                    data_list.append((line_list[0], line_list[1], line_list[2]))
+                    print('read_theme_index: {} {} {}'.format(line_list[0], line_list[1], line_list[2]))
         except Exception as e:
             write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return data_list

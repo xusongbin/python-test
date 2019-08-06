@@ -16,9 +16,10 @@ write_log = logging.getLogger('Dimage')
 class AutoImage(object):
     web_url = 'http://www.rentiyishu.in'
     theme_list = ['/zgrenti/', '/rbrenti/', '/omrenti/', '/ddrenti/', '/mnrenti/']
-    local_path = 'img/'
-    record_path = 'csv/'
-    src_path = record_path + 'image_src.csv'
+    img_base_path = 'img/'
+    csv_base_path = 'csv/'
+    record_path = csv_base_path + 'rentiyishu_record.csv'
+    src_path = csv_base_path + 'rentiyishu_src.csv'
     headers = {
         'User-Agent': (
                 'Mozilla/5.0 '
@@ -32,10 +33,10 @@ class AutoImage(object):
     }
 
     def __init__(self):
-        if not os.path.isdir(self.local_path):
-            os.mkdir(self.local_path)
-        if not os.path.isdir(self.record_path):
-            os.mkdir(self.record_path)
+        if not os.path.isdir(self.img_base_path):
+            os.mkdir(self.img_base_path)
+        if not os.path.isdir(self.csv_base_path):
+            os.mkdir(self.csv_base_path)
         # 使用代理
         # proxy_support = request.ProxyHandler({'http': '112.95.207.53:8888'})
         # opener = request.build_opener(proxy_support)
@@ -79,7 +80,6 @@ class AutoImage(object):
 
     def get_theme_index(self, theme, save=False):
         cur_url = self.web_url + theme
-        record_name = self.record_path + '{}.csv'.format(theme.replace('/', ''))
         write_log.debug('获取主题：{} 的所有专辑'.format(theme))
         index_list = []
         try:
@@ -94,8 +94,9 @@ class AutoImage(object):
             write_log.error('{}\n{}'.format(e, traceback.format_exc()))
             return index_list
         if save:
-            with open(record_name, 'a+') as f:
-                f.write('{},{},{}\n'.format('地址', '数量', '名称'))
+            if not os.path.isfile(self.record_path):
+                with open(self.record_path, 'w') as f:
+                    f.write('{},{},{}\n'.format('地址', '数量', '名称'))
         for idx in range(1, page_last + 1):
             try:
                 page_source = self.get_source_by_url(cur_url + '{}.html'.format(idx))
@@ -109,7 +110,7 @@ class AutoImage(object):
                     name = li.xpath('a/@title')[0]
                     write_log.debug('地址：{} 数量：{} 名称：{}'.format(addr, num, ''))
                     if save:
-                        with open(record_name, 'a+') as f:
+                        with open(self.record_path, 'a+') as f:
                             f.write('{},{},{}\n'.format(addr, num, name))
                     index_list.append(addr)
             except Exception as e:
@@ -119,21 +120,16 @@ class AutoImage(object):
     def read_theme_index(self):
         data_list = []
         try:
-            for theme in self.theme_list:
-                record_name = self.record_path + '{}.csv'.format(theme.replace('/', ''))
-                if not os.path.isfile(record_name):
-                    write_log.debug('read_theme_index {} not exist'.format(record_name))
-                    continue
-                with open(record_name, 'r') as f:
-                    while True:
-                        line = f.readline().strip()
-                        if not line:
-                            break
-                        if not re.match(r'.*\.html.*', line):
-                            continue
-                        line_list = line.split(',')
-                        data_list.append((line_list[0], line_list[1], line_list[2]))
-                        print('read_theme_index: {} {} {}'.format(line_list[0], line_list[1], line_list[2]))
+            with open(self.record_path, 'r') as f:
+                while True:
+                    line = f.readline().strip()
+                    if not line:
+                        break
+                    if not re.match(r'.*\.html.*', line):
+                        continue
+                    line_list = line.split(',')
+                    data_list.append((line_list[0], line_list[1], line_list[2]))
+                    print('read_theme_index: {} {} {}'.format(line_list[0], line_list[1], line_list[2]))
         except Exception as e:
             write_log.error('{}\n{}'.format(e, traceback.format_exc()))
         return data_list
@@ -173,7 +169,7 @@ class AutoImage(object):
         return src_list
 
     def download_image(self, dl_url, save_path, retry=5):
-        save_path = self.local_path + save_path
+        save_path = self.img_base_path + save_path
         try:
             while retry > 0:
                 retry -= 1
