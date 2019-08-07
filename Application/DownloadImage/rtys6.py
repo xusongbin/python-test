@@ -59,7 +59,7 @@ class AutoImage(object):
         #         gevent.joinall(t)
         #         t = []
         # 从文件读取图片链接并下载
-        self.read_src_to_download()
+        self.read_src_to_download(True)
 
     def get_source_by_url(self, surl, retry=4, method='GET'):
         while retry > 0:
@@ -202,19 +202,22 @@ class AutoImage(object):
                     pass
         return
 
-    def download_image(self, dl_url, save_path, save_name):
+    def download_image(self, dl_url, save_path, save_name, instead=True):
         self.do_mkdirs(save_path)
         save_url = '{}/{}'.format(save_path, save_name)
+        if os.path.isfile(save_url) and not instead:
+            write_log.debug('download_image: {} 已存在'.format(save_url))
+            return
         retry = 3
         while retry > 0:
             try:
                 request.urlretrieve(dl_url, save_url)
-                write_log.debug('download_name: {} 成功'.format(save_url))
+                write_log.debug('download_image: {} 成功'.format(save_url))
                 return
             except Exception as e:
                 pass
             retry -= 1
-        write_log.debug('download_name: {} 失败'.format(save_url))
+        write_log.debug('download_image: {} 失败'.format(save_url))
 
     def do_mkdirs(self, dirs):
         cur_path = ''
@@ -223,7 +226,7 @@ class AutoImage(object):
             if not os.path.isdir(cur_path):
                 os.mkdir(cur_path)
 
-    def read_src_to_download(self):
+    def read_src_to_download(self, instead=True):
         if not os.path.isfile(self.src_path):
             write_log.error('图片链接文件不存在！')
             return False
@@ -245,7 +248,7 @@ class AutoImage(object):
                 # local_url = '{}/{}'.format(download_path, download_name)
                 # print('{} {}'.format(download_path, download_name))
                 # self.download_image(remote_url, download_path, download_name)
-                t.append(gevent.spawn(self.download_image, remote_url, download_path, download_name))
+                t.append(gevent.spawn(self.download_image, remote_url, download_path, download_name, instead))
                 if len(t) > 200:
                     gevent.joinall(t)
                     t = []
