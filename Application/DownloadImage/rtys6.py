@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+import socket
 from time import sleep
 from lxml import etree
 from urllib import request
@@ -9,6 +10,7 @@ from urllib import parse
 import gevent
 from gevent import monkey
 monkey.patch_socket()
+socket.setdefaulttimeout(20)
 
 from md_logging import *
 
@@ -19,7 +21,6 @@ write_log = logging.getLogger('Dimage')
 class AutoImage(object):
     web_url = 'http://rtys6.com'
     theme_list = ['/ArtZG/', '/ArtOM/', '/ArtRB/', '/ArtDD/', '/ArtZXY/', '/ArtMET/']
-    img_base_path = 'rtys6/'
     csv_base_path = 'csv/'
     record_path = csv_base_path + 'rtys6_record.csv'
     src_path = csv_base_path + 'rtys6_src.csv'
@@ -36,8 +37,6 @@ class AutoImage(object):
     }
 
     def __init__(self):
-        if not os.path.isdir(self.img_base_path):
-            os.mkdir(self.img_base_path)
         if not os.path.isdir(self.csv_base_path):
             os.mkdir(self.csv_base_path)
         # 使用代理
@@ -92,9 +91,22 @@ class AutoImage(object):
                 method = 'GET'
         return None
 
-    def test(self, cur_url=''):
-        # page_url = self.web_url + cur_url
-        self.get_image_src('/ArtOM/198/', 'test')
+    def test(self):
+        # self.get_image_src('/ArtOM/198/', 'test')
+        fw = open(self.src_path + '.bak', 'w')
+        with open(self.src_path, 'r') as fr:
+            while True:
+                line = fr.readline()
+                if not line:
+                    break
+                try:
+                    link = re.findall(r'https?\:[0-9A-Za-z/.\-]+\.jpg', line.strip())[0]
+                    if link:
+                        link = link.replace('-lp', '')
+                        fw.write(link + '\n')
+                except:
+                    pass
+        fw.close()
         return
 
     def get_theme_index(self, theme, save=False):
@@ -190,33 +202,53 @@ class AutoImage(object):
                     pass
         return
 
-    def download_image(self, dl_url, save_path, retry=5):
-        save_path = self.img_base_path + save_path
-        try:
-            while retry > 0:
-                retry -= 1
-                request.urlretrieve(dl_url, save_path)
-                return True
-        except Exception as e:
-            write_log.error('{}\n{}'.format(e, traceback.format_exc()))
-        return False
+    def download_image(self, dl_url, save_path, save_name):
+        self.do_mkdirs(save_path)
+        save_url = '{}/{}'.format(save_path, save_name)
+        retry = 3
+        while retry > 0:
+            try:
+                request.urlretrieve(dl_url, save_url)
+                write_log.debug('download_name: {} 成功'.format(save_url))
+                return
+            except Exception as e:
+                pass
+            retry -= 1
+        write_log.debug('download_name: {} 失败'.format(save_url))
+
+    def do_mkdirs(self, dirs):
+        cur_path = ''
+        for dir in dirs.split('/'):
+            cur_path += dir + '/'
+            if not os.path.isdir(cur_path):
+                os.mkdir(cur_path)
 
     def read_src_to_download(self):
         if not os.path.isfile(self.src_path):
             write_log.error('图片链接文件不存在！')
             return False
+        t = []
         with open(self.src_path, 'r') as f:
             while True:
-                line = f.readline().strip()
+                line = f.readline()
                 if not line:
+                    if len(t) > 0:
+                        gevent.joinall(t)
                     break
+                line = line.strip()
                 if not re.match(r'.*\.jpg', line):
                     continue
-                download_url = line
-                download_name = os.path.basename(line)
-                sta = self.download_image(download_url, download_name)
-                result = '成功' if sta else '失败'
-                write_log.debug('download_name: {} {}'.format(download_name, result))
+                remote_url = line
+                download_path, download_name = os.path.split(line)
+                download_path = download_path.replace('http://', '')
+                download_path = download_path.replace('https://', '')
+                # local_url = '{}/{}'.format(download_path, download_name)
+                # print('{} {}'.format(download_path, download_name))
+                # self.download_image(remote_url, download_path, download_name)
+                t.append(gevent.spawn(self.download_image, remote_url, download_path, download_name))
+                if len(t) > 200:
+                    gevent.joinall(t)
+                    t = []
 
 
 if __name__ == '__main__':
