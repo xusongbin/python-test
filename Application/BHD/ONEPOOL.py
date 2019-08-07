@@ -61,11 +61,12 @@ class Pool(object):
 
         today = strftime("%Y-%m-%d", localtime())
         yesterday = strftime("%Y-%m-%d", localtime(time()-24*60*60))
+        lastweek = strftime("%Y-%m-%d", localtime(time()-7*24*60*60))
         # today = '2019-07-29'
         self.day_income(today, details=True)
         # '2019-07-18'  15号盘重新Plot后上线时间
         # '2019-08-07'  16号盘Plot后上线时间
-        num, rate = self.day_income('2019-07-18', yesterday, details=False)
+        num, rate = self.day_income(lastweek, yesterday, details=False)
         write_log('')
         self.back_cycle(rate/num)
         write_log('')
