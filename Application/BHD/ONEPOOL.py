@@ -370,6 +370,7 @@ class Pool(object):
         disk_ratio = day_income / disk_capacity
         disk_count = self.machine_disk
         disk_income = disk_ratio * disk_capacity
+        disk_bcycle = 0
         tmp_day = 0
         for i in range(1, int(day_bcycle + 1)):
             if tmp_profit >= 1050 and disk_count < 32:
@@ -377,10 +378,12 @@ class Pool(object):
                 disk_count += 1
                 disk_capacity += 8
                 disk_income = disk_ratio * disk_capacity
+                disk_bcycle = i
             tmp_profit += disk_income
             if tmp_profit >= self.machine_price:
                 tmp_day = i
                 break
+        write_log('Disk bcycle:{:.1f}'.format(disk_bcycle/30))
         write_log('Invest disk:{:.1f}'.format(self.machine_disk))
         write_log('Invest capacity:{:.1f}'.format(self.machine_capacity))
         write_log('Invest machine:{:.1f}'.format(self.machine_price))
