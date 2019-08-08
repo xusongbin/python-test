@@ -33,6 +33,18 @@ class AutoImage(object):
             'http://rtys6.com/ArtMET/'
         ]
     }
+    info_rentiyishu = {
+        'src_file': 'src_rentiyishu.csv',
+        'index_file': 'index_rentiyishu.csv',
+        'url_head': 'http://www.rentiyishu.in',
+        'url': [
+            'http://www.rentiyishu.in/zgrenti/',
+            'http://www.rentiyishu.in/rbrenti/',
+            'http://www.rentiyishu.in/omrenti/',
+            'http://www.rentiyishu.in/ddrenti/',
+            'http://www.rentiyishu.in/mnrenti/',
+        ]
+    }
     headers = {
         'User-Agent': (
                 'Mozilla/5.0 '
@@ -54,9 +66,11 @@ class AutoImage(object):
         self.download_pass = 0
         self.download_fail = 0
         # self.test_request()
-        self.do_rtys6_save_src()
+        # 获取地址信息
+        # self.do_rtys6_save_src(True, True)
+        # self.do_rentiyishu_save_src(False, True)
         # 从文件读取图片链接并下载
-        # self.do_readlink_to_download(self.src_path, True)
+        self.do_readlink_to_download(self.info_rentiyishu['src_file'], True)
 
     def test_request(self):
         url = 'http://rtys6.com/ArtOM/'
@@ -166,11 +180,100 @@ class AutoImage(object):
                     print('{}\n{}'.format(e, traceback.format_exc()))
                 cur_url = next_url
 
-    def do_rtys6_save_src(self):
+    def do_rtys6_save_src(self, index=True, src=True):
         # 从网页获取所有主题的内容
-        # self.do_rtys6_save_index()
+        if index:
+            self.do_rtys6_save_index()
         # 从内容主页的列表获取图片链接
-        self.do_rtys6_save_src_by_index()
+        if src:
+            self.do_rtys6_save_src_by_index()
+
+    def do_rentiyishu_save_src_by_index(self):
+        url_head = self.info_rentiyishu['url_head']
+        src_file = self.info_rentiyishu['src_file']
+        index_file = self.info_rentiyishu['index_file']
+        if not os.path.isfile(index_file):
+            write_log.error('主页链接文件不存在！')
+            return False
+        with open(index_file, 'r') as index_fd:
+            while True:
+                line = index_fd.readline()
+                if not line:
+                    break
+                line = line.strip()
+                if not line or not re.match(r'https?://www\.rentiyishu\.in/.*,.*,.*', line):
+                    continue
+                this_url = line.split(',')[0]
+                this_num = line.split(',')[1]
+                this_name = line.split(',')[2]
+                url_base = this_url[:this_url.rfind('/')] + '/'
+                url_name = this_url[this_url.rfind('/'):]
+                write_log.debug('当前地址：{} {} {}'.format(this_url, this_num, this_name))
+                while True:
+                    cur_url = url_base + url_name
+                    try:
+                        page_source = self.do_request_page(cur_url)
+                        if not page_source:
+                            break
+                        if 'bigpic' not in page_source:
+                            break
+                        page_tree = etree.HTML(page_source)
+                        src = page_tree.xpath('//div[@id="bigpic"]/a/img/@src')[0]
+                        src = url_head + src
+                        write_log.debug('获取链接：{}'.format(src))
+                        with open(src_file, 'a+') as f:
+                            f.write('{}\n'.format(src))
+                        url_name = page_tree.xpath('//div[@class="page"]/ul/li/a[text()="下一页"]/@href')[0]
+                    except Exception as e:
+                        write_log.debug('获取链接：{} 处理异常'.format(src))
+                        write_log.error('{}\n{}'.format(e, traceback.format_exc()))
+                        break
+
+    def do_rentiyishu_save_index(self):
+        url_list = self.info_rentiyishu['url']
+        url_head = self.info_rentiyishu['url_head']
+        index_file = self.info_rentiyishu['index_file']
+        if os.path.isfile(index_file):
+            os.remove(index_file)
+        for root_url in url_list:
+            try:
+                page_source = self.do_request_page(root_url)
+                if not page_source:
+                    write_log.debug('爬取url：{} 获取源码失败'.format(root_url))
+                    continue
+                page_tree = etree.HTML(page_source)
+                page_last_html = page_tree.xpath('//div[@class="page-show"]/ul/li/a[text()="末页"]/@href')[0]
+                page_last = int(re.findall(r'\d+', page_last_html)[0])
+            except Exception as e:
+                write_log.debug('爬取url：{} 处理异常'.format(root_url))
+                write_log.error('{}\n{}'.format(e, traceback.format_exc()))
+                continue
+            for idx in range(1, page_last + 1):
+                cur_url = root_url + '{}.html'.format(idx)
+                try:
+                    page_source = self.do_request_page(cur_url)
+                    if not page_source:
+                        write_log.debug('爬取url：{} 获取源码失败'.format(root_url))
+                        continue
+                    page_tree = etree.HTML(page_source)
+                    for li in page_tree.xpath('//ul[@class="detail-list"]/li'):
+                        addr = li.xpath('a/@href')[0]
+                        addr = url_head + addr
+                        num = re.findall(r'\d+', li.xpath('div/span/text()')[0])[0]
+                        name = li.xpath('a/@title')[0]
+                        write_log.debug('爬取内容： {} {} {}'.format(addr, num, name))
+                        with open(index_file, 'a+') as f:
+                            f.write('{},{},{}\n'.format(addr, num, name))
+                except Exception as e:
+                    write_log.error('{}\n{}'.format(e, traceback.format_exc()))
+
+    def do_rentiyishu_save_src(self, index=True, src=True):
+        # 从网页获取所有主题的内容
+        if index:
+            self.do_rentiyishu_save_index()
+        # 从内容主页的列表获取图片链接
+        if src:
+            self.do_rentiyishu_save_src_by_index()
 
     def do_request_page(self, surl, code='UTF-8'):
         try:
