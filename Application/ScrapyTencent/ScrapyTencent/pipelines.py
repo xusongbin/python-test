@@ -14,7 +14,7 @@ class ScrapytencentPipeline(object):
         context = '{},{},{},{},{}\n'.format(
             item['title'], item['part'], item['local'], item['type'], item['time']
         )
-        self.file.write(context.encode('bgk').decode('utf-8'))
+        self.file.write(context)
         return item
 
     def close_spider(self, spider):
