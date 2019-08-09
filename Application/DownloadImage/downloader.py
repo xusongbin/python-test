@@ -76,10 +76,10 @@ class AutoImage(object):
         # 获取地址信息
         # self.do_rtys6_save_src(True, True)
         # self.do_rentiyishu_save_src(False, True)
-        # self.do_mm131_save_src(False, True)
+        # self.do_mm131_save_src(True, True)
         # 从文件读取图片链接并下载
-        src_file = self.info_mm131['src_file']
-        self.do_readlink_to_download(src_file, True)
+        src_file = self.info_rtys6['src_file']
+        self.do_readlink_to_download(src_file, False)
 
     def test_request(self):
         url = 'https://mm131.one/listpage/3.html'
@@ -350,24 +350,21 @@ class AutoImage(object):
             if not page_source:
                 write_log.debug('爬取url：{} 获取源码失败'.format(album_url))
                 continue
-            page_tree = etree.HTML(page_source)
-            album_name = page_tree.xpath('//h1/text()')[0]
-            with open(index_file, 'a+') as f:
-                f.write('{},{}\n'.format(album_url, album_name))
-            write_log.debug('爬取内容： {} {}'.format(album_url, album_name))
-            last_idx = 1
             try:
+                page_tree = etree.HTML(page_source)
+                album_name = page_tree.xpath('//h1/text()')[0]
+                with open(index_file, 'a+') as f:
+                    f.write('{},{}\n'.format(album_url, album_name))
+                # write_log.debug('爬取内容： {} {}'.format(album_url, album_name))
                 idx_str = page_tree.xpath('//div[@class="pagebread"]/li[1]/a/text()')[0]
                 last_idx = int(re.findall(r'\d+', idx_str)[0])
             except:
-                pass
-            if last_idx <= 1:
                 continue
             for next_dix in range(2, last_idx):
                 album_url = url_head + '/mm/{}_{}.html'.format(theme_idx, next_dix)
                 with open(index_file, 'a+') as f:
                     f.write('{},{}\n'.format(album_url, album_name))
-                write_log.debug('爬取内容： {} {}'.format(album_url, album_name))
+                # write_log.debug('爬取内容： {} {}'.format(album_url, album_name))
 
     def do_mm131_save_src(self, index=True, src=True):
         # 从网页获取所有主题的内容
@@ -409,7 +406,7 @@ class AutoImage(object):
             pass
         return None
 
-    def do_download_gevent(self, dl_url, save_path, save_name, instead=True):
+    def do_download_gevent(self, dl_url, save_path, save_name, instead=False):
         # 创建文件路径
         cur_path = ''
         for name in save_path.split('/'):
@@ -425,6 +422,7 @@ class AutoImage(object):
         try:
             dl_url = dl_url.replace(' ', '%20')
             request.urlretrieve(dl_url, save_url)
+            request.urlcleanup()
             write_log.debug('do_download_gevent: {} 成功'.format(dl_url))
             self.download_pass += 1
             return
@@ -433,7 +431,7 @@ class AutoImage(object):
         self.download_fail += 1
         write_log.debug('do_download_gevent: {} 失败'.format(dl_url))
 
-    def do_readlink_to_download(self, link_path, instead=True):
+    def do_readlink_to_download(self, link_path, instead=False):
         if not os.path.isfile(link_path):
             write_log.error('图片链接文件不存在！')
             return False
@@ -447,7 +445,6 @@ class AutoImage(object):
                 if not line:
                     if len(t) > 0:
                         gevent.joinall(t)
-                        request.urlcleanup()
                     break
                 line = line.strip()
                 if not re.match(r'.*\.jpg', line):
@@ -457,9 +454,8 @@ class AutoImage(object):
                 download_path = download_path.replace('http://', '')
                 download_path = download_path.replace('https://', '')
                 t.append(gevent.spawn(self.do_download_gevent, remote_url, download_path, download_name, instead))
-                if len(t) >= 10:
-                    gevent.joinall(t)
-                    request.urlcleanup()
+                if len(t) >= 120:
+                    gevent.joinall(t, timeout=60)
                     t = []
         write_log.info('下载结束： PASS={} FAIL={} SKIP={}'.format(
             self.download_pass, self.download_fail, self.download_skip
