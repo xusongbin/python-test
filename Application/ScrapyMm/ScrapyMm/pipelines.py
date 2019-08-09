@@ -24,13 +24,13 @@ class MyImagesPipeline(ImagesPipeline):
         return item
 
     def file_path(self, request, response=None, info=None):
-        assert isinstance(request, scrapy.Request)
+        # assert isinstance(request, scrapy.Request)
         cur_url = str(request.url)
-        save_path = cur_url.replace('http://', '').replace('https://', '')
-        save_dir = os.path.dirname(save_path)
-        now_dir = ''
-        for name in save_dir.split('/'):
-            now_dir += '{}/'.format(name)
-            if not os.path.isdir(now_dir):
-                os.mkdir(now_dir)
+        save_path = cur_url.replace('http://', '').replace('https://', '').replace('//', '/')
+        # save_dir = os.path.dirname(save_path)
+        # now_dir = ''
+        # for name in save_dir.split('/'):
+        #     now_dir += '{}/'.format(name)
+        #     if not os.path.isdir(now_dir):
+        #         os.mkdir(now_dir)
         return save_path

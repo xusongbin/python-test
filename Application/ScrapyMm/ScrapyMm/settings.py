@@ -67,7 +67,7 @@ DEFAULT_REQUEST_HEADERS = {
 ITEM_PIPELINES = {
    'ScrapyMm.pipelines.MyImagesPipeline': 300
 }
-IMAGES_STORE = 'E:\Development\project\python-test\Application\ScrapyMm'
+IMAGES_STORE = 'E:\Project\python-test\Application\ScrapyMm'
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
