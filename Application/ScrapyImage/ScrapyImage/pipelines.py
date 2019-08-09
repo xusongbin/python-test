@@ -5,6 +5,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 import os
+import time
 
 
 class ScrapyimagePipeline(object):
@@ -20,4 +21,5 @@ class ScrapyimagePipeline(object):
         if not os.path.isfile(save_url):
             with open(save_url, 'wb') as f:
                 f.write(item['data'])
+            print('{:.3f}: {}'.format(time.time(), save_url))
         return item
