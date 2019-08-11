@@ -74,9 +74,9 @@ class AutoImage(object):
         self.download_fail = 0
         # self.test_request()
         # 获取地址信息
-        # self.do_rtys6_save_src(True, True)
-        # self.do_rentiyishu_save_src(False, True)
-        # self.do_mm131_save_src(True, True)
+        self.do_rtys6_save_src(True, True)
+        self.do_rentiyishu_save_src(False, True)
+        self.do_mm131_save_src(True, True)
         # 从文件读取图片链接并下载
         src_file = self.info_rtys6['src_file']
         self.do_readlink_to_download(src_file, False)
