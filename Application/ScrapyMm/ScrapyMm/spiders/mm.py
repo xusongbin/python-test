@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 import scrapy
 from ScrapyMm.items import ScrapymmItem
 
@@ -22,13 +23,29 @@ class MmSpider(scrapy.Spider):
         item = ScrapymmItem()
         for a in response.xpath('//div[@class="img gets"]/center/a'):
             try:
-                src = a.xpath('img/@src').extract()[0]
+                src = a.xpath('img/@src').extract_first()
                 if src:
                     if 'http' not in src:
                         src = 'https://mm131.one' + src
                     if 'mm//mm' in src:
                         src = src.replace('mm//mm', 'mm')
+                    name = a.xpath('img/@alt').extract_first().strip()
+                    if not name:
+                        name = response.xpath('//h1/text()').extract_first().strip()
+                        if not name:
+                            print('MM NOT NAME: {}'.format(response.url))
+                    name = re.sub(r'[？\\*|“<>:/]', '', name)
+                    name = name.replace('标题：', '')
+                    if re.match(r'.*\((\d+|图\d+)\)', name):
+                        name = name[:name.find('(')]
+                    if re.match(r'【.*】.*', name):
+                        name = name[name.rfind('】')+1:]
+                    if re.match(r'\[.*\].*', name):
+                        name = name[name.rfind(']')+1:]
+                    if re.match(r'.* \d+', name):
+                        name = name[: name.rfind(' ')]
                     item['image_url'] = src
+                    item['image_name'] = name
                     yield item
             except:
                 pass

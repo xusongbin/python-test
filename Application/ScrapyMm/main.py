@@ -5,3 +5,5 @@ from scrapy import cmdline
 
 
 cmdline.execute(['scrapy', 'crawl', 'mm'])
+# cmdline.execute(['scrapy', 'crawl', 'mmonly'])
+# cmdline.execute(['scrapy', 'crawl', 'qvod'])

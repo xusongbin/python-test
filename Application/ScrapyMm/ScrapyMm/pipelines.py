@@ -6,31 +6,41 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 import os
 import re
+import time
+import shutil
 import scrapy
 from scrapy.pipelines.images import ImagesPipeline
 from scrapy.exceptions import DropItem
+from ScrapyMm.settings import IMAGES_STORE
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class MyImagesPipeline(ImagesPipeline):
 
     def get_media_requests(self, item, info):
-        yield scrapy.Request(item['image_url'])
-
-    def item_completed(self, results, item, info):
-        image_paths = [x['path'] for ok, x in results if ok]
-        if not image_paths:
-            raise DropItem("Item contains no images")
-        item['image_url'] = image_paths
-        return item
+        if item['image_name'].strip():
+            old_file = item['image_url'].replace('http://', '').replace('https://', '').replace('//', '/')
+            old_file = IMAGES_STORE + '/' + old_file
+            old_file = old_file.replace('\\', '/')
+            file_name = os.path.basename(item['image_url'])
+            new_file = item['image_name'].strip() + '/' + file_name
+            new_file = IMAGES_STORE + '/' + new_file
+            new_file = new_file.replace('\\', '/')
+            if os.path.isfile(old_file):
+                file_path = os.path.dirname(new_file)
+                if not os.path.isdir(file_path):
+                    os.mkdir(file_path)
+                shutil.move(old_file, new_file)
+                print('{} TO {}'.format(old_file, new_file))
+            elif os.path.isfile(new_file):
+                print('{} EXSIT'.format(new_file))
+                pass
+            else:
+                print('{} DOWNLOAD'.format(new_file))
+                yield scrapy.Request(item['image_url'], meta={'name': item['image_name']})
 
     def file_path(self, request, response=None, info=None):
-        # assert isinstance(request, scrapy.Request)
-        cur_url = str(request.url)
-        save_path = cur_url.replace('http://', '').replace('https://', '').replace('//', '/')
-        # save_dir = os.path.dirname(save_path)
-        # now_dir = ''
-        # for name in save_dir.split('/'):
-        #     now_dir += '{}/'.format(name)
-        #     if not os.path.isdir(now_dir):
-        #         os.mkdir(now_dir)
-        return save_path
+        file_name = os.path.basename(str(request.url))
+        new_path = request.meta['name'] + '/' + file_name
+        return new_path
