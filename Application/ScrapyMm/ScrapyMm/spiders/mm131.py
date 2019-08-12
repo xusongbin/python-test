@@ -20,9 +20,11 @@ class Mm131Spider(scrapy.Spider):
         # 获取当前照片链接
         img = response.xpath('//div[@class="img gets"]/center/a/img/@src').extract_first()
         if img:
+            item = ScrapymmItem()
             name = response.xpath('//div[@class="title jgfgh"]/h1/text()').extract_first()
-            name = handle_name(name)
-            print('{} {}'.format(name, img))
+            item['image_url'] = img
+            item['image_name'] = handle_name(name)
+            yield item
         # 获取下一张照片连接
         next_img = response.xpath('//div[@class="pagebread"]/li/a[text()="下一页"]/@href').extract_first()
         if next_img:
