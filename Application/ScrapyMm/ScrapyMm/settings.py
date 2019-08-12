@@ -14,7 +14,7 @@ BOT_NAME = 'ScrapyMm'
 SPIDER_MODULES = ['ScrapyMm.spiders']
 NEWSPIDER_MODULE = 'ScrapyMm.spiders'
 
-LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'DEBUG'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'ScrapyMm (+http://www.yourdomain.com)'
@@ -54,9 +54,15 @@ DEFAULT_REQUEST_HEADERS = {
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'ScrapyMm.middlewares.ScrapymmDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+    # 注意将SinaSpider修改为你自己的项目名称
+    'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
+    'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': None,
+    'scrapy.contrib.downloadermiddleware.retry.RetryMiddleware': None,
+    'ScrapyMm.middlewares.UserAgentMiddleware': 100,
+    'ScrapyMm.middlewares.ProxyMiddleware': 101,
+    'ScrapyMm.middlewares.ProcessException': 102,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
