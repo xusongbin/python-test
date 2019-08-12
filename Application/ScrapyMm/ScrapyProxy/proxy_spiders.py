@@ -25,6 +25,7 @@ class ProxySpiders(object):
 
     def start(self):
         self.xici_spider()
+        self.iphai_spider()
         self.data89ip_spider()
         self.kuaidaili_spider()
         self.filter_proxies()
@@ -101,6 +102,35 @@ class ProxySpiders(object):
                 proxy.set_survival_time(survival_time)
                 self.proxy_model_list.append(proxy)
 
+            except Exception as e:
+                logging.debug(e)
+
+    def iphai_spider(self):
+        url = 'http://www.iphai.com/free/ng'
+        agent = "iphai"
+        print('正在爬取IP海代理……')
+        response = requests.get(url, headers=headers)
+        response.encoding = response.apparent_encoding
+        # print(response.text)
+        selector = etree.HTML(response.text)
+        for tr in selector.xpath('//div[@class="table-responsive module"]/table/tr'):
+            try:
+                ip = tr.xpath('td[1]/text()')[0].strip()
+                port = tr.xpath('td[2]/text()')[0].strip()
+                anonymity = tr.xpath('td[3]/text()')[0].strip()
+                http_type = tr.xpath('td[4]/text()')[0].strip()
+                area = tr.xpath('td[5]/text()')[0].strip()
+                speed = tr.xpath('td[6]/text()')[0].strip()
+                print(ip + " | " + port + " | " + anonymity + " | " + http_type + " | " + area + " | " + speed + " | ")
+                proxy = Proxy()
+                proxy.set_ip(ip)
+                proxy.set_port(port)
+                proxy.set_http_type(http_type)
+                proxy.set_anonymity(anonymity)
+                proxy.set_area(area)
+                proxy.set_speed(speed)
+                proxy.set_agent(agent)
+                self.proxy_model_list.append(proxy)
             except Exception as e:
                 logging.debug(e)
 
