@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from ScrapyMm.items import ScrapymmItem
 
 
 class Rtys6Spider(scrapy.Spider):
     name = 'rtys6'
+    base_url = 'https://rtys6.com'
     allowed_domains = ['rtys6.com']
     start_urls = [
             'http://rtys6.com/ArtZG/',
@@ -15,20 +17,38 @@ class Rtys6Spider(scrapy.Spider):
         ]
 
     def parse(self, response):
-        print(response.text)
-        # img = response.xpath('//div[@class="imgbox"]/a/img/@src').extract_first()
-        # print(img)
-        # if img:
-        #     name = response.xpath('/h1/a/text()').extract_first()
-        #     print('{} {}'.format(name, img))
-        # this_url = response.url
-        # head_url = 'http://rtys6.com'
-        # next_href = response.xpath('//div[@class="pagelist"]/a[text()="下一页"]/@href').extract_first()
-        # if next_href:
-        #     next_url = this_url[: this_url.rfind('/')+1] + next_href
-        #     yield scrapy.Request(next_url, callback=self.parse)
-        # for li in response.xpath('//div[@class="fzltp"]/ul/li'):
-        #     next_href = li.xpath('a/@href').extract_first()
-        #     if next_href:
-        #         next_url = head_url + next_href
-        #         yield scrapy.Request(next_url, callback=self.parse)
+        assert isinstance(response, scrapy.http.Response)
+        url_cur = response.url
+        url_head = url_cur[: url_cur.rfind('/')+1]
+        # 获取图片链接
+        img = response.xpath('//div[@class="imgbox"]/a/img/@src').extract_first()
+        if img:
+            name = response.xpath('//div[@class="contitle"]/span/h1/a/text()').extract_first()
+            print('{} {}'.format(name, img))
+        # 已打开相册链接，该相册有几张图片，打开下一张图片的连接
+        page_next = response.xpath('//div[@class="page"]/a[text()="下一页"]/@href').extract_first()
+        if page_next:
+            if 'html' in page_next:
+                url_next = url_head + page_next
+            else:
+                url_next = self.base_url + page_next
+            yield scrapy.Request(url_next, callback=self.parse)
+        # 已打开主题列表，枚举每个主题跳转到主题的连接
+        for li in response.xpath('//div[@class="fzltp"]/ul/li'):
+            page_next = li.xpath('a/@href').extract_first()
+            if not page_next:
+                continue
+            if 'html' in page_next:
+                url_next = url_head + page_next
+            else:
+                url_next = self.base_url + page_next
+            yield scrapy.Request(url_next, callback=self.parse)
+        # 已打开主页链接，获取到主题列表一共N页，当前跳转到下一页。
+        # 已打开主题链接，该主题下的相册列表有很多页，获取下一页链接
+        page_next = response.xpath('//div[@class="pagelist"]/a[text()="下一页"]/@href').extract_first()
+        if page_next:
+            if 'html' in page_next:
+                url_next = url_head + page_next
+            else:
+                url_next = self.base_url + page_next
+            yield scrapy.Request(url_next, callback=self.parse)
