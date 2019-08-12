@@ -25,16 +25,14 @@ class ProxySpiders(object):
 
     def start(self):
         self.xici_spider()
-        self.data5u_spider()
+        self.data89ip_spider()
         self.kuaidaili_spider()
         self.filter_proxies()
 
     """
     function:使用线程池快速验证代理ip
     """
-
     def filter_proxies(self):
-
         # 默认10个线程
         pool = threadpool.ThreadPool(10)
         pool_requests = threadpool.makeRequests(self.filter_proxy, self.proxy_model_list)
@@ -46,7 +44,6 @@ class ProxySpiders(object):
     """
     function：过滤无效代理
     """
-
     def filter_proxy(self, proxy_model):
         http_type = proxy_model.get_http_type()
         ip = proxy_model.get_ip()
@@ -88,9 +85,7 @@ class ProxySpiders(object):
                 area = info.xpath('./td[4]/a/text()')[0]  # 地区
                 speed = info.xpath('./td[7]/div/@title')[0]  # 速度
                 survival_time = info.xpath('./td[9]/text()')[0]  # 存活时间
-
                 print(ip + " | " + port + " | " + anonymity + " | " + http_type + " | " + area + " | " + speed + " | " + survival_time)
-
                 proxy = Proxy()
                 proxy.set_ip(ip)
                 proxy.set_port(port)
@@ -109,27 +104,20 @@ class ProxySpiders(object):
             except Exception as e:
                 logging.debug(e)
 
-    def data5u_spider(self):
-
-        url = 'http://www.data5u.com/free/gngn/index.shtml'
-
-        agent = "data5u"
-
-
-        print('正在爬取无忧代理……')
-
+    def data89ip_spider(self):
+        url = 'http://www.89ip.cn/'
+        agent = "89ip"
+        print('正在爬取89免费代理……')
         response = requests.get(url, headers=headers)
         selector = etree.HTML(response.text)
-        infos = selector.xpath('//ul[@class="l2"]')
-
-        for i, info in enumerate(infos):
+        for tr in selector.xpath('//table[@class="layui-table"]/tbody/tr'):
             try:
-                ip = info.xpath('/html/body/div[5]/ul/li[2]/ul[{}]/span[1]/li'.format(str(i + 2)))[0].text  # ip
-                port = info.xpath('/html/body/div[5]/ul/li[2]/ul[{}]/span[2]/li'.format(str(i + 2)))[0].text  # 端口
-                anonymity = info.xpath('/html/body/div[5]/ul/li[2]/ul[{}]/span[3]/li'.format(str(i + 2)))[0].text  # 匿名度
-                http_type = info.xpath('/html/body/div[5]/ul/li[2]/ul[{}]/span[4]/li'.format(str(i + 2)))[0].text  # 类型
-                area = info.xpath('/html/body/div[5]/ul/li[2]/ul[{}]/span[5]/li'.format(str(i + 2)))[0].text  # 地区, 省
-                speed = info.xpath('/html/body/div[5]/ul/li[2]/ul[{}]/span[8]/li'.format(str(i + 2)))[0].text  # 速度
+                ip = tr.xpath('td[1]/text()')[0].strip()
+                port = tr.xpath('td[2]/text()')[0].strip()
+                anonymity = '未知'
+                http_type = 'HTTP'
+                area = tr.xpath('td[3]/text()')[0].strip()
+                speed = '未知'
                 print(ip + " | " + port + " | " + anonymity + " | " + http_type + " | " + area + " | " + speed + " | ")
                 proxy = Proxy()
                 proxy.set_ip(ip)
@@ -145,13 +133,9 @@ class ProxySpiders(object):
 
     def kuaidaili_spider(self):
         url = 'http://www.kuaidaili.com/free'
-
         agent = "快代理"
-
         print('正在爬取快代理……')
-
         response = requests.get(url, headers=headers)
-
         pattern = re.compile(
             '<tr>\s.*?<td.*?>(.*?)</td>\s.*?<td.*?>(.*?)</td>\s.*?<td.*?>(.*?)</td>\s.*?<td.*?>('
             '.*?)</td>\s.*?<td.*?>(.*?)</td>\s.*?<td.*?>(.*?)</td>\s.*?<td.*?>(.*?)</td>\s.*?</tr>',
@@ -184,7 +168,6 @@ class ProxySpiders(object):
                     self.proxy_model_list.append(proxy)
             except Exception as e:
                 logging.debug(e)
-
 
 
 if __name__ == '__main__':
