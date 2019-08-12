@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from ScrapyMm.items import ScrapymmItem
+from ScrapyMm.spiders.HandleName import handle_name
 
 
 class Rtys6Spider(scrapy.Spider):
@@ -9,11 +10,11 @@ class Rtys6Spider(scrapy.Spider):
     allowed_domains = ['rtys6.com']
     start_urls = [
             'http://rtys6.com/ArtZG/',
-            # 'http://rtys6.com/ArtOM/',
-            # 'http://rtys6.com/ArtRB/',
-            # 'http://rtys6.com/ArtDD/',
-            # 'http://rtys6.com/ArtZXY/',
-            # 'http://rtys6.com/ArtMET/'
+            'http://rtys6.com/ArtOM/',
+            'http://rtys6.com/ArtRB/',
+            'http://rtys6.com/ArtDD/',
+            'http://rtys6.com/ArtZXY/',
+            'http://rtys6.com/ArtMET/'
         ]
 
     def parse(self, response):
@@ -23,8 +24,10 @@ class Rtys6Spider(scrapy.Spider):
         # 获取图片链接
         img = response.xpath('//div[@class="imgbox"]/a/img/@src').extract_first()
         if img:
+            item = ScrapymmItem()
             name = response.xpath('//div[@class="contitle"]/span/h1/a/text()').extract_first()
-            print('{} {}'.format(name, img))
+            item['image_url'] = img
+            item['image_name'] = handle_name(name)
         # 已打开相册链接，该相册有几张图片，打开下一张图片的连接
         page_next = response.xpath('//div[@class="page"]/a[text()="下一页"]/@href').extract_first()
         if page_next:
