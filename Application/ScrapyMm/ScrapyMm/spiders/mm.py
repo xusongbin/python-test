@@ -2,6 +2,7 @@
 import re
 import scrapy
 from ScrapyMm.items import ScrapymmItem
+from ScrapyMm.spiders.HandleName import handle_name
 
 
 class MmSpider(scrapy.Spider):
@@ -34,18 +35,8 @@ class MmSpider(scrapy.Spider):
                         name = response.xpath('//h1/text()').extract_first().strip()
                         if not name:
                             print('MM NOT NAME: {}'.format(response.url))
-                    name = re.sub(r'[？\\*|“<>:/]', '', name)
-                    name = name.replace('标题：', '')
-                    if re.match(r'.*\((\d+|图\d+)\)', name):
-                        name = name[:name.find('(')]
-                    if re.match(r'【.*】.*', name):
-                        name = name[name.rfind('】')+1:]
-                    if re.match(r'\[.*\].*', name):
-                        name = name[name.rfind(']')+1:]
-                    if re.match(r'.* \d+', name):
-                        name = name[: name.rfind(' ')]
                     item['image_url'] = src
-                    item['image_name'] = name
+                    item['image_name'] = handle_name(name)
                     yield item
             except:
                 pass
