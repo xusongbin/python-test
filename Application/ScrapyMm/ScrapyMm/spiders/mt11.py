@@ -24,14 +24,12 @@ class Mt11Spider(scrapy.Spider):
             img = text[text.find('var imgs') + 12:]
             img = img[:img.find(']')]
             name = response.xpath('//div[@class="tuku"]/div[@class="title"]/text()').extract_first()
-
             for im in re.findall(r'http.*\.jpg', img):
                 item['image_url'] = im
                 item['image_name'] = handle_name(name)
                 yield item
         for a in response.xpath('//div[@class="container"]/article/a[@class="tuItem"]'):
-            href = a.xpath('@href').extract_first()
-            if not href:
+            next_url = a.xpath('@href').extract_first()
+            if not next_url:
                 continue
-            url = 'http://mt11.xyz/' + href
-            yield scrapy.Request(url, callback=self.parse)
+            yield scrapy.Request(response.urljoin(next_url), callback=self.parse)

@@ -40,6 +40,7 @@ class ProcessException(RetryMiddleware):
                 ProxyCheck().update_proxy(proxy.split(':')[0])
             except Exception as e:
                 logging.debug("===  访问页面: " + request.url + " 出现异常。\n %s", e)
+        return request
 
     def process_response(self, request, response, spider):
         if response.status < 200 or response.status >= 400:

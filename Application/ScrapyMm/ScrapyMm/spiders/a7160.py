@@ -27,14 +27,12 @@ class A7160Spider(scrapy.Spider):
         for row in response.xpath('//div[@class="news_bom-left"]/div[@class="new-img"]'):
             for col in row.xpath('ul/li'):
                 url_href = col.xpath('a/@href').extract_first()
-                url_next = 'https://www.7160.com' + url_href
-                yield scrapy.Request(url_next, callback=self.parse)
+                if not url_href:
+                    continue
+                yield scrapy.Request(response.urljoin(url_href), callback=self.parse)
         page_next = response.xpath(
             '//div[@class="page"]/a[text()="下一页"]/@href|'
             '//div[@class="itempage"]/a[text()="下一页"]/@href'
         ).extract_first()
         if page_next:
-            url_head = response.url
-            url_head = url_head[:url_head.rfind('/')+1]
-            url_next = url_head + page_next
-            yield scrapy.Request(url_next, callback=self.parse)
+            yield scrapy.Request(response.urljoin(page_next), callback=self.parse)

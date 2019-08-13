@@ -54,15 +54,15 @@ DEFAULT_REQUEST_HEADERS = {
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-DOWNLOADER_MIDDLEWARES = {
-    # 注意将SinaSpider修改为你自己的项目名称
-    'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
-    'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': None,
-    'scrapy.contrib.downloadermiddleware.retry.RetryMiddleware': None,
-    'ScrapyMm.middlewares.UserAgentMiddleware': 100,
-    'ScrapyMm.middlewares.ProxyMiddleware': 101,
-    'ScrapyMm.middlewares.ProcessException': 102,
-}
+# DOWNLOADER_MIDDLEWARES = {
+#     # 注意将SinaSpider修改为你自己的项目名称
+#     'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
+#     'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': None,
+#     'scrapy.contrib.downloadermiddleware.retry.RetryMiddleware': None,
+#     'ScrapyMm.middlewares.UserAgentMiddleware': 100,
+#     'ScrapyMm.middlewares.ProxyMiddleware': 101,
+#     'ScrapyMm.middlewares.ProcessException': 102,
+# }
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html

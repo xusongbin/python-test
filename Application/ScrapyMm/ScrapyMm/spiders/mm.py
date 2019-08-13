@@ -18,36 +18,30 @@ class MmSpider(scrapy.Spider):
 
     def parse(self, response):
         assert isinstance(response, scrapy.http.Response)
-        now_url = response.url
-        # print(response.text)
         next_url = None
         item = ScrapymmItem()
         for a in response.xpath('//div[@class="img gets"]/center/a'):
             try:
                 src = a.xpath('img/@src').extract_first()
-                if src:
-                    if 'http' not in src:
-                        src = 'https://mm131.one' + src
-                    if 'mm//mm' in src:
-                        src = src.replace('mm//mm', 'mm')
-                    name = a.xpath('img/@alt').extract_first().strip()
+                if not src:
+                    continue
+                name = a.xpath('img/@alt').extract_first().strip()
+                if not name:
+                    name = response.xpath('//h1/text()').extract_first().strip()
                     if not name:
-                        name = response.xpath('//h1/text()').extract_first().strip()
-                        if not name:
-                            print('MM NOT NAME: {}'.format(response.url))
-                    item['image_url'] = src
-                    item['image_name'] = handle_name(name)
-                    yield item
+                        print('MM NOT NAME: {}'.format(response.url))
+                item['image_url'] = response.urljoin(src)
+                item['image_name'] = handle_name(name)
+                yield item
             except:
                 pass
             if next_url:
                 continue
             try:
-                href = a.xpath('@href').extract()[0]
-                next_url = now_url[:now_url.rfind('/') + 1] + href
+                href = a.xpath('@href').extract_first()
+                if href:
+                    next_url = response.urljoin(href)
             except:
                 pass
         if next_url:
-            if 'mm//mm' in next_url:
-                next_url = next_url.replace('mm//mm', 'mm')
-            yield scrapy.Request(next_url, callback=self.parse)
+            yield scrapy.Request(response.urljoin(next_url), callback=self.parse)

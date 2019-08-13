@@ -28,7 +28,4 @@ class Mm131Spider(scrapy.Spider):
         # 获取下一张照片连接
         next_img = response.xpath('//div[@class="pagebread"]/li/a[text()="下一页"]/@href').extract_first()
         if next_img:
-            url_this = response.url
-            url_head = url_this[: url_this.rfind('/') + 1]
-            url_next = url_head + next_img
-            yield scrapy.Request(url_next, callback=self.parse)
+            yield scrapy.Request(response.urljoin(next_img), callback=self.parse)

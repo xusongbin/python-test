@@ -7,7 +7,6 @@ from ScrapyMm.spiders.HandleName import handle_name
 
 class QvodSpider(scrapy.Spider):
     name = 'qvod'
-    base_url = 'https://kuaibo-qvod.com'
     allowed_domains = ['kuaibo-qvod.com']
     # start_urls = ['https://kuaibo-qvod.com/lipage/1.html']
     start_urls = []
@@ -21,24 +20,20 @@ class QvodSpider(scrapy.Spider):
         item = ScrapymmItem()
         if re.match(r'https://kuaibo-qvod\.com/lipage/\d+\.html', response.url):
             for a in response.xpath('//div[@class="index_pic gao"]/a'):
-                href = self.base_url + a.xpath('@href').extract_first()
-                # title = a.xpath('@title').extract_first()
-                # print('{} {}'.format(href, title))
-                if not href:
+                next_url = self.base_url + a.xpath('@href').extract_first()
+                if not next_url:
                     continue
-                yield scrapy.Request(href, callback=self.parse)
+                yield scrapy.Request(next_url, callback=self.parse)
         elif re.match(r'https://kuaibo-qvod\.com/qvod/\d+\.html', response.url):
             for a in response.xpath('//div[@class="img datu"]/a'):
-                src = a.xpath('img/@src').extract_first()
+                next_url = a.xpath('img/@src').extract_first()
                 name = a.xpath('img/@data').extract_first()
-                if not src:
+                if not next_url:
                     continue
-                if 'http' not in src:
-                    src = self.base_url + src
                 if not name:
                     name = a.xpath('img/@alt').extract_first()
                     if not name:
                         print('QVOD NOT NAME: {}'.format(response.url))
-                item['image_url'] = src
+                item['image_url'] = response.urljoin(next_url)
                 item['image_name'] = handle_name(name)
                 yield item
