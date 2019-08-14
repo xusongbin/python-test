@@ -26,6 +26,7 @@ class Rtys6Spider(scrapy.Spider):
             name = response.xpath('//div[@class="contitle"]/span/h1/a/text()').extract_first()
             item['image_url'] = next_url
             item['image_name'] = handle_name(name)
+            yield item
         # 已打开相册链接，该相册有几张图片，打开下一张图片的连接
         next_url = response.xpath('//div[@class="page"]/a[text()="下一页"]/@href').extract_first()
         if next_url:

@@ -25,7 +25,7 @@ class RentiyishuSpider(scrapy.Spider):
         if next_url:
             item = ScrapymmItem()
             name = response.xpath('//div[@class="con-5-l"]/span/text()').extract_first()
-            item['image_url'] = response.urljoin(next_url)
+            item['image_url'] = response.urljoin(next_url).strip()
             item['image_name'] = handle_name(name)
             # print('{} {}'.format(item['image_name'], item['image_url']))
             yield item

@@ -22,7 +22,7 @@ class Mm131Spider(scrapy.Spider):
         if img:
             item = ScrapymmItem()
             name = response.xpath('//div[@class="title jgfgh"]/h1/text()').extract_first()
-            item['image_url'] = img
+            item['image_url'] = response.urljoin(img)
             item['image_name'] = handle_name(name)
             yield item
         # 获取下一张照片连接

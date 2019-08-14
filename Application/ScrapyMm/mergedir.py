@@ -27,6 +27,12 @@ for this_name in os.listdir(base_path):
         next_name = next_name[next_name.rfind(']')+1:]
     if re.match(r'.* \d+', next_name):
         next_name = next_name[:next_name.rfind(' ')]
+    if re.match(r'.*图片', next_name):
+        next_name = next_name[:next_name.rfind('图')]
+    if re.match(r'.*图片\d+', next_name):
+        next_name = next_name[:next_name.rfind('图')]
+    if re.match(r'.*第\d+张', next_name):
+        next_name = next_name[:next_name.rfind('第')]
     this_path = base_path + this_name
     next_path = base_path + next_name
     if this_path != next_path:
