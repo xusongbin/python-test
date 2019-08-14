@@ -5,6 +5,9 @@ import re
 import shutil
 
 base_path = 'D:/Program Files/Picture/'
+keyword = [
+    '黄可', '沈佳熹'
+]
 
 
 def move_to_dest(src_dir, dest_dir):
@@ -20,6 +23,9 @@ def move_to_dest(src_dir, dest_dir):
 
 def handle_name(src_name):
     dst_name = src_name.strip()
+    for kw in keyword:
+        if kw in dst_name:
+            return kw
     if re.match(r'.*\((\d+|图\d+)\)$', dst_name):
         dst_name = dst_name[:dst_name.rfind('(')]
     if re.match(r'^【.*】.*', dst_name):
@@ -32,6 +38,8 @@ def handle_name(src_name):
         dst_name = dst_name[:dst_name.rfind('图')]
     if re.match(r'.*图片\d+$', dst_name):
         dst_name = dst_name[:dst_name.rfind('图')]
+    if re.match(r'.*写真\d+$', dst_name):
+        dst_name = dst_name[:dst_name.rfind('写')]
     if re.match(r'.*第\d+张$', dst_name):
         dst_name = dst_name[:dst_name.rfind('第')]
     return dst_name
