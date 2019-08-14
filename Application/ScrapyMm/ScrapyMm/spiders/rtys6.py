@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from ScrapyMm.items import ScrapymmItem
-from ScrapyMm.spiders.HandleName import handle_name
 
 
 class Rtys6Spider(scrapy.Spider):
@@ -25,7 +24,7 @@ class Rtys6Spider(scrapy.Spider):
             item = ScrapymmItem()
             name = response.xpath('//div[@class="contitle"]/span/h1/a/text()').extract_first()
             item['image_url'] = next_url
-            item['image_name'] = handle_name(name)
+            item['image_name'] = name
             yield item
         # 已打开相册链接，该相册有几张图片，打开下一张图片的连接
         next_url = response.xpath('//div[@class="page"]/a[text()="下一页"]/@href').extract_first()

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from ScrapyMm.items import ScrapymmItem
-from ScrapyMm.spiders.HandleName import handle_name
 
 
 class A7160Spider(scrapy.Spider):
@@ -22,7 +21,7 @@ class A7160Spider(scrapy.Spider):
             item = ScrapymmItem()
             name = response.xpath('//div[@class="picsbox picsboxcenter"]/p/a/img/@alt').extract_first()
             item['image_url'] = img
-            item['image_name'] = handle_name(name)
+            item['image_name'] = name
             yield item
         for row in response.xpath('//div[@class="news_bom-left"]/div[@class="new-img"]'):
             for col in row.xpath('ul/li'):

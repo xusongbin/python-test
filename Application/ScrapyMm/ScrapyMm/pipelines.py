@@ -5,21 +5,20 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 import os
-import re
-import time
 import shutil
 import scrapy
 from scrapy.pipelines.images import ImagesPipeline
-from scrapy.exceptions import DropItem
 from ScrapyMm.settings import IMAGES_STORE
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+from mergedir import handle_name
 
 
 class MyImagesPipeline(ImagesPipeline):
 
     def get_media_requests(self, item, info):
-        if item['image_name'].strip():
+        item['image_name'] = handle_name(item['image_name'])
+        if item['image_name']:
             old_file = item['image_url'].replace('http://', '').replace('https://', '').replace('//', '/')
             old_file = IMAGES_STORE + '/' + old_file
             old_file = old_file.replace('\\', '/')

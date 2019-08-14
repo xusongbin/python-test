@@ -2,7 +2,6 @@
 import re
 import scrapy
 from ScrapyMm.items import ScrapymmItem
-from ScrapyMm.spiders.HandleName import handle_name
 
 
 class MmonlySpider(scrapy.Spider):
@@ -20,7 +19,7 @@ class MmonlySpider(scrapy.Spider):
             if not name:
                 print('MMONLY NOT NAME: {}'.format(response.url))
             item['image_url'] = img
-            item['image_name'] = handle_name(name)
+            item['image_name'] = name
             # print('{} {}'.format(alt, img))
             yield item
         # 查找主题下一张图片

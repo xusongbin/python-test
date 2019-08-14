@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from ScrapyMm.items import ScrapymmItem
-from ScrapyMm.spiders.HandleName import handle_name
-from urllib.parse import urljoin
 
 
 class RentiyishuSpider(scrapy.Spider):
@@ -26,7 +24,7 @@ class RentiyishuSpider(scrapy.Spider):
             item = ScrapymmItem()
             name = response.xpath('//div[@class="con-5-l"]/span/text()').extract_first()
             item['image_url'] = response.urljoin(next_url).strip()
-            item['image_name'] = handle_name(name)
+            item['image_name'] = name
             # print('{} {}'.format(item['image_name'], item['image_url']))
             yield item
         # 下一张照片

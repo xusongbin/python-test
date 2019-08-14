@@ -16,24 +16,29 @@ def move_to_dest(src_dir, dest_dir):
     os.rmdir(src_dir)
 
 
+def handle_name(src_name):
+    dst_name = src_name.strip()
+    if re.match(r'.*\((\d+|图\d+)\)', dst_name):
+        dst_name = dst_name[:dst_name.rfind('(')]
+    if re.match(r'【.*】.*', dst_name):
+        dst_name = dst_name[dst_name.rfind('】')+1:]
+    if re.match(r'\[.*\].*', dst_name):
+        dst_name = dst_name[dst_name.rfind(']')+1:]
+    if re.match(r'.* \d+', dst_name):
+        dst_name = dst_name[:dst_name.rfind(' ')]
+    if re.match(r'.*图片', dst_name):
+        dst_name = dst_name[:dst_name.rfind('图')]
+    if re.match(r'.*图片\d+', dst_name):
+        dst_name = dst_name[:dst_name.rfind('图')]
+    if re.match(r'.*第\d+张', dst_name):
+        dst_name = dst_name[:dst_name.rfind('第')]
+    return dst_name
+
+
 base_path = 'D:/Program Files/Picture/'
 for this_name in os.listdir(base_path):
-    next_name = this_name
-    if re.match(r'.*\((\d+|图\d+)\)', next_name):
-        next_name = next_name[:next_name.rfind('(')]
-    if re.match(r'【.*】.*', next_name):
-        next_name = next_name[next_name.rfind('】')+1:]
-    if re.match(r'\[.*\].*', next_name):
-        next_name = next_name[next_name.rfind(']')+1:]
-    if re.match(r'.* \d+', next_name):
-        next_name = next_name[:next_name.rfind(' ')]
-    if re.match(r'.*图片', next_name):
-        next_name = next_name[:next_name.rfind('图')]
-    if re.match(r'.*图片\d+', next_name):
-        next_name = next_name[:next_name.rfind('图')]
-    if re.match(r'.*第\d+张', next_name):
-        next_name = next_name[:next_name.rfind('第')]
+    next_name = handle_name(this_name)
     this_path = base_path + this_name
     next_path = base_path + next_name
-    if this_path != next_path:
+    if next_name != '' and this_path != next_path:
         move_to_dest(this_path, next_path)

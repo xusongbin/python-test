@@ -2,7 +2,6 @@
 import re
 import scrapy
 from ScrapyMm.items import ScrapymmItem
-from ScrapyMm.spiders.HandleName import handle_name
 
 
 class MmSpider(scrapy.Spider):
@@ -31,7 +30,7 @@ class MmSpider(scrapy.Spider):
                     if not name:
                         print('MM NOT NAME: {}'.format(response.url))
                 item['image_url'] = response.urljoin(src)
-                item['image_name'] = handle_name(name)
+                item['image_name'] = name
                 yield item
             except:
                 pass

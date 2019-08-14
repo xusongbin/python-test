@@ -2,7 +2,6 @@
 import re
 import scrapy
 from ScrapyMm.items import ScrapymmItem
-from ScrapyMm.spiders.HandleName import handle_name
 
 
 class Mt11Spider(scrapy.Spider):
@@ -26,7 +25,7 @@ class Mt11Spider(scrapy.Spider):
             name = response.xpath('//div[@class="tuku"]/div[@class="title"]/text()').extract_first()
             for im in re.findall(r'http.*\.jpg', img):
                 item['image_url'] = im
-                item['image_name'] = handle_name(name)
+                item['image_name'] = name
                 yield item
         for a in response.xpath('//div[@class="container"]/article/a[@class="tuItem"]'):
             next_url = a.xpath('@href').extract_first()

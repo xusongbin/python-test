@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from ScrapyMm.items import ScrapymmItem
-from ScrapyMm.spiders.HandleName import handle_name
 
 
 class Mm131Spider(scrapy.Spider):
@@ -23,7 +22,7 @@ class Mm131Spider(scrapy.Spider):
             item = ScrapymmItem()
             name = response.xpath('//div[@class="title jgfgh"]/h1/text()').extract_first()
             item['image_url'] = response.urljoin(img)
-            item['image_name'] = handle_name(name)
+            item['image_name'] = name
             yield item
         # 获取下一张照片连接
         next_img = response.xpath('//div[@class="pagebread"]/li/a[text()="下一页"]/@href').extract_first()
