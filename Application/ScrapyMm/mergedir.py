@@ -20,19 +20,19 @@ def move_to_dest(src_dir, dest_dir):
 
 def handle_name(src_name):
     dst_name = src_name.strip()
-    if re.match(r'.*\((\d+|图\d+)\)', dst_name):
+    if re.match(r'.*\((\d+|图\d+)\)$', dst_name):
         dst_name = dst_name[:dst_name.rfind('(')]
-    if re.match(r'【.*】.*', dst_name):
+    if re.match(r'^【.*】.*', dst_name):
         dst_name = dst_name[dst_name.rfind('】')+1:]
-    if re.match(r'\[.*\].*', dst_name):
+    if re.match(r'^\[.*\].*', dst_name):
         dst_name = dst_name[dst_name.rfind(']')+1:]
-    if re.match(r'.* \d+', dst_name):
+    if re.match(r'.* \d+$', dst_name):
         dst_name = dst_name[:dst_name.rfind(' ')]
-    if re.match(r'.*图片', dst_name):
+    if re.match(r'.*图片$', dst_name):
         dst_name = dst_name[:dst_name.rfind('图')]
-    if re.match(r'.*图片\d+', dst_name):
+    if re.match(r'.*图片\d+$', dst_name):
         dst_name = dst_name[:dst_name.rfind('图')]
-    if re.match(r'.*第\d+张', dst_name):
+    if re.match(r'.*第\d+张$', dst_name):
         dst_name = dst_name[:dst_name.rfind('第')]
     return dst_name
 
@@ -47,7 +47,7 @@ def check_directory():
 
 
 def read_directory():
-    with open('dir.csv', 'w') as f:
+    with open('dir.csv', 'w', encoding='UTF-8') as f:
         for this_name in os.listdir(base_path):
             f.write(this_name + '\n')
 
