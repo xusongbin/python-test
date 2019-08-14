@@ -4,6 +4,8 @@ import os
 import re
 import shutil
 
+base_path = 'D:/Program Files/Picture/'
+
 
 def move_to_dest(src_dir, dest_dir):
     if not os.path.isdir(dest_dir):
@@ -35,10 +37,21 @@ def handle_name(src_name):
     return dst_name
 
 
-base_path = 'D:/Program Files/Picture/'
-for this_name in os.listdir(base_path):
-    next_name = handle_name(this_name)
-    this_path = base_path + this_name
-    next_path = base_path + next_name
-    if next_name != '' and this_path != next_path:
-        move_to_dest(this_path, next_path)
+def check_directory():
+    for this_name in os.listdir(base_path):
+        next_name = handle_name(this_name)
+        this_path = base_path + this_name
+        next_path = base_path + next_name
+        if next_name != '' and this_path != next_path:
+            move_to_dest(this_path, next_path)
+
+
+def read_directory():
+    with open('dir.csv', 'w') as f:
+        for this_name in os.listdir(base_path):
+            f.write(this_name + '\n')
+
+
+if __name__ == '__main__':
+    check_directory()
+    read_directory()
