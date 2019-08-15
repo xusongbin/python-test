@@ -7,6 +7,7 @@ import gzip
 from urllib import request
 from urllib import parse
 from time import time, strftime, localtime, mktime, strptime
+import traceback
 
 
 def write_log(_str):
@@ -28,8 +29,12 @@ class Pool(object):
         'AppleWebKit/537.36 (KHTML, like Gecko) '
         'Chrome/70.0.3538.25 Safari/537.36 Core/1.70.3676.400 QQBrowser/10.4.3469.400'
     )
+    robot = (
+        'https://oapi.dingtalk.com/robot/send?access_token='
+        '836c4833037901bb7c077e402ccea800094a1b524ee4108344c6feb1489ab8f1'
+    )
     power_rate = 1.5
-    power_waste = 150
+    power_waste = 50
     machine_price = 25000
     machine_disk = 16
     machine_capacity = 134
@@ -70,6 +75,35 @@ class Pool(object):
         write_log('')
         self.back_cycle(rate/num)
         write_log('')
+
+    def markdown_msg(self, data=''):
+        _time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        _pack = {'msgtype': 'markdown', 'markdown': ''}
+        context = '### {} {} \n'.format('ONEPOOL', _time)
+        # if not data:
+        #     return None
+        for d in data:
+            d = d.strip()
+            if not d:
+                continue
+            context += '- ' + d + '\n'
+        _pack['markdown'] = {'title': 'New Message', 'text': context}
+        try:
+            return json.dumps(_pack)
+        except Exception as e:
+            print('{}\n{}'.format(e, traceback.format_exc()))
+            return None
+
+    def post_msg(self):
+        headers = {
+            'Content-Type': 'application/json;charset=utf-8'
+        }
+        data = self.markdown_msg()
+        try:
+            req = request.Request(self.robot, data=bytes(data, 'utf-8'), headers=headers)
+            print(request.urlopen(req, timeout=5).read().decode('utf-8'))
+        except Exception as e:
+            print(e)
 
     def get_wacai(self):
         tms = int(time() * 1000)
@@ -351,7 +385,7 @@ class Pool(object):
         local_profit += (self.wallet_boom + self.property_boom) * self.price_boom
         local_profit += (self.wallet_burst + self.property_burst) * self.price_burst
         write_log('Local profit:{}'.format(local_profit))
-        month_pay = self.power_waste * self.power_rate * 24 * 30 / 1000
+        month_pay = (self.power_waste + 1.56 * self.machine_capacity) * self.power_rate * 24 * 30 / 1000
         write_log('Month pay:{}'.format(month_pay))
         month_income = day_income * 30
         write_log('Month income:{}'.format(month_income))
