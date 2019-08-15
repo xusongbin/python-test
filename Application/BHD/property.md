@@ -1,4 +1,3 @@
-
 #### 报价
 >[BHD](https://www.aex-global.com/page/trade.html?mk_type=CNC&trade_coin_name=BHD)
 - 买盘：{bhdBid}  
@@ -15,22 +14,19 @@
 - 日均收益：{poolAverage}
 
 #### BHD当前统计
+- 今天：{bhdToday}
 - 钱包：{bhdAmount}
 - 价值：{bhdProperty}
-- 已分配：{bhdCurrent}
-- 未分配：{bhdExpect}
 
 #### BOOM当前统计
+- 今天：{boomToday}
 - 钱包：{boomAmount}
 - 价值：{boomProperty}
-- 已分配：{boomCurrent}
-- 未分配：{boomExpect}
 
 #### BURST当前统计
+- 今天：{burstToday}
 - 钱包：{burstAmount}
 - 价值：{burstProperty}
-- 已分配：{burstCurrent}
-- 未分配：{burstExpect}
 
 #### 用电统计
 - 电价：{cycPrice}

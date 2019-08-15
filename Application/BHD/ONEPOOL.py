@@ -52,31 +52,39 @@ class Pool(object):
 
     poolAverage = 0
 
+    bhdToday = 0
+    boomToday = 0
+    burstToday = 0
     bhdAmount = 0
     boomAmount = 0
     burstAmount = 0
 
     def __init__(self):
 
-        # 线程获取挖财数据，30分钟获取一次，获取失败则5秒后重试
+        # 线程获取挖财数据，720分钟获取一次，获取失败则5秒后重试
         self.thread_wacai = threading.Thread(target=self.on_thread_wacai)
         self.thread_wacai.setDaemon(True)
         self.thread_wacai.start()
+
+        # 线程获取日均收益，120分钟获取一次，获取失败则5秒后重试
+        self.thread_average = threading.Thread(target=self.on_thread_average)
+        self.thread_average.setDaemon(True)
+        self.thread_average.start()
 
         # 线程获取实时报价，10分钟获取一次，获取失败则5秒后重试
         self.thread_trade = threading.Thread(target=self.on_thread_trade)
         self.thread_trade.setDaemon(True)
         self.thread_trade.start()
 
-        # 线程获取日均收益，60分钟获取一次，获取失败则5秒后重试
-        self.thread_average = threading.Thread(target=self.on_thread_average)
-        self.thread_average.setDaemon(True)
-        self.thread_average.start()
-
         # 线程获取矿池资产，60分钟获取一次，获取失败则5秒后重试
         self.thread_property = threading.Thread(target=self.on_thread_property)
         self.thread_property.setDaemon(True)
         self.thread_property.start()
+
+        # 线程获取当日收益，60分钟获取一次，获取失败则5秒后重试
+        self.thread_today = threading.Thread(target=self.on_thread_today)
+        self.thread_today.setDaemon(True)
+        self.thread_today.start()
 
         # 上报数据
         self.run()
@@ -86,7 +94,7 @@ class Pool(object):
         _time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         _pack = {
             'msgtype': 'markdown',
-            'markdown': {'title': 'New Message', 'text': context}
+            'markdown': {'title': _time, 'text': '#### {}\n{}'.format(_time, context)}
         }
         try:
             return json.dumps(_pack)
@@ -399,13 +407,12 @@ class Pool(object):
         while True:
             if (time() - wacai_ts) >= wacai_tout:
                 wacai_ts = time()
+                wacai_tout = 0
                 data = self.get_wacai()
                 if data:
-                    wacai_tout = 60 * 30
+                    wacai_tout = 60 * 720
                     self.cycMachine, self.cycDisk, self.cycCapacity, self.cycPrice, self.cycPow = data
                     write_log('获取挖财数据：{}'.format(data))
-                else:
-                    wacai_tout = 0
             sleep(5)
 
     def on_thread_trade(self):
@@ -419,31 +426,28 @@ class Pool(object):
         while True:
             if (time() - trade_bhd_ts) >= trade_bhd_tout:
                 trade_bhd_ts = time()
+                trade_bhd_tout = 0
                 price = self.get_trade('BHD')
                 if price:
                     trade_bhd_tout = 60 * 10
                     self.tradeBHD = price
                     write_log('获取BHD价格：{}'.format(price))
-                else:
-                    trade_bhd_tout = 0
             if (time() - trade_boom_ts) >= trade_boom_tout:
                 trade_boom_ts = time()
+                trade_boom_tout = 0
                 price = self.get_trade('BOOM')
                 if price:
                     trade_boom_tout = 60 * 10
                     self.tradeBOOM = price
                     write_log('获取BOOM价格：{}'.format(price))
-                else:
-                    trade_boom_tout = 0
             if (time() - trade_burst_ts) >= trade_burst_tout:
                 trade_burst_ts = time()
+                trade_burst_tout = 0
                 price = self.get_trade('BURST')
                 if price:
                     trade_burst_tout = 60 * 10
                     self.tradeBURST = price
                     write_log('获取BURST价格：{}'.format(price))
-                else:
-                    trade_burst_tout = 0
             sleep(5)
 
     def on_thread_average(self):
@@ -458,19 +462,18 @@ class Pool(object):
                     self.tradeBOOM and \
                     self.tradeBURST:
                 average_ts = time()
+                average_tsout = 0
                 yesterday = strftime("%Y-%m-%d", localtime(time() - 24 * 60 * 60))
                 lastweek = strftime("%Y-%m-%d", localtime(time() - 7 * 24 * 60 * 60))
                 data = self.get_profit_by_date(lastweek, yesterday, details=False)
                 if data:
-                    average_tsout = 60 * 60
+                    average_tsout = 60 * 120
                     bhd_amount, boom_amount, burst_amount = data
                     bhd_price, boom_price, burst_price = self.tradeBHD[0], self.tradeBOOM[0], self.tradeBURST[0]
                     total_income = bhd_amount * bhd_price + boom_amount * boom_price + burst_amount * burst_price
                     total_day = 7
                     self.poolAverage = total_income / total_day
                     write_log('获取矿池日均收益：{}'.format(self.poolAverage))
-                else:
-                    average_tsout = 0
             sleep(5)
 
     def on_thread_property(self):
@@ -484,31 +487,44 @@ class Pool(object):
         while True:
             if (time() - property_bhd_ts) >= property_bhd_tout:
                 property_bhd_ts = time()
+                property_bhd_tout = 0
                 data = self.get_property('BHD')
                 if data:
                     property_bhd_tout = 60 * 60
                     self.bhdAmount = data
                     write_log('获取BHD资产：{}'.format(data))
-                else:
-                    property_bhd_tout = 0
             if (time() - property_boom_ts) >= property_boom_tout:
                 property_boom_ts = time()
+                property_boom_tout = 0
                 data = self.get_property('BOOM')
                 if data:
                     property_boom_tout = 60 * 60
                     self.boomAmount = data
                     write_log('获取BOOM资产：{}'.format(data))
-                else:
-                    property_boom_tout = 0
             if (time() - property_burst_ts) >= property_burst_tout:
                 property_burst_ts = time()
+                property_burst_tout = 0
                 data = self.get_property('BURST')
                 if data:
                     property_burst_tout = 60 * 60
                     self.burstAmount = data
                     write_log('获取BURST资产：{}'.format(data))
-                else:
-                    property_burst_tout = 0
+            sleep(5)
+
+    def on_thread_today(self):
+        # 线程获取当日收益，60分钟获取一次，获取失败则5秒后重试
+        today_ts = time()
+        today_tout = 0
+        while True:
+            today = strftime("%Y-%m-%d", localtime())
+            if (time() - today_ts) >= today_tout:
+                today_ts = time()
+                today_tout = 0
+                data = self.get_profit_by_date(today)
+                if data:
+                    self.bhdToday, self.boomToday, self.burstToday = data
+                    today_tout = 60 * 60
+                    write_log('获取当日收益：{}'.format(data))
             sleep(5)
 
     def commit_evt(self):
@@ -543,14 +559,6 @@ class Pool(object):
         cycProfit = cycIncome - cycPay
         cycMonth = (self.cycMachine - poolProperty) / cycProfit
         cycDate = strftime('%Y-%m-%d', localtime(time() + cycMonth * 30 * 24 * 60 * 60))
-
-        # 未完成的功能
-        bhdCurrent = 0
-        bhdExpect = 0
-        boomCurrent = 0
-        boomExpect = 0
-        burstCurrent = 0
-        burstExpect = 0
         if not os.path.isfile(self.template):
             print('{} 未正常获取'.format('Markdown模板'))
             return False
@@ -561,27 +569,23 @@ class Pool(object):
             boomBid=boomBid, boomAsk=boomAsk,
             burstBid=burstBid, burstAsk=burstAsk,
 
-            poolProperty=poolProperty, poolAverage=self.poolAverage,
+            poolProperty=round(poolProperty, 6), poolAverage=round(self.poolAverage, 6),
 
-            bhdAmount=self.bhdAmount, bhdProperty=bhdProperty,
-            bhdCurrent=bhdCurrent, bhdExpect=bhdExpect,
+            bhdToday=self.bhdToday, bhdAmount=self.bhdAmount, bhdProperty=round(bhdProperty, 6),
+            boomToday=self.boomToday, boomAmount=self.boomAmount, boomProperty=round(boomProperty, 6),
+            burstToday=self.burstToday, burstAmount=self.burstAmount, burstProperty=round(burstProperty, 6),
 
-            boomAmount=self.boomAmount, boomProperty=boomProperty,
-            boomCurrent=boomCurrent, boomExpect=boomExpect,
-
-            burstAmount=self.burstAmount, burstProperty=burstProperty,
-            burstCurrent=burstCurrent, burstExpect=burstExpect,
-
-            cycPrice=self.cycPrice, cycPow=self.cycPow, cycPay=cycPay,
+            cycPrice=self.cycPrice, cycPow=self.cycPow, cycPay=round(cycPay, 2),
 
             cycMachine=self.cycMachine, cycDisk=self.cycDisk, cycCapacity=self.cycCapacity,
-            cycIncome=cycIncome, cycProfit=cycProfit, cycMonth=cycMonth, cycDate=cycDate
+            cycIncome=round(cycIncome, 2), cycProfit=round(cycProfit, 2), cycMonth=round(cycMonth, 2), cycDate=cycDate
         )
         if data == self.last_push:
             # 数据已上报过
             return False
         if self.post_msg(data):
             self.last_push = data
+            write_log('上报新数据')
 
     def run(self):
         # Thread get self.cycMachine, self.cycDisk, self.cycCapacity
