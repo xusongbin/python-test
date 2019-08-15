@@ -1,13 +1,15 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import re
 import json
 import gzip
+import threading
 from urllib import request
 from urllib import parse
-from time import time, strftime, localtime, mktime, strptime
-import traceback
+from time import time, strftime, localtime, mktime, strptime, sleep
+from traceback import format_exc
 
 
 def write_log(_str):
@@ -20,7 +22,7 @@ def write_log(_str):
             f.write(_data + '\n')
             f.flush()
     except Exception as e:
-        print('write log exception %s' % e)
+        print('{}\n{}'.format(e, format_exc()))
 
 
 class Pool(object):
@@ -31,81 +33,93 @@ class Pool(object):
     )
     robot = (
         'https://oapi.dingtalk.com/robot/send?access_token='
-        '836c4833037901bb7c077e402ccea800094a1b524ee4108344c6feb1489ab8f1'
+        'ea1cec7b579e9f5acfec476e6a63fc90e47204fc8e16c49a094cb5366910556c'
     )
-    power_rate = 1.5
-    power_waste = 50
-    machine_price = 25000
-    machine_disk = 16
-    machine_capacity = 134
-    wallet_bhd = 1          # wallet + hdpool + bitatm
-    wallet_boom = 0         # wallet
-    wallet_burst = 0        # wallet
+    last_push = None
+    robot_ts = time()
+    robot_tout = 10     # 上报频率10秒一次
+    template = 'property.md'
+
+    cycMachine = 25000
+    cycDisk = 16
+    cycCapacity = 134
+    cycPrice = 1.5
+    cycPow = 200
+
+    tradeBHD = 0
+    tradeBOOM = 0
+    tradeBURST = 0
+
+    poolAverage = 0
+
+    bhdAmount = 0
+    boomAmount = 0
+    burstAmount = 0
 
     def __init__(self):
-        self.get_wacai()
 
-        self.price_bhd = self.get_price('BHD')
-        self.price_boom = self.get_price('BOOM')
-        self.price_burst = self.get_price('BURST')
-        write_log('BHD price:{}'.format(self.price_bhd))
-        write_log('BOOM price:{}'.format(self.price_boom))
-        write_log('BURST price:{}'.format(self.price_burst))
-        write_log('')
+        # 线程获取挖财数据，30分钟获取一次，获取失败则5秒后重试
+        self.thread_wacai = threading.Thread(target=self.on_thread_wacai)
+        self.thread_wacai.setDaemon(True)
+        self.thread_wacai.start()
 
-        self.property_bhd = self.get_onepool('BHD')
-        self.property_boom = self.get_onepool('BOOM')
-        self.property_burst = self.get_onepool('BURST')
-        property_all = self.property_bhd * self.price_bhd
-        property_all += self.property_boom * self.price_boom
-        property_all += self.property_burst * self.price_burst
-        write_log('BHD property:{}'.format(self.property_bhd))
-        write_log('BOOM property:{}'.format(self.property_boom))
-        write_log('BURST property:{}'.format(self.property_burst))
-        write_log('TOTAL property:{}'.format(property_all))
+        # 线程获取实时报价，10分钟获取一次，获取失败则5秒后重试
+        self.thread_trade = threading.Thread(target=self.on_thread_trade)
+        self.thread_trade.setDaemon(True)
+        self.thread_trade.start()
 
-        today = strftime("%Y-%m-%d", localtime())
-        yesterday = strftime("%Y-%m-%d", localtime(time()-24*60*60))
-        lastweek = strftime("%Y-%m-%d", localtime(time()-7*24*60*60))
-        # today = '2019-07-29'
-        self.day_income(today, details=True)
-        # '2019-07-18'  15号盘重新Plot后上线时间
-        # '2019-08-07'  16号盘Plot后上线时间
-        num, rate = self.day_income(lastweek, yesterday, details=False)
-        write_log('')
-        self.back_cycle(rate/num)
-        write_log('')
+        # 线程获取日均收益，60分钟获取一次，获取失败则5秒后重试
+        self.thread_average = threading.Thread(target=self.on_thread_average)
+        self.thread_average.setDaemon(True)
+        self.thread_average.start()
 
-    def markdown_msg(self, data=''):
+        # 线程获取矿池资产，60分钟获取一次，获取失败则5秒后重试
+        self.thread_property = threading.Thread(target=self.on_thread_property)
+        self.thread_property.setDaemon(True)
+        self.thread_property.start()
+
+        # 上报数据
+        self.run()
+
+    @staticmethod
+    def __markdown_msg(context=''):
         _time = strftime("%Y-%m-%d %H:%M:%S", localtime())
-        _pack = {'msgtype': 'markdown', 'markdown': ''}
-        context = '### {} {} \n'.format('ONEPOOL', _time)
-        # if not data:
-        #     return None
-        for d in data:
-            d = d.strip()
-            if not d:
-                continue
-            context += '- ' + d + '\n'
-        _pack['markdown'] = {'title': 'New Message', 'text': context}
+        _pack = {
+            'msgtype': 'markdown',
+            'markdown': {'title': 'New Message', 'text': context}
+        }
         try:
             return json.dumps(_pack)
         except Exception as e:
-            print('{}\n{}'.format(e, traceback.format_exc()))
-            return None
+            write_log('{}\n{}'.format(e, format_exc()))
+        return None
 
-    def post_msg(self):
+    def post_msg(self, context=''):
+        if (time() - self.robot_ts) < self.robot_tout:
+            return False
+        self.robot_ts = time()
         headers = {
             'Content-Type': 'application/json;charset=utf-8'
         }
-        data = self.markdown_msg()
+        data = self.__markdown_msg(context)
+        resp = None
         try:
             req = request.Request(self.robot, data=bytes(data, 'utf-8'), headers=headers)
-            print(request.urlopen(req, timeout=5).read().decode('utf-8'))
+            resp = request.urlopen(req, timeout=5).read().decode('utf-8')
+            resp = json.loads(resp)
+            if resp['errcode'] == 0:
+                return True
         except Exception as e:
-            print(e)
+            if 'timed out' in str(e):
+                write_log(str(e))
+            else:
+                if resp:
+                    print(resp)
+                write_log('{}\n{}'.format(e, format_exc()))
+        return False
 
-    def get_wacai(self):
+    @staticmethod
+    def get_wacai():
         tms = int(time() * 1000)
         url = 'https://www.wacai.com/setting/account_list.action?timesamp={}'.format(tms)
         headers = {
@@ -155,7 +169,7 @@ class Pool(object):
         try:
             data = parse.urlencode(data).encode('utf-8')
             req = request.Request(url, data, headers)
-            resp = request.urlopen(req)
+            resp = request.urlopen(req, timeout=3)
 
             if resp.info().get('Content-Encoding') == 'gzip':
                 resp = gzip.decompress(resp.read()).decode('utf-8')
@@ -166,6 +180,8 @@ class Pool(object):
             value = 0
             disk = 0
             capacity = 0
+            cost = 0
+            power = 0
             for account in resp_dict['accountTypeSum']:
                 if 'accTypeName' not in account.keys():
                     continue
@@ -176,16 +192,18 @@ class Pool(object):
                             comment = accs['comment'].split('\n')
                             disk = int(comment[0].split('=')[1])
                             capacity = int(comment[1].split('=')[1])
-            if value > 0:
-                self.machine_price = value
-            if disk > 0:
-                self.machine_disk = disk
-            if capacity > 0:
-                self.machine_capacity = capacity
+                            cost = float(comment[2].split('=')[1])
+                            power = int(comment[3].split('=')[1])
+            if value > 0 and disk > 0 and capacity > 0 and cost > 0 and power > 0:
+                return [value, disk, capacity, cost, power]
         except Exception as e:
-            write_log('get_wacai except:%s' % e)
+            if 'timed out' in str(e):
+                write_log(str(e))
+            else:
+                write_log('{}\n{}'.format(e, format_exc()))
+        return None
 
-    def get_price(self, symbol):
+    def get_trade(self, symbol):
         headers = {
             'User-Agent': self.user_agent
         }
@@ -198,18 +216,21 @@ class Pool(object):
             qbct = False
         try:
             req = request.Request(url=url, headers=headers)
-            resp = request.urlopen(req, timeout=5)
+            resp = request.urlopen(req, timeout=3)
             data = json.loads(resp.read().decode('utf-8'))
             if qbct:
-                data = float(data['result']['buy'][0]['price'])
+                data = [float(data['result']['buy'][0]['price']), float(data['result']['sell'][0]['price'])]
             else:
-                data = float(data['bids'][0][0])
+                data = [float(data['bids'][0][0]), float(data['asks'][0][0])]
             return data
         except Exception as e:
-            write_log('get_price except: %s' % e)
-        return 0
+            if 'timed out' in str(e):
+                write_log(str(e))
+            else:
+                write_log('{}\n{}'.format(e, format_exc()))
+        return None
 
-    def get_onepool(self, symbol):
+    def get_property(self, symbol):
         headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Encoding': 'gzip, deflate',
@@ -241,7 +262,7 @@ class Pool(object):
             headers['Referer'] = 'http://www.onepool.cc/burst/user/income_inquiry.html'
             cur_url = 'http://www.onepool.cc/burst/user/asset.html'
         else:
-            return 0
+            return None
         try:
             req = request.Request(cur_url, headers=headers)
             resp = request.urlopen(req)
@@ -251,7 +272,7 @@ class Pool(object):
                 resp = resp.read().decode('utf-8')
             if 'user_asset_avai_balance' not in resp:
                 print('Not found property')
-                return 0
+                return None
             resp = resp[:resp.find('user_asset_avai_balance')]
             resp = resp[resp.rfind('asset-num'):]
             data = 0
@@ -259,10 +280,13 @@ class Pool(object):
                 data = d
             return float(data)
         except Exception as e:
-            write_log('get_onepool except: %s' % e)
-        return 0
+            if 'timed out' in str(e):
+                write_log(str(e))
+            else:
+                write_log('{}\n{}'.format(e, format_exc()))
+        return None
 
-    def post_onepool(self, symbol, t_start, t_stop):
+    def get_profit_date_to_list(self, symbol, t_start, t_stop):
         headers = {
             'Accept': '*/*',
             'Accept-Encoding': 'gzip, deflate',
@@ -314,45 +338,51 @@ class Pool(object):
                 data = {'page': page_idx, 'start': t_start, 'stop': t_stop}
                 data = parse.urlencode(data).encode('utf-8')
                 req = request.Request(cur_url, data=data, headers=headers)
-                resp = request.urlopen(req).read().decode('utf-8')
+                resp = request.urlopen(req, timeout=3).read().decode('utf-8')
                 js_data = json.loads(resp)['data']
                 for data in js_data['data']:
                     if data['profit_date'] in day_list:
                         rt_data.append(data)
                 try:
                     page_total = js_data['last_page']
-                except:
-                    pass
+                except Exception as e:
+                    print('{}\n{}'.format(e, format_exc()))
                 page_idx += 1
             return rt_data
         except Exception as e:
-            write_log('post_onepool except: %s' % e)
+            if 'timed out' in str(e):
+                write_log(str(e))
+            else:
+                write_log('{}\n{}'.format(e, format_exc()))
         return []
 
-    def day_income(self, t_start, t_stop='', details=False, bhd=True, boom=True, burst=True):
+    def get_profit_by_date(self, t_start, t_stop='', details=False, bhd=True, boom=True, burst=True):
         if not t_stop:
             t_stop = t_start
         bhd_amount = 0
         if bhd:
             try:
-                for data in self.post_onepool('BHD', t_start, t_stop):
+                for data in self.get_profit_date_to_list('BHD', t_start, t_stop):
                     bhd_amount += float(data['amount'])
             except Exception as e:
-                write_log('bhd_amount except: %s' % e)
+                write_log('{}\n{}'.format(e, format_exc()))
+                return None
         boom_amount = 0
         if boom:
             try:
-                for data in self.post_onepool('BOOM', t_start, t_stop):
+                for data in self.get_profit_date_to_list('BOOM', t_start, t_stop):
                     boom_amount += float(data['amount'])
             except Exception as e:
-                write_log('boom_amount except: %s' % e)
+                write_log('{}\n{}'.format(e, format_exc()))
+                return None
         burst_amount = 0
         if burst:
             try:
-                for data in self.post_onepool('BURST', t_start, t_stop):
+                for data in self.get_profit_date_to_list('BURST', t_start, t_stop):
                     burst_amount += float(data['amount'])
             except Exception as e:
-                write_log('burst_amount except: %s' % e)
+                write_log('{}\n{}'.format(e, format_exc()))
+                return None
         if details:
             if bhd:
                 write_log('BHD amount:{}'.format(bhd_amount))
@@ -360,71 +390,206 @@ class Pool(object):
                 write_log('BOOM amount:{}'.format(boom_amount))
             if burst:
                 write_log('BURST amount:{}'.format(burst_amount))
-        income = 0
-        try:
-            income += bhd_amount * self.price_bhd
-            income += boom_amount * self.price_boom
-            income += burst_amount * self.price_burst
-        except Exception as e:
-            write_log('income except: %s' % e)
-        t_start_ts = int(mktime(strptime(t_start, "%Y-%m-%d")))
-        t_stop_ts = int(mktime(strptime(t_stop, "%Y-%m-%d")))
-        day_count = int((t_stop_ts - t_start_ts) / (24*60*60)) + 1
-        write_log('Time:{}~{} Days:{} Income:{} Average:{}'.format(t_start, t_stop, day_count, income, income/day_count))
-        return day_count, income
+        return bhd_amount, boom_amount, burst_amount
 
-    def day_profit(self, day_income):
-        power_pay = self.power_waste * self.power_rate * 24 / 1000
-        return day_income - power_pay
+    def on_thread_wacai(self):
+        # 线程获取挖财数据，30分钟获取一次，获取失败则5秒后重试
+        wacai_ts = time()
+        wacai_tout = 0
+        while True:
+            if (time() - wacai_ts) >= wacai_tout:
+                wacai_ts = time()
+                data = self.get_wacai()
+                if data:
+                    wacai_tout = 60 * 30
+                    self.cycMachine, self.cycDisk, self.cycCapacity, self.cycPrice, self.cycPow = data
+                    write_log('获取挖财数据：{}'.format(data))
+                else:
+                    wacai_tout = 0
+            sleep(5)
 
-    def month_profit(self, day_income):
-        return self.day_profit(day_income) * 30
+    def on_thread_trade(self):
+        # 线程获取实时报价，10分钟获取一次，获取失败则5秒后重试
+        trade_bhd_ts = time()
+        trade_boom_ts = time()
+        trade_burst_ts = time()
+        trade_bhd_tout = 0
+        trade_boom_tout = 0
+        trade_burst_tout = 0
+        while True:
+            if (time() - trade_bhd_ts) >= trade_bhd_tout:
+                trade_bhd_ts = time()
+                price = self.get_trade('BHD')
+                if price:
+                    trade_bhd_tout = 60 * 10
+                    self.tradeBHD = price
+                    write_log('获取BHD价格：{}'.format(price))
+                else:
+                    trade_bhd_tout = 0
+            if (time() - trade_boom_ts) >= trade_boom_tout:
+                trade_boom_ts = time()
+                price = self.get_trade('BOOM')
+                if price:
+                    trade_boom_tout = 60 * 10
+                    self.tradeBOOM = price
+                    write_log('获取BOOM价格：{}'.format(price))
+                else:
+                    trade_boom_tout = 0
+            if (time() - trade_burst_ts) >= trade_burst_tout:
+                trade_burst_ts = time()
+                price = self.get_trade('BURST')
+                if price:
+                    trade_burst_tout = 60 * 10
+                    self.tradeBURST = price
+                    write_log('获取BURST价格：{}'.format(price))
+                else:
+                    trade_burst_tout = 0
+            sleep(5)
 
-    def back_cycle(self, day_income):
-        local_profit = (self.wallet_bhd + self.property_bhd) * self.price_bhd
-        local_profit += (self.wallet_boom + self.property_boom) * self.price_boom
-        local_profit += (self.wallet_burst + self.property_burst) * self.price_burst
-        write_log('Local profit:{}'.format(local_profit))
-        month_pay = (self.power_waste + 1.56 * self.machine_capacity) * self.power_rate * 24 * 30 / 1000
-        write_log('Month pay:{}'.format(month_pay))
-        month_income = day_income * 30
-        write_log('Month income:{}'.format(month_income))
-        month_profit = month_income - month_pay
-        write_log('Month profit:{}'.format(month_profit))
-        month_cycle = (self.machine_price - local_profit) / month_profit
-        write_log('Month bcycle:{:.1f}'.format(month_cycle))
-        target_date = time() + month_cycle * 30 * 24 * 60 * 60
-        target_date = strftime('%Y-%m-%d', localtime(target_date))
-        write_log('Target date:{}'.format(target_date))
+    def on_thread_average(self):
+        # 线程获取日均收益，60分钟获取一次，获取失败则5秒后重试
+        # '2019-07-18'  15号盘重新Plot后上线时间
+        # '2019-08-07'  16号盘Plot后上线时间
+        average_ts = time()
+        average_tsout = 0
+        while True:
+            if (time() - average_ts) >= average_tsout and \
+                    self.tradeBHD and \
+                    self.tradeBOOM and \
+                    self.tradeBURST:
+                average_ts = time()
+                yesterday = strftime("%Y-%m-%d", localtime(time() - 24 * 60 * 60))
+                lastweek = strftime("%Y-%m-%d", localtime(time() - 7 * 24 * 60 * 60))
+                data = self.get_profit_by_date(lastweek, yesterday, details=False)
+                if data:
+                    average_tsout = 60 * 60
+                    bhd_amount, boom_amount, burst_amount = data
+                    bhd_price, boom_price, burst_price = self.tradeBHD[0], self.tradeBOOM[0], self.tradeBURST[0]
+                    total_income = bhd_amount * bhd_price + boom_amount * boom_price + burst_amount * burst_price
+                    total_day = 7
+                    self.poolAverage = total_income / total_day
+                    write_log('获取矿池日均收益：{}'.format(self.poolAverage))
+                else:
+                    average_tsout = 0
+            sleep(5)
 
-        write_log('')
-        day_bcycle = month_cycle * 30
-        tmp_profit = local_profit
-        disk_capacity = self.machine_capacity
-        disk_ratio = day_income / disk_capacity
-        disk_count = self.machine_disk
-        disk_income = disk_ratio * disk_capacity
-        disk_bcycle = 0
-        tmp_day = 0
-        for i in range(1, int(day_bcycle + 1)):
-            if tmp_profit >= 1050 and disk_count < 32:
-                tmp_profit -= 1050
-                disk_count += 1
-                disk_capacity += 8
-                disk_income = disk_ratio * disk_capacity
-                disk_bcycle = i
-            tmp_profit += disk_income
-            if tmp_profit >= self.machine_price:
-                tmp_day = i
-                break
-        write_log('Disk bcycle:{:.1f}'.format(disk_bcycle/30))
-        write_log('Invest disk:{:.1f}'.format(self.machine_disk))
-        write_log('Invest capacity:{:.1f}'.format(self.machine_capacity))
-        write_log('Invest machine:{:.1f}'.format(self.machine_price))
-        write_log('Invest bcycle:{:.1f}'.format(tmp_day/30))
-        tmp_date = time() + tmp_day * 24 * 60 * 60
-        tmp_date = strftime('%Y-%m-%d', localtime(tmp_date))
-        write_log('Invest date:{}'.format(tmp_date))
+    def on_thread_property(self):
+        # 线程获取矿池资产，60分钟获取一次，获取失败则5秒后重试
+        property_bhd_ts = time()
+        property_boom_ts = time()
+        property_burst_ts = time()
+        property_bhd_tout = 0
+        property_boom_tout = 0
+        property_burst_tout = 0
+        while True:
+            if (time() - property_bhd_ts) >= property_bhd_tout:
+                property_bhd_ts = time()
+                data = self.get_property('BHD')
+                if data:
+                    property_bhd_tout = 60 * 60
+                    self.bhdAmount = data
+                    write_log('获取BHD资产：{}'.format(data))
+                else:
+                    property_bhd_tout = 0
+            if (time() - property_boom_ts) >= property_boom_tout:
+                property_boom_ts = time()
+                data = self.get_property('BOOM')
+                if data:
+                    property_boom_tout = 60 * 60
+                    self.boomAmount = data
+                    write_log('获取BOOM资产：{}'.format(data))
+                else:
+                    property_boom_tout = 0
+            if (time() - property_burst_ts) >= property_burst_tout:
+                property_burst_ts = time()
+                data = self.get_property('BURST')
+                if data:
+                    property_burst_tout = 60 * 60
+                    self.burstAmount = data
+                    write_log('获取BURST资产：{}'.format(data))
+                else:
+                    property_burst_tout = 0
+            sleep(5)
+
+    def commit_evt(self):
+        # 报价
+        if not self.tradeBHD or not self.tradeBOOM or not self.tradeBURST:
+            print('{} 未正常获取'.format('报价'))
+            return False
+        bhdBid, bhdAsk = self.tradeBHD
+        boomBid, boomAsk = self.tradeBOOM
+        burstBid, burstAsk = self.tradeBURST
+        # ONEPOOL
+        if not self.bhdAmount or not self.boomAmount or not self.burstAmount:
+            print('{} 未正常获取'.format('ONEPOOL资产'))
+            return False
+        bhdProperty = self.bhdAmount * bhdBid
+        boomProperty = self.boomAmount * boomBid
+        burstProperty = self.burstAmount * burstBid
+        poolProperty = bhdProperty + boomProperty + burstProperty
+        # 用电统计
+        if not self.cycPrice or not self.cycPow:
+            print('{} 未正常获取'.format('用电信息'))
+            return False
+        cycPay = self.cycPow * 24 * 30 * self.cycPrice / 1000
+        # 周期
+        if not self.cycMachine or not self.cycDisk or not self.cycCapacity:
+            print('{} 未正常获取'.format('设备信息'))
+            return False
+        if not self.poolAverage:
+            print('{} 未正常获取'.format('日均收益'))
+            return False
+        cycIncome = self.poolAverage * 30
+        cycProfit = cycIncome - cycPay
+        cycMonth = (self.cycMachine - poolProperty) / cycProfit
+        cycDate = strftime('%Y-%m-%d', localtime(time() + cycMonth * 30 * 24 * 60 * 60))
+
+        # 未完成的功能
+        bhdCurrent = 0
+        bhdExpect = 0
+        boomCurrent = 0
+        boomExpect = 0
+        burstCurrent = 0
+        burstExpect = 0
+        if not os.path.isfile(self.template):
+            print('{} 未正常获取'.format('Markdown模板'))
+            return False
+        with open(self.template, 'r', encoding='utf-8') as f:
+            md = f.read()
+        data = md.format(
+            bhdBid=bhdBid, bhdAsk=bhdAsk,
+            boomBid=boomBid, boomAsk=boomAsk,
+            burstBid=burstBid, burstAsk=burstAsk,
+
+            poolProperty=poolProperty, poolAverage=self.poolAverage,
+
+            bhdAmount=self.bhdAmount, bhdProperty=bhdProperty,
+            bhdCurrent=bhdCurrent, bhdExpect=bhdExpect,
+
+            boomAmount=self.boomAmount, boomProperty=boomProperty,
+            boomCurrent=boomCurrent, boomExpect=boomExpect,
+
+            burstAmount=self.burstAmount, burstProperty=burstProperty,
+            burstCurrent=burstCurrent, burstExpect=burstExpect,
+
+            cycPrice=self.cycPrice, cycPow=self.cycPow, cycPay=cycPay,
+
+            cycMachine=self.cycMachine, cycDisk=self.cycDisk, cycCapacity=self.cycCapacity,
+            cycIncome=cycIncome, cycProfit=cycProfit, cycMonth=cycMonth, cycDate=cycDate
+        )
+        if data == self.last_push:
+            # 数据已上报过
+            return False
+        if self.post_msg(data):
+            self.last_push = data
+
+    def run(self):
+        # Thread get self.cycMachine, self.cycDisk, self.cycCapacity
+        # Thread get self.tradeBHD, self.tradeBOOM, self.tradeBURST
+        # Thread get self.bhdAmount, self.boomAmount, self.burstAmount
+        while True:
+            self.commit_evt()
+            sleep(1)
 
 
 if __name__ == '__main__':
