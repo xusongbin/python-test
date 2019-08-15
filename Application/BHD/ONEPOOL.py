@@ -9,6 +9,7 @@ import threading
 from urllib import request
 from urllib import parse
 from time import time, strftime, localtime, mktime, strptime, sleep
+from contextlib import closing
 from traceback import format_exc
 
 
@@ -60,7 +61,6 @@ class Pool(object):
     burstAmount = 0
 
     def __init__(self):
-
         # 线程获取挖财数据，720分钟获取一次，获取失败则5秒后重试
         self.thread_wacai = threading.Thread(target=self.on_thread_wacai)
         self.thread_wacai.setDaemon(True)
@@ -110,19 +110,19 @@ class Pool(object):
             'Content-Type': 'application/json;charset=utf-8'
         }
         data = self.__markdown_msg(context)
-        resp = None
         try:
             req = request.Request(self.robot, data=bytes(data, 'utf-8'), headers=headers)
-            resp = request.urlopen(req, timeout=5).read().decode('utf-8')
-            resp = json.loads(resp)
-            if resp['errcode'] == 0:
+            with closing(request.urlopen(req, timeout=5)) as resp:
+                context = resp.read().decode('utf-8')
+            if not context:
+                return False
+            context = json.loads(context)
+            if context['errcode'] == 0:
                 return True
         except Exception as e:
             if 'timed out' in str(e):
                 write_log(str(e))
             else:
-                if resp:
-                    print(resp)
                 write_log('{}\n{}'.format(e, format_exc()))
         return False
 
@@ -177,14 +177,18 @@ class Pool(object):
         try:
             data = parse.urlencode(data).encode('utf-8')
             req = request.Request(url, data, headers)
-            resp = request.urlopen(req, timeout=3)
-
-            if resp.info().get('Content-Encoding') == 'gzip':
-                resp = gzip.decompress(resp.read()).decode('utf-8')
+            context = None
+            encoding = 'utf-8'
+            with closing(request.urlopen(req, timeout=3)) as resp:
+                encoding = resp.info().get('Content-Encoding')
+                context = resp.read()
+            if not context:
+                return None
+            if encoding == 'gzip':
+                context = gzip.decompress(context).decode('utf-8')
             else:
-                resp = resp.read().encode('utf-8')
-
-            resp_dict = json.loads(resp)
+                context = context.encode('utf-8')
+            resp_dict = json.loads(context)
             value = 0
             disk = 0
             capacity = 0
@@ -215,27 +219,31 @@ class Pool(object):
         headers = {
             'User-Agent': self.user_agent
         }
-        if symbol == 'BOOM' or symbol == 'BURST':
-            headers['Host'] = 'www.qbtc.ink'
-            url = 'http://www.qbtc.ink/json/depthTable.do?tradeMarket=CNYT&symbol={}'.format(symbol)
-            qbct = True
-        else:
-            url = 'https://api.aex.zone/depth.php?c={}&mk_type=cnc'.format(symbol)
-            qbct = False
         try:
-            req = request.Request(url=url, headers=headers)
-            resp = request.urlopen(req, timeout=3)
-            data = json.loads(resp.read().decode('utf-8'))
-            if qbct:
-                data = [float(data['result']['buy'][0]['price']), float(data['result']['sell'][0]['price'])]
+            if symbol == 'BOOM' or symbol == 'BURST':
+                headers['Host'] = 'www.qbtc.ink'
+                url = 'http://www.qbtc.ink/json/depthTable.do?tradeMarket=CNYT&symbol={}'.format(symbol)
+                qbtc = True
             else:
-                data = [float(data['bids'][0][0]), float(data['asks'][0][0])]
-            return data
+                url = 'https://api.aex.zone/depth.php?c={}&mk_type=cnc'.format(symbol)
+                qbtc = False
+            context = None
+            req = request.Request(url=url, headers=headers)
+            with closing(request.urlopen(req, timeout=10)) as resp:
+                context = resp.read().decode('utf-8')
+            if not context:
+                return None
+            context = json.loads(context)
+            if qbtc:
+                data_list = [float(context['result']['buy'][0]['price']), float(context['result']['sell'][0]['price'])]
+            else:
+                data_list = [float(context['bids'][0][0]), float(context['asks'][0][0])]
+            return data_list
         except Exception as e:
             if 'timed out' in str(e):
                 write_log(str(e))
             else:
-                write_log('{}\n{}'.format(e, format_exc()))
+                write_log('{}\n{}\n{}'.format(symbol, e, format_exc()))
         return None
 
     def get_property(self, symbol):
@@ -273,20 +281,24 @@ class Pool(object):
             return None
         try:
             req = request.Request(cur_url, headers=headers)
-            resp = request.urlopen(req)
+            context = None
+            with closing(request.urlopen(req, timeout=5)) as resp:
+                context = resp.read()
+            if not context:
+                return None
             if resp.info().get('Content-Encoding') == 'gzip':
-                resp = gzip.decompress(resp.read()).decode('utf-8')
+                context = gzip.decompress(context).decode('utf-8')
             else:
-                resp = resp.read().decode('utf-8')
-            if 'user_asset_avai_balance' not in resp:
+                context = context.decode('utf-8')
+            if 'user_asset_avai_balance' not in context:
                 print('Not found property')
                 return None
-            resp = resp[:resp.find('user_asset_avai_balance')]
-            resp = resp[resp.rfind('asset-num'):]
-            data = 0
-            for d in re.findall(r'asset-num\">(\d+\.\d+)<.*', resp):
-                data = d
-            return float(data)
+            context = context[:context.find('user_asset_avai_balance')]
+            context = context[context.rfind('asset-num'):]
+            property = 0
+            for d in re.findall(r'asset-num\">(\d+\.\d+)<.*', context):
+                property = d
+            return float(property)
         except Exception as e:
             if 'timed out' in str(e):
                 write_log(str(e))
@@ -346,8 +358,12 @@ class Pool(object):
                 data = {'page': page_idx, 'start': t_start, 'stop': t_stop}
                 data = parse.urlencode(data).encode('utf-8')
                 req = request.Request(cur_url, data=data, headers=headers)
-                resp = request.urlopen(req, timeout=3).read().decode('utf-8')
-                js_data = json.loads(resp)['data']
+                context = None
+                with closing(request.urlopen(req, timeout=3)) as resp:
+                    context = resp.read().decode('utf-8')
+                if not context:
+                    return []
+                js_data = json.loads(context)['data']
                 for data in js_data['data']:
                     if data['profit_date'] in day_list:
                         rt_data.append(data)
@@ -423,29 +439,31 @@ class Pool(object):
         trade_bhd_tout = 0
         trade_boom_tout = 0
         trade_burst_tout = 0
+        default_tout = 60 * 10
+        # default_tout = 60
         while True:
             if (time() - trade_bhd_ts) >= trade_bhd_tout:
                 trade_bhd_ts = time()
                 trade_bhd_tout = 0
                 price = self.get_trade('BHD')
                 if price:
-                    trade_bhd_tout = 60 * 10
+                    trade_bhd_tout = default_tout
                     self.tradeBHD = price
                     write_log('获取BHD价格：{}'.format(price))
             if (time() - trade_boom_ts) >= trade_boom_tout:
                 trade_boom_ts = time()
-                trade_boom_tout = 0
+                trade_boom_tout = 60
                 price = self.get_trade('BOOM')
                 if price:
-                    trade_boom_tout = 60 * 10
+                    trade_boom_tout = default_tout
                     self.tradeBOOM = price
                     write_log('获取BOOM价格：{}'.format(price))
             if (time() - trade_burst_ts) >= trade_burst_tout:
                 trade_burst_ts = time()
-                trade_burst_tout = 0
+                trade_burst_tout = 60
                 price = self.get_trade('BURST')
                 if price:
-                    trade_burst_tout = 60 * 10
+                    trade_burst_tout = default_tout
                     self.tradeBURST = price
                     write_log('获取BURST价格：{}'.format(price))
             sleep(5)

@@ -1,11 +1,11 @@
 #### 报价
->[BHD](https://www.aex-global.com/page/trade.html?mk_type=CNC&trade_coin_name=BHD)
+- [BHD](https://www.aex-global.com/page/trade.html?mk_type=CNC&trade_coin_name=BHD)
 - 买盘：{bhdBid}  
 - 卖盘：{bhdAsk}
->[BOOM](https://www.qbtc.ink/trade?symbol=BOOM_CNYT)
+- [BOOM](https://www.qbtc.ink/trade?symbol=BOOM_CNYT)
 - 买盘：{boomBid}
 - 卖盘：{boomAsk}
->[BURST](https://www.qbtc.ink/trade?symbol=BURST_CNYT)
+- [BURST](https://www.qbtc.ink/trade?symbol=BURST_CNYT)
 - 买盘：{burstBid}
 - 卖盘：{burstAsk}
 
