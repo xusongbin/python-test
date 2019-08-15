@@ -37,8 +37,7 @@ class Pool(object):
         'ea1cec7b579e9f5acfec476e6a63fc90e47204fc8e16c49a094cb5366910556c'
     )
     last_push = None
-    robot_ts = time()
-    robot_tout = 10     # 上报频率10秒一次
+    robot_tout = 60      # 上报频率60秒一次
     template = 'property.md'
 
     cycMachine = 25000
@@ -103,9 +102,6 @@ class Pool(object):
         return None
 
     def post_msg(self, context=''):
-        if (time() - self.robot_ts) < self.robot_tout:
-            return False
-        self.robot_ts = time()
         headers = {
             'Content-Type': 'application/json;charset=utf-8'
         }
@@ -599,6 +595,11 @@ class Pool(object):
         if data == self.last_push:
             # 数据已上报过
             return False
+        self.robot_tout += 1
+        if self.robot_tout < 6:
+            # 限制数据无法1分钟内频繁发送
+            return False
+        self.robot_tout = 0
         if self.post_msg(data):
             self.last_push = data
             write_log('上报新数据')
@@ -609,7 +610,7 @@ class Pool(object):
         # Thread get self.bhdAmount, self.boomAmount, self.burstAmount
         while True:
             self.commit_evt()
-            sleep(2)
+            sleep(10)
 
 
 if __name__ == '__main__':
