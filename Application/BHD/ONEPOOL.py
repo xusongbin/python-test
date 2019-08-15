@@ -54,6 +54,7 @@ class Pool(object):
     poolAverage = 0
 
     bhdToday = 0
+    bhdTodayPer = 0
     boomToday = 0
     burstToday = 0
     bhdAmount = 0
@@ -71,7 +72,7 @@ class Pool(object):
         self.thread_average.setDaemon(True)
         self.thread_average.start()
 
-        # 线程获取实时报价，10分钟获取一次，获取失败则5秒后重试
+        # 线程获取实时报价，60分钟获取一次，获取失败则5秒后重试
         self.thread_trade = threading.Thread(target=self.on_thread_trade)
         self.thread_trade.setDaemon(True)
         self.thread_trade.start()
@@ -417,7 +418,7 @@ class Pool(object):
         return bhd_amount, boom_amount, burst_amount
 
     def on_thread_wacai(self):
-        # 线程获取挖财数据，30分钟获取一次，获取失败则5秒后重试
+        # 线程获取挖财数据，720分钟获取一次，获取失败则5秒后重试
         wacai_ts = time()
         wacai_tout = 0
         while True:
@@ -432,15 +433,14 @@ class Pool(object):
             sleep(5)
 
     def on_thread_trade(self):
-        # 线程获取实时报价，10分钟获取一次，获取失败则5秒后重试
+        # 线程获取实时报价，60分钟获取一次，获取失败则5秒后重试
         trade_bhd_ts = time()
         trade_boom_ts = time()
         trade_burst_ts = time()
         trade_bhd_tout = 0
         trade_boom_tout = 0
         trade_burst_tout = 0
-        default_tout = 60 * 10
-        # default_tout = 60
+        default_tout = 60 * 60
         while True:
             if (time() - trade_bhd_ts) >= trade_bhd_tout:
                 trade_bhd_ts = time()
@@ -469,7 +469,7 @@ class Pool(object):
             sleep(5)
 
     def on_thread_average(self):
-        # 线程获取日均收益，60分钟获取一次，获取失败则5秒后重试
+        # 线程获取日均收益，120分钟获取一次，获取失败则5秒后重试
         # '2019-07-18'  15号盘重新Plot后上线时间
         # '2019-08-07'  16号盘Plot后上线时间
         average_ts = time()
@@ -598,11 +598,12 @@ class Pool(object):
             cycMachine=self.cycMachine, cycDisk=self.cycDisk, cycCapacity=self.cycCapacity,
             cycIncome=round(cycIncome, 2), cycProfit=round(cycProfit, 2), cycMonth=round(cycMonth, 2), cycDate=cycDate
         )
-        if data == self.last_push:
+        if data == self.last_push or self.bhdTodayPer == self.bhdToday:
             # 数据已上报过
             return False
         if self.post_msg(data):
             self.last_push = data
+            self.bhdTodayPer = self.bhdToday
             write_log('上报新数据')
 
     def run(self):
@@ -611,7 +612,7 @@ class Pool(object):
         # Thread get self.bhdAmount, self.boomAmount, self.burstAmount
         while True:
             self.commit_evt()
-            sleep(1)
+            sleep(2)
 
 
 if __name__ == '__main__':
