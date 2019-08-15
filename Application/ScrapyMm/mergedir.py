@@ -6,7 +6,6 @@ import shutil
 
 base_path = 'D:/Program Files/Picture/'
 keyword = [
-    '黄可', '沈佳熹'
 ]
 
 
@@ -62,4 +61,4 @@ def read_directory():
 
 if __name__ == '__main__':
     check_directory()
-    read_directory()
+    # read_directory()

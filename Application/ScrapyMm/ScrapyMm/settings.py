@@ -14,7 +14,7 @@ BOT_NAME = 'ScrapyMm'
 SPIDER_MODULES = ['ScrapyMm.spiders']
 NEWSPIDER_MODULE = 'ScrapyMm.spiders'
 
-LOG_LEVEL = 'DEBUG'
+LOG_LEVEL = 'INFO'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'ScrapyMm (+http://www.yourdomain.com)'
@@ -39,6 +39,8 @@ COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
+TELNETCONSOLE_USERNAME = 'scrapy'
+TELNETCONSOLE_PASSWORD = 'scrapy'
 
 # Override the default request headers:
 DEFAULT_REQUEST_HEADERS = {
