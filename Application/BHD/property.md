@@ -30,8 +30,8 @@
 
 #### 用电统计
 - 电价：{cycPrice}{cycPriceDirect}
-- 功率：{burstProperty}{burstPropertyDirect}
-- 月电费：{burstProperty}{burstPropertyDirect}
+- 功率：{cycPow}{cycPowDirect}
+- 月电费：{cycPay}{cycPayDirect}
 
 #### 周期
 - 设备成本：{cycMachine}{cycMachineDirect}
