@@ -1,44 +1,44 @@
 #### 报价
 - [BHD](https://www.aex-global.com/page/trade.html?mk_type=CNC&trade_coin_name=BHD)
-- 买盘：{bhdBid}  
-- 卖盘：{bhdAsk}
+- 买盘：{bhdBid}{bhdBidDirect}
+- 卖盘：{bhdAsk}{bhdAskDirect}
 - [BOOM](https://www.qbtc.ink/trade?symbol=BOOM_CNYT)
-- 买盘：{boomBid}
-- 卖盘：{boomAsk}
+- 买盘：{boomBid}{boomBidDirect}
+- 卖盘：{boomAsk}{boomAskDirect}
 - [BURST](https://www.qbtc.ink/trade?symbol=BURST_CNYT)
-- 买盘：{burstBid}
-- 卖盘：{burstAsk}
+- 买盘：{burstBid}{burstBidDirect}
+- 卖盘：{burstAsk}{burstAskDirect}
 
 #### ONEPOOL
-- 总价值：{poolProperty}
-- 日均收益：{poolAverage}
+- 总价值：{poolProperty}{poolPropertyDirect}
+- 日均收益：{poolAverage}{poolAverageDirect}
 
 #### BHD当前统计
-- 今天：{bhdToday}
-- 钱包：{bhdAmount}
-- 价值：{bhdProperty}
+- 今天：{bhdToday}{bhdTodayDirect}
+- 钱包：{bhdAmount}{bhdAmountDirect}
+- 价值：{bhdProperty}{bhdPropertyDirect}
 
 #### BOOM当前统计
-- 今天：{boomToday}
-- 钱包：{boomAmount}
-- 价值：{boomProperty}
+- 今天：{boomToday}{boomTodayDirect}
+- 钱包：{boomAmount}{boomAmountDirect}
+- 价值：{boomProperty}{boomPropertyDirect}
 
 #### BURST当前统计
-- 今天：{burstToday}
-- 钱包：{burstAmount}
-- 价值：{burstProperty}
+- 今天：{burstToday}{burstTodayDirect}
+- 钱包：{burstAmount}{burstAmountDirect}
+- 价值：{burstProperty}{burstPropertyDirect}
 
 #### 用电统计
-- 电价：{cycPrice}
-- 功率：{cycPow}
-- 月电费：{cycPay}
+- 电价：{cycPrice}{cycPriceDirect}
+- 功率：{burstProperty}{burstPropertyDirect}
+- 月电费：{burstProperty}{burstPropertyDirect}
 
 #### 周期
-- 设备成本：{cycMachine} 
-- 硬盘数量：{cycDisk}
-- 硬盘容量：{cycCapacity}
-- 月收益：{cycIncome}
-- 净收益：{cycProfit}
-- 月周期：{cycMonth}
-- 日期：{cycDate}
+- 设备成本：{cycMachine}{cycMachineDirect}
+- 硬盘数量：{cycDisk}{cycDiskDirect}
+- 硬盘容量：{cycCapacity}{cycCapacityDirect}
+- 月收益：{cycIncome}{cycIncomeDirect}
+- 净收益：{cycProfit}{cycProfitDirect}
+- 月周期：{cycMonth}{cycMonthDirect}
+- 日期：{cycDate}{cycDateDirect}
 

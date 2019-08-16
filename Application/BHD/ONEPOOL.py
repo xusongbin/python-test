@@ -36,7 +36,25 @@ class Pool(object):
         'https://oapi.dingtalk.com/robot/send?access_token='
         'ea1cec7b579e9f5acfec476e6a63fc90e47204fc8e16c49a094cb5366910556c'
     )
-    last_push = None
+    item = [
+        'bhdBid', 'bhdAsk', 'boomBid', 'boomAsk', 'burstBid', 'burstAsk',
+        'poolProperty', 'poolAverage',
+        'bhdToday', 'bhdAmount', 'bhdProperty',
+        'boomToday', 'boomAmount', 'boomProperty',
+        'burstToday', 'burstAmount', 'burstProperty',
+        'cycPrice', 'cycPow', 'cycPay',
+        'cycMachine', 'cycDisk', 'cycCapacity',
+        'cycIncome', 'cycProfit', 'cycMonth', 'cycDate'
+    ]
+    last_push_str = None
+    last_push_dict = {}
+    this_push_dict = {}
+    this_push_direct = {}
+    for key in item:
+        last_push_dict[key] = 0.0
+        this_push_dict[key] = 0.0
+    for key in item:
+        this_push_direct[key] = 'black'
     robot_tout = 60      # 上报频率60秒一次
     template = 'property.md'
 
@@ -571,37 +589,107 @@ class Pool(object):
         cycIncome = self.poolAverage * 30
         cycProfit = cycIncome - cycPay
         cycMonth = (self.cycMachine - poolProperty) / cycProfit
-        cycDate = strftime('%Y-%m-%d', localtime(time() + cycMonth * 30 * 24 * 60 * 60))
+        cycDate = time() + cycMonth * 30 * 24 * 60 * 60
         if not os.path.isfile(self.template):
             print('{} 未正常获取'.format('Markdown模板'))
             return False
+        
+        # 判断数据增长或减少
+        self.this_push_dict['bhdBid'] = bhdBid
+        self.this_push_dict['bhdAsk'] = bhdAsk
+        self.this_push_dict['boomBid'] = boomBid
+        self.this_push_dict['boomAsk'] = boomAsk
+        self.this_push_dict['burstBid'] = burstBid
+        self.this_push_dict['burstAsk'] = burstAsk
+
+        self.this_push_dict['poolProperty'] = round(poolProperty, 6)
+        self.this_push_dict['poolAverage'] = round(self.poolAverage, 6)
+
+        self.this_push_dict['bhdToday'] = self.bhdToday
+        self.this_push_dict['bhdAmount'] = self.bhdAmount
+        self.this_push_dict['bhdProperty'] = round(bhdProperty, 6)
+        self.this_push_dict['boomToday'] = self.boomToday
+        self.this_push_dict['boomAmount'] = self.boomAmount
+        self.this_push_dict['boomProperty'] = round(boomProperty, 6)
+        self.this_push_dict['burstToday'] = self.burstToday
+        self.this_push_dict['burstAmount'] = self.burstAmount
+        self.this_push_dict['burstProperty'] = round(burstProperty, 6)
+
+        self.this_push_dict['cycPrice'] = self.cycPrice
+        self.this_push_dict['cycPow'] = self.cycPow
+        self.this_push_dict['cycPay'] = round(cycPay, 2)
+        self.this_push_dict['cycMachine'] = self.cycMachine
+        self.this_push_dict['cycDisk'] = self.cycDisk
+        self.this_push_dict['cycCapacity'] = self.cycCapacity
+        self.this_push_dict['cycIncome'] = round(cycIncome, 2)
+        self.this_push_dict['cycProfit'] = round(cycProfit, 2)
+        self.this_push_dict['cycMonth'] = round(cycMonth, 2)
+        self.this_push_dict['cycDate'] = cycDate
+
+        for key in self.item:
+            if key == 'cycDate':
+                if int(self.this_push_dict[key]/86400) > int(self.last_push_dict[key]/86400):
+                    self.this_push_direct[key] = '↑'
+                elif int(self.this_push_dict[key]/86400) < int(self.last_push_dict[key]/86400):
+                    self.this_push_direct[key] = '↓'
+                else:
+                    self.this_push_direct[key] = ''
+            else:
+                if self.this_push_dict[key] > self.last_push_dict[key]:
+                    self.this_push_direct[key] = '↑'
+                elif self.this_push_dict[key] < self.last_push_dict[key]:
+                    self.this_push_direct[key] = '↓'
+                else:
+                    self.this_push_direct[key] = ''
+        # 写入数据到markdown
         with open(self.template, 'r', encoding='utf-8') as f:
             md = f.read()
         data = md.format(
-            bhdBid=bhdBid, bhdAsk=bhdAsk,
-            boomBid=boomBid, boomAsk=boomAsk,
-            burstBid=burstBid, burstAsk=burstAsk,
+            bhdBidDirect=self.this_push_direct['bhdBid'], bhdBid=self.this_push_dict['bhdBid'],
+            bhdAskDirect=self.this_push_direct['bhdAsk'], bhdAsk=self.this_push_dict['bhdAsk'],
+            boomBidDirect=self.this_push_direct['boomBid'], boomBid=self.this_push_dict['boomBid'],
+            boomAskDirect=self.this_push_direct['boomAsk'], boomAsk=self.this_push_dict['boomAsk'],
+            burstBidDirect=self.this_push_direct['burstBid'], burstBid=self.this_push_dict['burstBid'],
+            burstAskDirect=self.this_push_direct['burstAsk'], burstAsk=self.this_push_dict['burstAsk'],
 
-            poolProperty=round(poolProperty, 6), poolAverage=round(self.poolAverage, 6),
+            poolPropertyDirect=self.this_push_direct['poolProperty'], poolProperty=self.this_push_dict['poolProperty'],
+            poolAverageDirect=self.this_push_direct['poolAverage'], poolAverage=self.this_push_dict['poolAverage'],
 
-            bhdToday=self.bhdToday, bhdAmount=self.bhdAmount, bhdProperty=round(bhdProperty, 6),
-            boomToday=self.boomToday, boomAmount=self.boomAmount, boomProperty=round(boomProperty, 6),
-            burstToday=self.burstToday, burstAmount=self.burstAmount, burstProperty=round(burstProperty, 6),
+            bhdTodayDirect=self.this_push_direct['bhdToday'], bhdToday=self.this_push_dict['bhdToday'],
+            bhdAmountDirect=self.this_push_direct['bhdAmount'], bhdAmount=self.this_push_dict['bhdAmount'],
+            bhdPropertyDirect=self.this_push_direct['bhdProperty'], bhdProperty=self.this_push_dict['bhdProperty'],
+            boomTodayDirect=self.this_push_direct['boomToday'], boomToday=self.this_push_dict['boomToday'],
+            boomAmountDirect=self.this_push_direct['boomAmount'], boomAmount=self.this_push_dict['boomAmount'],
+            boomPropertyDirect=self.this_push_direct['boomProperty'], boomProperty=self.this_push_dict['boomProperty'],
+            burstTodayDirect=self.this_push_direct['burstToday'], burstToday=self.this_push_dict['burstToday'],
+            burstAmountDirect=self.this_push_direct['burstAmount'], burstAmount=self.this_push_dict['burstAmount'],
+            burstPropertyDirect=self.this_push_direct['burstProperty'],
+            burstProperty=self.this_push_dict['burstProperty'],
 
-            cycPrice=self.cycPrice, cycPow=self.cycPow, cycPay=round(cycPay, 2),
-            cycMachine=self.cycMachine, cycDisk=self.cycDisk, cycCapacity=self.cycCapacity,
-            cycIncome=round(cycIncome, 2), cycProfit=round(cycProfit, 2), cycMonth=round(cycMonth, 2), cycDate=cycDate
+            cycPriceDirect=self.this_push_direct['cycPrice'], cycPrice=self.this_push_dict['cycPrice'],
+            cycPowDirect=self.this_push_direct['cycPow'], cycPow=self.this_push_dict['cycPow'],
+            cycPayDirect=self.this_push_direct['cycPay'], cycPay=self.this_push_dict['cycPay'],
+            cycMachineDirect=self.this_push_direct['cycMachine'], cycMachine=self.this_push_dict['cycMachine'],
+            cycDiskDirect=self.this_push_direct['cycDisk'], cycDisk=self.this_push_dict['cycDisk'],
+            cycCapacityDirect=self.this_push_direct['cycCapacity'], cycCapacity=self.this_push_dict['cycCapacity'],
+            cycIncomeDirect=self.this_push_direct['cycIncome'], cycIncome=self.this_push_dict['cycIncome'],
+            cycProfitDirect=self.this_push_direct['cycProfit'], cycProfit=self.this_push_dict['cycProfit'],
+            cycMonthDirect=self.this_push_direct['cycMonth'], cycMonth=self.this_push_dict['cycMonth'],
+            cycDateDirect=self.this_push_direct['cycDate'],
+            cycDate=strftime('%Y-%m-%d', localtime(self.this_push_dict['cycDate']))
         )
-        if data == self.last_push:
-            # 数据已上报过
+        # 判断数据是否上报过
+        if data == self.last_push_str:
             return False
         self.robot_tout += 1
-        if self.robot_tout < 6:
+        if self.robot_tout < 9:
             # 限制数据无法1分钟内频繁发送
             return False
         self.robot_tout = 0
         if self.post_msg(data):
-            self.last_push = data
+            self.last_push_str = data
+            for key in self.item:
+                self.last_push_dict[key] = self.this_push_dict[key]
             write_log('上报新数据')
 
     def run(self):
