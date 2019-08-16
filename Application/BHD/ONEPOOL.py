@@ -3,6 +3,7 @@
 
 import os
 import re
+import gc
 import json
 import gzip
 import threading
@@ -11,6 +12,7 @@ from urllib import parse
 from time import time, strftime, localtime, mktime, strptime, sleep
 from contextlib import closing
 from traceback import format_exc
+gc.set_threshold(600, 10, 10)
 
 
 def write_log(_str):
@@ -128,11 +130,9 @@ class Pool(object):
             req = request.Request(self.robot, data=bytes(data, 'utf-8'), headers=headers)
             with closing(request.urlopen(req, timeout=5)) as resp:
                 context = resp.read().decode('utf-8')
-            if not context:
-                return False
-            context = json.loads(context)
-            if context['errcode'] == 0:
-                return True
+                context = json.loads(context)
+                if context['errcode'] == 0:
+                    return True
         except Exception as e:
             if 'timed out' in str(e):
                 write_log(str(e))
@@ -191,37 +191,32 @@ class Pool(object):
         try:
             data = parse.urlencode(data).encode('utf-8')
             req = request.Request(url, data, headers)
-            context = None
-            encoding = 'utf-8'
             with closing(request.urlopen(req, timeout=3)) as resp:
-                encoding = resp.info().get('Content-Encoding')
                 context = resp.read()
-            if not context:
-                return None
-            if encoding == 'gzip':
-                context = gzip.decompress(context).decode('utf-8')
-            else:
-                context = context.encode('utf-8')
-            resp_dict = json.loads(context)
-            value = 0
-            disk = 0
-            capacity = 0
-            cost = 0
-            power = 0
-            for account in resp_dict['accountTypeSum']:
-                if 'accTypeName' not in account.keys():
-                    continue
-                if account['accTypeName'] == '投资账户':
-                    for accs in account['accs']:
-                        if accs['name'] == '矿工':
-                            value = accs['balance']
-                            comment = accs['comment'].split('\n')
-                            disk = int(comment[0].split('=')[1])
-                            capacity = int(comment[1].split('=')[1])
-                            cost = float(comment[2].split('=')[1])
-                            power = int(comment[3].split('=')[1])
-            if value > 0 and disk > 0 and capacity > 0 and cost > 0 and power > 0:
-                return [value, disk, capacity, cost, power]
+                if resp.info().get('Content-Encoding') == 'gzip':
+                    context = gzip.decompress(context).decode('utf-8')
+                else:
+                    context = context.encode('utf-8')
+                resp_dict = json.loads(context)
+                value = 0
+                disk = 0
+                capacity = 0
+                cost = 0
+                power = 0
+                for account in resp_dict['accountTypeSum']:
+                    if 'accTypeName' not in account.keys():
+                        continue
+                    if account['accTypeName'] == '投资账户':
+                        for accs in account['accs']:
+                            if accs['name'] == '矿工':
+                                value = accs['balance']
+                                comment = accs['comment'].split('\n')
+                                disk = int(comment[0].split('=')[1])
+                                capacity = int(comment[1].split('=')[1])
+                                cost = float(comment[2].split('=')[1])
+                                power = int(comment[3].split('=')[1])
+                if value > 0 and disk > 0 and capacity > 0 and cost > 0 and power > 0:
+                    return [value, disk, capacity, cost, power]
         except Exception as e:
             if 'timed out' in str(e):
                 write_log(str(e))
@@ -241,18 +236,15 @@ class Pool(object):
             else:
                 url = 'https://api.aex.zone/depth.php?c={}&mk_type=cnc'.format(symbol)
                 qbtc = False
-            context = None
             req = request.Request(url=url, headers=headers)
             with closing(request.urlopen(req, timeout=10)) as resp:
                 context = resp.read().decode('utf-8')
-            if not context:
-                return None
-            context = json.loads(context)
-            if qbtc:
-                data_list = [float(context['result']['buy'][0]['price']), float(context['result']['sell'][0]['price'])]
-            else:
-                data_list = [float(context['bids'][0][0]), float(context['asks'][0][0])]
-            return data_list
+                context = json.loads(context)
+                if qbtc:
+                    data_list = [float(context['result']['buy'][0]['price']), float(context['result']['sell'][0]['price'])]
+                else:
+                    data_list = [float(context['bids'][0][0]), float(context['asks'][0][0])]
+                return data_list
         except Exception as e:
             if 'timed out' in str(e):
                 write_log(str(e))
@@ -295,24 +287,21 @@ class Pool(object):
             return None
         try:
             req = request.Request(cur_url, headers=headers)
-            context = None
             with closing(request.urlopen(req, timeout=5)) as resp:
                 context = resp.read()
-            if not context:
-                return None
-            if resp.info().get('Content-Encoding') == 'gzip':
-                context = gzip.decompress(context).decode('utf-8')
-            else:
-                context = context.decode('utf-8')
-            if 'user_asset_avai_balance' not in context:
-                print('Not found property')
-                return None
-            context = context[:context.find('user_asset_avai_balance')]
-            context = context[context.rfind('asset-num'):]
-            property = 0
-            for d in re.findall(r'asset-num\">(\d+\.\d+)<.*', context):
-                property = d
-            return float(property)
+                if resp.info().get('Content-Encoding') == 'gzip':
+                    context = gzip.decompress(context).decode('utf-8')
+                else:
+                    context = context.decode('utf-8')
+                if 'user_asset_avai_balance' not in context:
+                    print('Not found property')
+                    return None
+                context = context[:context.find('user_asset_avai_balance')]
+                context = context[context.rfind('asset-num'):]
+                property = 0
+                for d in re.findall(r'asset-num\">(\d+\.\d+)<.*', context):
+                    property = d
+                return float(property)
         except Exception as e:
             if 'timed out' in str(e):
                 write_log(str(e))
@@ -372,20 +361,17 @@ class Pool(object):
                 data = {'page': page_idx, 'start': t_start, 'stop': t_stop}
                 data = parse.urlencode(data).encode('utf-8')
                 req = request.Request(cur_url, data=data, headers=headers)
-                context = None
                 with closing(request.urlopen(req, timeout=3)) as resp:
                     context = resp.read().decode('utf-8')
-                if not context:
-                    return []
-                js_data = json.loads(context)['data']
-                for data in js_data['data']:
-                    if data['profit_date'] in day_list:
-                        rt_data.append(data)
-                try:
-                    page_total = js_data['last_page']
-                except Exception as e:
-                    print('{}\n{}'.format(e, format_exc()))
-                page_idx += 1
+                    js_data = json.loads(context)['data']
+                    for data in js_data['data']:
+                        if data['profit_date'] in day_list:
+                            rt_data.append(data)
+                    try:
+                        page_total = js_data['last_page']
+                    except Exception as e:
+                        print('{}\n{}'.format(e, format_exc()))
+                    page_idx += 1
             return rt_data
         except Exception as e:
             if 'timed out' in str(e):
@@ -626,19 +612,24 @@ class Pool(object):
         self.this_push_dict['cycMonth'] = round(cycMonth, 2)
         self.this_push_dict['cycDate'] = cycDate
 
+        change_flag = False
         for key in self.item:
             if key == 'cycDate':
                 if int(self.this_push_dict[key]/86400) > int(self.last_push_dict[key]/86400):
                     self.this_push_direct[key] = '↑'
+                    change_flag = True
                 elif int(self.this_push_dict[key]/86400) < int(self.last_push_dict[key]/86400):
                     self.this_push_direct[key] = '↓'
+                    change_flag = True
                 else:
                     self.this_push_direct[key] = ''
             else:
                 if self.this_push_dict[key] > self.last_push_dict[key]:
                     self.this_push_direct[key] = '↑'
+                    change_flag = True
                 elif self.this_push_dict[key] < self.last_push_dict[key]:
                     self.this_push_direct[key] = '↓'
+                    change_flag = True
                 else:
                     self.this_push_direct[key] = ''
         # 写入数据到markdown
@@ -679,15 +670,19 @@ class Pool(object):
             cycDate=strftime('%Y-%m-%d', localtime(self.this_push_dict['cycDate']))
         )
         # 判断数据是否上报过
-        if data == self.last_push_str:
+        if data == self.last_push_str or not change_flag:
+            self.robot_tout = 0
             return False
         self.robot_tout += 1
         if self.robot_tout < 9:
-            # 限制数据无法1分钟内频繁发送
+            # 限制数据无法1.5分钟内频繁发送
             return False
-        self.robot_tout = 0
         if self.post_msg(data):
+            self.robot_tout = 0
             self.last_push_str = data
+            for key in self.item:
+                if self.this_push_direct[key]:
+                    print('{} change to {}'.format(key, self.this_push_dict[key]))
             for key in self.item:
                 self.last_push_dict[key] = self.this_push_dict[key]
             write_log('上报新数据')
