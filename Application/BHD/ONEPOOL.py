@@ -57,7 +57,8 @@ class Pool(object):
         this_push_dict[key] = 0.0
     for key in item:
         this_push_direct[key] = 'black'
-    robot_tout = 60      # 上报频率60秒一次
+    robot_tout = 60 * 60      # 上报频率60分钟一次
+    robot_ts = time() - robot_tout
     template = 'property.md'
 
     cycMachine = 25000
@@ -79,7 +80,9 @@ class Pool(object):
     boomAmount = 0
     burstAmount = 0
 
-    def __init__(self):
+    def __init__(self, test=False):
+        if test:
+            return
         # 线程获取挖财数据，720分钟获取一次，获取失败则5秒后重试
         self.thread_wacai = threading.Thread(target=self.on_thread_wacai)
         self.thread_wacai.setDaemon(True)
@@ -90,12 +93,12 @@ class Pool(object):
         self.thread_average.setDaemon(True)
         self.thread_average.start()
 
-        # 线程获取实时报价，60分钟获取一次，获取失败则5秒后重试
+        # 线程获取实时报价，40分钟获取一次，获取失败则5秒后重试
         self.thread_trade = threading.Thread(target=self.on_thread_trade)
         self.thread_trade.setDaemon(True)
         self.thread_trade.start()
 
-        # 线程获取矿池资产，60分钟获取一次，获取失败则5秒后重试
+        # 线程获取矿池资产，40分钟获取一次，获取失败则5秒后重试
         self.thread_property = threading.Thread(target=self.on_thread_property)
         self.thread_property.setDaemon(True)
         self.thread_property.start()
@@ -209,7 +212,7 @@ class Pool(object):
                     if account['accTypeName'] == '投资账户':
                         for accs in account['accs']:
                             if accs['name'] == '矿工':
-                                value = accs['balance']
+                                value = round(accs['balance'], 2)
                                 comment = accs['comment'].split('\n')
                                 disk = int(comment[0].split('=')[1])
                                 capacity = int(comment[1].split('=')[1])
@@ -432,14 +435,14 @@ class Pool(object):
             sleep(5)
 
     def on_thread_trade(self):
-        # 线程获取实时报价，60分钟获取一次，获取失败则5秒后重试
+        # 线程获取实时报价，40分钟获取一次，获取失败则5秒后重试
         trade_bhd_ts = time()
         trade_boom_ts = time()
         trade_burst_ts = time()
         trade_bhd_tout = 0
         trade_boom_tout = 0
         trade_burst_tout = 0
-        default_tout = 60 * 60
+        default_tout = 60 * 40
         while True:
             if (time() - trade_bhd_ts) >= trade_bhd_tout:
                 trade_bhd_ts = time()
@@ -494,20 +497,21 @@ class Pool(object):
             sleep(5)
 
     def on_thread_property(self):
-        # 线程获取矿池资产，60分钟获取一次，获取失败则5秒后重试
+        # 线程获取矿池资产，40分钟获取一次，获取失败则5秒后重试
         property_bhd_ts = time()
         property_boom_ts = time()
         property_burst_ts = time()
         property_bhd_tout = 0
         property_boom_tout = 0
         property_burst_tout = 0
+        default_tout = 60 * 40
         while True:
             if (time() - property_bhd_ts) >= property_bhd_tout:
                 property_bhd_ts = time()
                 property_bhd_tout = 60
                 data = self.get_property('BHD')
                 if data:
-                    property_bhd_tout = 60 * 60
+                    property_bhd_tout = default_tout
                     self.bhdAmount = data
                     write_log('获取BHD资产：{}'.format(data))
             if (time() - property_boom_ts) >= property_boom_tout:
@@ -515,7 +519,7 @@ class Pool(object):
                 property_boom_tout = 60
                 data = self.get_property('BOOM')
                 if data:
-                    property_boom_tout = 60 * 60
+                    property_boom_tout = default_tout
                     self.boomAmount = data
                     write_log('获取BOOM资产：{}'.format(data))
             if (time() - property_burst_ts) >= property_burst_tout:
@@ -523,7 +527,7 @@ class Pool(object):
                 property_burst_tout = 60
                 data = self.get_property('BURST')
                 if data:
-                    property_burst_tout = 60 * 60
+                    property_burst_tout = default_tout
                     self.burstAmount = data
                     write_log('获取BURST资产：{}'.format(data))
             sleep(5)
@@ -553,7 +557,7 @@ class Pool(object):
         boomBid, boomAsk = self.tradeBOOM
         burstBid, burstAsk = self.tradeBURST
         # ONEPOOL
-        if not self.bhdAmount or not self.boomAmount or not self.burstAmount:
+        if not self.bhdAmount and not self.boomAmount and not self.burstAmount:
             print('{} 未正常获取'.format('ONEPOOL资产'))
             return False
         bhdProperty = self.bhdAmount * bhdBid
@@ -604,7 +608,7 @@ class Pool(object):
         self.this_push_dict['cycPrice'] = self.cycPrice
         self.this_push_dict['cycPow'] = self.cycPow
         self.this_push_dict['cycPay'] = round(cycPay, 2)
-        self.this_push_dict['cycMachine'] = self.cycMachine
+        self.this_push_dict['cycMachine'] = round(self.cycMachine, 2)
         self.this_push_dict['cycDisk'] = self.cycDisk
         self.this_push_dict['cycCapacity'] = self.cycCapacity
         self.this_push_dict['cycIncome'] = round(cycIncome, 2)
@@ -671,21 +675,17 @@ class Pool(object):
         )
         # 判断数据是否上报过
         if data == self.last_push_str or not change_flag:
-            self.robot_tout = 0
             return False
-        self.robot_tout += 1
-        if self.robot_tout < 9:
-            # 限制数据无法1.5分钟内频繁发送
-            return False
-        if self.post_msg(data):
-            self.robot_tout = 0
-            self.last_push_str = data
-            for key in self.item:
-                if self.this_push_direct[key]:
-                    print('{} change to {}'.format(key, self.this_push_dict[key]))
-            for key in self.item:
-                self.last_push_dict[key] = self.this_push_dict[key]
-            write_log('上报新数据')
+        if (time() - self.robot_ts) >= self.robot_tout:
+            if self.post_msg(data):
+                self.robot_ts = time()
+                self.last_push_str = data
+                # for key in self.item:
+                #     if self.this_push_direct[key]:
+                #         print('{} change to {}'.format(key, self.this_push_dict[key]))
+                for key in self.item:
+                    self.last_push_dict[key] = self.this_push_dict[key]
+                write_log('上报新数据')
 
     def run(self):
         # Thread get self.cycMachine, self.cycDisk, self.cycCapacity
