@@ -4,16 +4,14 @@
 import sys
 import queue
 import threading
-import pandas as pd
 from time import time, sleep, strftime, localtime
 
-from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-from Aex_websocket import Aex
+from AEX.Aex_websocket import Aex
 from md_logging import *
-from Robot_ui import Ui_Form
+from AEX.Aex_Robot_ui import Ui_Form
 
 setup_log()
 write_log = logging.getLogger('ROBOT')
