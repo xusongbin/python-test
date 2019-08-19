@@ -574,6 +574,7 @@ class Pool(object):
         # '2019-08-07'  16号盘Plot后上线时间
         average_ts = time()
         average_tsout = 0
+        average_days = 30
         while True:
             if (time() - average_ts) >= average_tsout and \
                     self.tradeBHD and \
@@ -582,15 +583,14 @@ class Pool(object):
                 average_ts = time()
                 average_tsout = 60
                 yesterday = strftime("%Y-%m-%d", localtime(time() - 24 * 60 * 60))
-                lastweek = strftime("%Y-%m-%d", localtime(time() - 7 * 24 * 60 * 60))
+                lastweek = strftime("%Y-%m-%d", localtime(time() - average_days * 24 * 60 * 60))
                 data = self.get_profit_by_date(lastweek, yesterday, details=False)
                 if data:
                     average_tsout = 60 * 120
                     bhd_amount, boom_amount, burst_amount = data
                     bhd_price, boom_price, burst_price = self.tradeBHD[0], self.tradeBOOM[0], self.tradeBURST[0]
                     total_income = bhd_amount * bhd_price + boom_amount * boom_price + burst_amount * burst_price
-                    total_day = 7
-                    self.poolAverage = total_income / total_day
+                    self.poolAverage = total_income / average_days
                     write_log('获取矿池日均收益：{}'.format(self.poolAverage))
             sleep(5)
 
