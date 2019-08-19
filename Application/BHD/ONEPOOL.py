@@ -40,7 +40,7 @@ class Pool(object):
     )
     item = [
         'bhdBid', 'bhdAsk', 'boomBid', 'boomAsk', 'burstBid', 'burstAsk',
-        'poolProperty', 'poolAverage',
+        'poolProperty', 'poolToday', 'poolAverage',
         'bhdToday', 'bhdFuture', 'bhdAmount', 'bhdProperty',
         'boomToday', 'boomFuture', 'boomAmount', 'boomProperty',
         'burstToday', 'burstFuture', 'burstAmount', 'burstProperty',
@@ -202,7 +202,7 @@ class Pool(object):
                 if resp.info().get('Content-Encoding') == 'gzip':
                     context = gzip.decompress(context).decode('utf-8')
                 else:
-                    context = context.encode('utf-8')
+                    context = context.decode('utf-8')
                 resp_dict = json.loads(context)
                 value = 0
                 disk = 0
@@ -673,6 +673,7 @@ class Pool(object):
         boomProperty = self.boomAmount * boomBid
         burstProperty = self.burstAmount * burstBid
         poolProperty = bhdProperty + boomProperty + burstProperty
+        poolToday = self.bhdToday * bhdBid + self.boomToday * boomBid + self.burstToday * burstBid
         # 用电统计
         if not self.cycPrice or not self.cycPow:
             print('{} 未正常获取'.format('用电信息'))
@@ -702,6 +703,7 @@ class Pool(object):
         self.this_push_dict['burstAsk'] = round(burstAsk, 6)
 
         self.this_push_dict['poolProperty'] = round(poolProperty, 6)
+        self.this_push_dict['poolToday'] = round(poolToday, 6)
         self.this_push_dict['poolAverage'] = round(self.poolAverage, 6)
 
         self.this_push_dict['bhdToday'] = round(self.bhdToday, 6)
@@ -760,6 +762,7 @@ class Pool(object):
             burstAskDirect=self.this_push_direct['burstAsk'], burstAsk=self.this_push_dict['burstAsk'],
 
             poolPropertyDirect=self.this_push_direct['poolProperty'], poolProperty=self.this_push_dict['poolProperty'],
+            poolTodayDirect=self.this_push_direct['poolToday'], poolToday=self.this_push_dict['poolToday'],
             poolAverageDirect=self.this_push_direct['poolAverage'], poolAverage=self.this_push_dict['poolAverage'],
 
             bhdTodayDirect=self.this_push_direct['bhdToday'], bhdToday=self.this_push_dict['bhdToday'],

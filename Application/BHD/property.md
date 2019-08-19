@@ -10,26 +10,27 @@
 - 卖盘：{burstAsk}{burstAskDirect}
 
 #### ONEPOOL
-- 总价值：{poolProperty}{poolPropertyDirect}
+- 矿池资产：{poolProperty}{poolPropertyDirect}
+- 今日收益：{poolToday}{poolTodayDirect}
 - 日均收益：{poolAverage}{poolAverageDirect}
 
 #### BHD当前统计
-- 今天：{bhdToday}{bhdTodayDirect}
-- 将来：{bhdFuture}{bhdFutureDirect}
-- 钱包：{bhdAmount}{bhdAmountDirect}
-- 价值：{bhdProperty}{bhdPropertyDirect}
+- 已分配：{bhdToday}{bhdTodayDirect}
+- 未分配：{bhdFuture}{bhdFutureDirect}
+- 资产数量：{bhdAmount}{bhdAmountDirect}
+- 资产价值：{bhdProperty}{bhdPropertyDirect}
 
 #### BOOM当前统计
-- 今天：{boomToday}{boomTodayDirect}
-- 将来：{boomFuture}{boomFutureDirect}
-- 钱包：{boomAmount}{boomAmountDirect}
-- 价值：{boomProperty}{boomPropertyDirect}
+- 已分配：{boomToday}{boomTodayDirect}
+- 未分配：{boomFuture}{boomFutureDirect}
+- 资产数量：{boomAmount}{boomAmountDirect}
+- 资产价值：{boomProperty}{boomPropertyDirect}
 
 #### BURST当前统计
-- 今天：{burstToday}{burstTodayDirect}
-- 将来：{burstFuture}{burstFutureDirect}
-- 钱包：{burstAmount}{burstAmountDirect}
-- 价值：{burstProperty}{burstPropertyDirect}
+- 已分配：{burstToday}{burstTodayDirect}
+- 未分配：{burstFuture}{burstFutureDirect}
+- 资产数量：{burstAmount}{burstAmountDirect}
+- 资产价值：{burstProperty}{burstPropertyDirect}
 
 #### 用电统计
 - 电价：{cycPrice}{cycPriceDirect}
