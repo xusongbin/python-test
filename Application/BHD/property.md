@@ -15,16 +15,19 @@
 
 #### BHD当前统计
 - 今天：{bhdToday}{bhdTodayDirect}
+- 将来：{bhdFuture}{bhdFutureDirect}
 - 钱包：{bhdAmount}{bhdAmountDirect}
 - 价值：{bhdProperty}{bhdPropertyDirect}
 
 #### BOOM当前统计
 - 今天：{boomToday}{boomTodayDirect}
+- 将来：{boomFuture}{boomFutureDirect}
 - 钱包：{boomAmount}{boomAmountDirect}
 - 价值：{boomProperty}{boomPropertyDirect}
 
 #### BURST当前统计
 - 今天：{burstToday}{burstTodayDirect}
+- 将来：{burstFuture}{burstFutureDirect}
 - 钱包：{burstAmount}{burstAmountDirect}
 - 价值：{burstProperty}{burstPropertyDirect}
 
