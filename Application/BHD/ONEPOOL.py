@@ -158,21 +158,19 @@ class Pool(object):
             'Content-Length': '58',
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'Cookie': (
-                'JSESSIONID=2A3A9A2AAC5BDFEE5E120CC149EC8EC4; '
-                'sajssdk_2015_cross_new_user=1; '
                 'sensorsdata2015jssdkcross=%7B%22'
-                'distinct_id%22%3A%22'
-                '16c461828eb4c2-024faca9e80597-48774f16-1049088-16c461828ec28d%22%2C%22%24'
+                'distinct_id%22%3A%2216c461828eb4c2-024faca9e80597-48774f16-1049088-16c461828ec28d%22%2C%22%24'
                 'device_id%22%3A%2216c461828eb4c2-024faca9e80597-48774f16-1049088-16c461828ec28d%22%2C%22'
-                'props%22%3A%7B%22%24latest_'
-                'referrer%22%3A%22%22%2C%22%24latest_referrer_host%22%3A%22%22%2C%22%24'
+                'props%22%3A%7B%22%24latest_referrer%22%3A%22%22%2C%22%24'
+                'latest_referrer_host%22%3A%22%22%2C%22%24'
                 'latest_traffic_source_type%22%3A%22%E7%9B%B4%E6%8E%A5%E6%B5%81%E9%87%8F%22%2C%22%24'
                 'latest_search_keyword%22%3A%22%E6%9C%AA%E5%8F%96%E5%88%B0%E5%80%BC_'
                 '%E7%9B%B4%E6%8E%A5%E6%89%93%E5%BC%80%22%7D%7D; '
-                'wctk=WCeO2k48oZiiwLIPYLKsjchOPolRnG38-yWkg; '
-                'wctk.sig=vt9wZb8DOvb2r05zFJBKMglKy8o; '
-                'access_token=WCeO2k48oZiiwLIPYLKsjchOPolRnG38-yWkg; '
-                'access_token.sig=fqcO8kx1zuN3VWnD1ldC2zsh6NI;'
+                'JSESSIONID=4596DBD14D553BD557700A6675CCD9C1; '
+                'wctk=WCeO2k48oaN8UlSPYLKsjchOAqMnsQlwD40eQ; '
+                'wctk.sig=8B9SQNb_1_k-yMasQ5POWhjxGi4; '
+                'access_token=WCeO2k48oaN8UlSPYLKsjchOAqMnsQlwD40eQ; '
+                'access_token.sig=cengeIVSknimMbcpFi5hgAYrpMU; '
             ),
             'Host': 'www.wacai.com',
             'Origin': 'https://www.wacai.com',
@@ -817,4 +815,4 @@ class Pool(object):
 if __name__ == '__main__':
     app = Pool()
     # app = Pool(True)
-    # print(app.get_theory())
+    # print(app.get_wacai())
