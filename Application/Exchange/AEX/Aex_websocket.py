@@ -84,7 +84,7 @@ class Aex(object):
         self.account_id = 0
         self.debug = debug
         try:
-            with open('Aex.log', 'r') as f:
+            with open('Aex.cfg', 'r') as f:
                 key = json.load(f)
             self.access_key = key['Access_key']
             self.secret_key = key['Secret_key']
@@ -98,7 +98,8 @@ class Aex(object):
             self.url,
             on_message=self.on_message,
             on_error=self.on_error,
-            on_close=self.on_close
+            on_close=self.on_close,
+            on_ping=self.on_ping
         )
         self.ws.on_open = self.on_open
 
@@ -118,8 +119,7 @@ class Aex(object):
         self.thread_run.start()
 
     def on_message(self, message):
-        # if self.debug:
-        #     print(message)
+        print(message)
         self.qq_rx.put(message)
 
     def on_error(self, error):
@@ -131,6 +131,9 @@ class Aex(object):
     def on_open(self):
         self.thread_work.start()
 
+    def on_ping(self, msg):
+        write_log.error('on_ping: {}'.format(msg))
+
     def on_thread_run(self):
         self.ws.run_forever(ping_interval=15)
 
@@ -138,9 +141,9 @@ class Aex(object):
         while True:
             if not self.qq_tx.empty():
                 data = self.qq_tx.get()
-                if self.debug:
-                    print(data)
+                print(data)
                 self.ws.send(data)
+            sleep(0.01)
 
     def do_md5(self, ts):
         try:
@@ -308,7 +311,7 @@ class Aex(object):
 
 
 if __name__ == '__main__':
-    aex = Aex()
+    aex = Aex(False)
     # aex.do_command2(1, [
     #     {"market": "cnc", "coin": "btc"},
     #     {"market": "cnc", "coin": "eos"},
@@ -322,8 +325,8 @@ if __name__ == '__main__':
     #     {"market": "usdt", "coin": "etc"}
     # ])
     aex.do_command4()
-    aex.do_command5()
-    aex.do_command6(6.5, 73.92492564, 'cnc', 'usdt', 2)
+    # aex.do_command5()
+    # aex.do_command6(6.5, 73.92492564, 'cnc', 'usdt', 2)
     aex.start()
     while True:
         while not aex.qq_rx.empty():

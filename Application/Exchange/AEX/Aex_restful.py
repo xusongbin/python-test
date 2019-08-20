@@ -29,7 +29,7 @@ class Aex(object):
         self.secret_key = ''
         self.account_id = 0
         try:
-            with open('Aex.log', 'r') as f:
+            with open('Aex.cfg', 'r') as f:
                 key = json.load(f)
             self.access_key = key['Access_key']
             self.secret_key = key['Secret_key']

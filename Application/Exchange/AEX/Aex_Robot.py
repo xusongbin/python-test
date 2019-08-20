@@ -22,10 +22,8 @@ class Robot(QWidget):
     # coin_table = ['btc', 'eos', 'eth', 'doge', 'etc', 'bts', 'xlm']
     coin_table = ['btc', 'eos', 'eth', 'bts', 'etc']
     coin_count = coin_market + coin_table
-    # usdt_to_ask = 6.88
-    # usdt_to_bid = 6.98
-    usdt_to_ask = 6.945
-    usdt_to_bid = 6.945
+    usdt_to_ask = 7.01
+    usdt_to_bid = 7.11
     coin_info = {}
     for coin in coin_table:
         coin_info[coin] = {
@@ -135,9 +133,9 @@ class Robot(QWidget):
     def on_income_cnc2usdt(self, coin):
         try:
             # 取值范围：6个小数点
-            # now_balance：钱包余额
-            # now_balance = float('{:.6f}'.format(self.balance_now['cnc']['val']))
-            now_balance = 100000
+            # my_balance：钱包余额
+            # my_balance = float('{:.6f}'.format(self.balance_now['cnc']['val']))
+            my_balance = 100000
             # bid_price：市场上可立即买入的价格     bid_amount：市场上课立即买入的价格对应的数量
             bid_price = float('{:.6f}'.format(self.coin_info[coin]['cnc']['asks'][0]['price']))
             bid_amount = float('{:.6f}'.format(self.coin_info[coin]['cnc']['asks'][0]['amount']))
@@ -146,42 +144,42 @@ class Robot(QWidget):
             ask_amount = float('{:.6f}'.format(self.coin_info[coin]['usdt']['bids'][0]['amount']))
             if ask_amount <= 0.001 or bid_amount <= 0.001:  # 买卖单的数量大于一定的数值才会计算是否盈利
                 return False
-            # 账户余额可买的数量       bal_amount = now_balance / bid_price
-            # 当前可买入的数量         now_amount = min(bal_amount,bid_amount)
-            # 买入币后的实际数量       use_amount=now_amount*(1-0.001)
-            # 持币与买盘可交易的数量   rel_amount=min(use_amount, ask_amount)
-            bal_amount = now_balance / bid_price        # 账户余额可买的数量
-            now_amount = min(bal_amount, bid_amount)    # 可买入的数量：取市场上可买入的币数量与余额可买入的币数量最小
-            use_amount = now_amount * (1 - 0.001)       # 买入币之后有效的数量：需要扣除手续费
-            rel_amount = min(use_amount, ask_amount)    # 实际卖出时的有效数量：取买入的有效数量和市场卖出时买盘的数量最小
-            bid_money = now_amount * bid_price          # 买币需要的资金
-            ask_money = rel_amount * ask_price          # 卖币获取到的资金
-            ask_money = ask_money * (1 - 0.001) * self.usdt_to_ask
-            inc_money = ask_money - bid_money           # 操作交易后可盈利的金额
-            if inc_money < -1:       # 盈利小于一定范围不考虑实施量化交易
+            # 账户余额可买的数量       balance_buy_amount = my_balance / bid_price
+            # 当前可买入的数量         min_buy_amount = min(balance_buy_amount,bid_amount)
+            # 买入币后的实际数量       real_recv_amount=min_buy_amount*(1-0.001)
+            # 持币与买盘可交易的数量   real_sell_amount=min(real_recv_amount, ask_amount)
+            balance_buy_amount = my_balance / bid_price        # 账户余额可买的数量
+            min_buy_amount = min(balance_buy_amount, bid_amount)    # 可买入的数量：取市场上可买入的币数量与余额可买入的币数量最小
+            real_recv_amount = min_buy_amount * (1 - 0.001)       # 买入币之后有效的数量：需要扣除手续费
+            real_sell_amount = min(real_recv_amount, ask_amount)    # 实际卖出时的有效数量：取买入的有效数量和市场卖出时买盘的数量最小
+            buy_need_money = min_buy_amount * bid_price          # 买币需要的资金
+            sell_inc_money = real_sell_amount * ask_price          # 卖币获取到的资金
+            sell_real_money = sell_inc_money * (1 - 0.001) * self.usdt_to_ask
+            earn_money = sell_real_money - buy_need_money           # 操作交易后可盈利的金额
+            if earn_money < -10:       # 盈利小于一定范围不考虑实施量化交易
                 return False
-            ask_price = bid_money / rel_amount          # 成本价卖出：市场会以最优价成交，此价格有效提高成交率
-            ask_price = ask_price / self.usdt_to_bid
-            if inc_money != self.strategy_im[coin][0]:
-                self.strategy_im[coin][0] = inc_money
+            # 成本价卖出：市场会以最优价成交，此价格有效提高成交率
+            # ask_price = round((buy_need_money / real_sell_amount) + 0.000005, 5)
+            if earn_money != self.strategy_im[coin][0]:
+                self.strategy_im[coin][0] = earn_money
                 show_bid_price = '{:.6f}'.format(bid_price)
-                show_bid_amount = '{:.6f}'.format(now_amount)
+                show_bid_amount = '{:.6f}'.format(min_buy_amount)
                 show_ask_price = '{:.6f}'.format(ask_price)
-                show_ask_amount = '{:.6f}'.format(use_amount)
-                show_bid_money = '{:.6f}'.format(bid_money)
-                show_inc_money = '{:.6f}'.format(inc_money)
+                show_ask_amount = '{:.6f}'.format(real_recv_amount)
+                show_buy_need_money = '{:.6f}'.format(buy_need_money)
+                show_inc_money = '{:.6f}'.format(earn_money)
                 ts = strftime("%Y-%m-%d %H:%M:%S", localtime())
                 msg = '{} CNC->{}->USDT 买：{:>13}/{:<13} 卖：{:>13}/{:<13} 额：{:>13}CNC  预期盈利：{:>13}CNC'.format(
                     ts, coin.upper(),
                     show_bid_price, show_bid_amount,
                     show_ask_price, show_ask_amount,
-                    show_bid_money, show_inc_money
+                    show_buy_need_money, show_inc_money
                 )
                 write_log.info(msg)
                 self.do_display_message(msg)
                 order_flow = [
-                    {'market': 'cnc', 'coin': coin, 'price': bid_price, 'amount': now_amount},
-                    {'market': 'usdt', 'coin': coin, 'price': ask_price, 'amount': now_amount}
+                    {'market': 'cnc', 'coin': coin, 'price': bid_price, 'amount': min_buy_amount},
+                    {'market': 'usdt', 'coin': coin, 'price': ask_price, 'amount': min_buy_amount}
                 ]
                 self.order_flow = order_flow
                 write_log.debug('获取CNC-USDT策略成功')
@@ -193,9 +191,9 @@ class Robot(QWidget):
     def on_income_usdt2cnc(self, coin):
         try:
             # 取值范围：6个小数点
-            # now_balance：钱包余额
-            # now_balance = float('{:.6f}'.format(self.balance_now['usdt']['val']))
-            now_balance = 100000
+            # my_balance：钱包余额
+            # my_balance = float('{:.6f}'.format(self.balance_now['usdt']['val']))
+            my_balance = 100000
             # bid_price：市场上可立即买入的价格     bid_amount：市场上课立即买入的价格对应的数量
             bid_price = float('{:.6f}'.format(self.coin_info[coin]['usdt']['asks'][0]['price']))
             bid_amount = float('{:.6f}'.format(self.coin_info[coin]['usdt']['asks'][0]['amount']))
@@ -204,42 +202,42 @@ class Robot(QWidget):
             ask_amount = float('{:.6f}'.format(self.coin_info[coin]['cnc']['bids'][0]['amount']))
             if ask_amount <= 0.001 or bid_amount <= 0.001:  # 买卖单的数量大于一定的数值才会计算是否盈利
                 return False
-            # 账户余额可买的数量       bal_amount = now_balance / bid_price
-            # 当前可买入的数量         now_amount = min(bal_amount,bid_amount)
-            # 买入币后的实际数量       use_amount=now_amount*(1-0.001)
-            # 持币与买盘可交易的数量   rel_amount=min(use_amount, ask_amount)
-            bal_amount = now_balance / bid_price        # 账户余额可买的数量
-            now_amount = min(bal_amount, bid_amount)    # 可买入的数量：取市场上可买入的币数量与余额可买入的币数量最小
-            use_amount = now_amount * (1 - 0.001)       # 买入币之后有效的数量：需要扣除手续费
-            rel_amount = min(use_amount, ask_amount)    # 实际卖出时的有效数量：取买入的有效数量和市场卖出时买盘的数量最小
-            bid_money = now_amount * bid_price                  # 买币需要的资金
-            bid_money = bid_money * self.usdt_to_bid
-            ask_money = rel_amount * ask_price * (1 - 0.001)    # 卖币获取到的资金
-            inc_money = ask_money - bid_money                   # 操作交易后可盈利的金额
-            if inc_money < -1:       # 盈利小于一定范围不考虑实施量化交易
+            # 账户余额可买的数量       balance_buy_amount = my_balance / bid_price
+            # 当前可买入的数量         min_buy_amount = min(balance_buy_amount,bid_amount)
+            # 买入币后的实际数量       real_recv_amount=min_buy_amount*(1-0.001)
+            # 持币与买盘可交易的数量   real_sell_amount=min(real_recv_amount, ask_amount)
+            balance_buy_amount = my_balance / bid_price        # 账户余额可买的数量
+            min_buy_amount = min(balance_buy_amount, bid_amount)    # 可买入的数量：取市场上可买入的币数量与余额可买入的币数量最小
+            real_recv_amount = min_buy_amount * (1 - 0.001)       # 买入币之后有效的数量：需要扣除手续费
+            real_sell_amount = min(real_recv_amount, ask_amount)    # 实际卖出时的有效数量：取买入的有效数量和市场卖出时买盘的数量最小
+            buy_need_money = min_buy_amount * bid_price                  # 买币需要的资金
+            buy_need_money = buy_need_money * self.usdt_to_bid
+            sell_inc_money = real_sell_amount * ask_price * (1 - 0.001)    # 卖币获取到的资金
+            earn_money = sell_inc_money - buy_need_money                   # 操作交易后可盈利的金额
+            if earn_money < -10:       # 盈利小于一定范围不考虑实施量化交易
                 return False
-            ask_price = bid_money / rel_amount          # 成本价卖出：市场会以最优价成交，此价格有效提高成交率
-            ask_price = ask_price * self.usdt_to_ask
-            if inc_money != self.strategy_im[coin][0]:
-                self.strategy_im[coin][0] = inc_money
+            # 成本价卖出：市场会以最优价成交，此价格有效提高成交率
+            # ask_price = round((buy_need_money / real_sell_amount) + 0.000005, 5)
+            if earn_money != self.strategy_im[coin][0]:
+                self.strategy_im[coin][0] = earn_money
                 show_bid_price = '{:.6f}'.format(bid_price)
-                show_bid_amount = '{:.6f}'.format(now_amount)
+                show_bid_amount = '{:.6f}'.format(min_buy_amount)
                 show_ask_price = '{:.6f}'.format(ask_price)
-                show_ask_amount = '{:.6f}'.format(use_amount)
-                show_bid_money = '{:.6f}'.format(bid_money)
-                show_inc_money = '{:.6f}'.format(inc_money)
+                show_ask_amount = '{:.6f}'.format(real_recv_amount)
+                show_buy_need_money = '{:.6f}'.format(buy_need_money)
+                show_inc_money = '{:.6f}'.format(earn_money)
                 ts = strftime("%Y-%m-%d %H:%M:%S", localtime())
                 msg = '{} USDT->{}->CNC 买：{:>13}/{:<13} 卖：{:>13}/{:<13} 额：{:>13}USDT 预期盈利：{:>13}CNC'.format(
                     ts, coin.upper(),
                     show_bid_price, show_bid_amount,
                     show_ask_price, show_ask_amount,
-                    show_bid_money, show_inc_money
+                    show_buy_need_money, show_inc_money
                 )
                 write_log.info(msg)
                 self.do_display_message(msg)
                 order_flow = [
-                    {'market': 'cnc', 'coin': coin, 'price': bid_price, 'amount': now_amount},
-                    {'market': 'usdt', 'coin': coin, 'price': ask_price, 'amount': now_amount}
+                    {'market': 'cnc', 'coin': coin, 'price': bid_price, 'amount': min_buy_amount},
+                    {'market': 'usdt', 'coin': coin, 'price': ask_price, 'amount': min_buy_amount}
                 ]
                 self.order_flow = order_flow
                 write_log.debug('获取USDT-CNC策略成功')
