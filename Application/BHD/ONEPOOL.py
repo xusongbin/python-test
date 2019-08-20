@@ -353,7 +353,7 @@ class Pool(object):
             headers['Referer'] = 'http://www.onepool.cc/burst/user/income_inquiry.html'
             cur_url = 'http://www.onepool.cc/burst/user/getincomeinquiry.html'
         else:
-            return []
+            return None
         try:
             t_start_ts = int(mktime(strptime(t_start, "%Y-%m-%d")))
             t_stop_ts = int(mktime(strptime(t_stop, "%Y-%m-%d")))
@@ -382,35 +382,35 @@ class Pool(object):
                 write_log(str(e))
             else:
                 write_log('{}\n{}'.format(e, format_exc()))
-        return []
+        return None
 
     def get_profit_by_date(self, t_start, t_stop='', details=False, bhd=True, boom=True, burst=True):
         if not t_stop:
             t_stop = t_start
         bhd_amount = 0
         if bhd:
-            try:
-                for data in self.get_profit_date_to_list('BHD', t_start, t_stop):
-                    bhd_amount += float(data['amount'])
-            except Exception as e:
-                write_log('{}\n{}'.format(e, format_exc()))
+            d_list = self.get_profit_date_to_list('BHD', t_start, t_stop)
+            if d_list is None:
                 return None
+            else:
+                for data in d_list:
+                    bhd_amount += float(data['amount'])
         boom_amount = 0
         if boom:
-            try:
-                for data in self.get_profit_date_to_list('BOOM', t_start, t_stop):
-                    boom_amount += float(data['amount'])
-            except Exception as e:
-                write_log('{}\n{}'.format(e, format_exc()))
+            d_list = self.get_profit_date_to_list('BOOM', t_start, t_stop)
+            if d_list is None:
                 return None
+            else:
+                for data in d_list:
+                    boom_amount += float(data['amount'])
         burst_amount = 0
         if burst:
-            try:
-                for data in self.get_profit_date_to_list('BURST', t_start, t_stop):
-                    burst_amount += float(data['amount'])
-            except Exception as e:
-                write_log('{}\n{}'.format(e, format_exc()))
+            d_list = self.get_profit_date_to_list('BURST', t_start, t_stop)
+            if d_list is None:
                 return None
+            else:
+                for data in d_list:
+                    burst_amount += float(data['amount'])
         if details:
             if bhd:
                 write_log('BHD amount:{}'.format(bhd_amount))
