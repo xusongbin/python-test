@@ -20,6 +20,12 @@
 - 资产数量：{bhdAmount}{bhdAmountDirect}
 - 资产价值：{bhdProperty}{bhdPropertyDirect}
 
+#### LHD当前统计
+- 已分配：{lhdToday}{lhdTodayDirect}
+- 未分配：{lhdFuture}{lhdFutureDirect}
+- 资产数量：{lhdAmount}{lhdAmountDirect}
+- 资产价值：{lhdProperty}{lhdPropertyDirect}
+
 #### BOOM当前统计
 - 已分配：{boomToday}{boomTodayDirect}
 - 未分配：{boomFuture}{boomFutureDirect}
