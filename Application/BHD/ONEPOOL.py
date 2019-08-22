@@ -13,6 +13,7 @@ from time import time, strftime, localtime, mktime, strptime, sleep
 from contextlib import closing
 from traceback import format_exc
 gc.set_threshold(100, 10, 10)
+gc.enable()
 
 
 def write_log(_str):
@@ -58,7 +59,7 @@ class Pool(object):
         this_push_dict[key] = 0.0
     for key in item:
         this_push_direct[key] = 'black'
-    robot_tout = 60 * 60      # 上报频率60分钟一次
+    robot_tout = 30      # 上报频率60分钟一次
     robot_ts = time() - robot_tout
     template = 'property.md'
 
