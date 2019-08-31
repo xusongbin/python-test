@@ -4,7 +4,6 @@
 import os
 import re
 import poplib
-import sqlite3
 from time import time, mktime, strptime, strftime, localtime, sleep
 from email.parser import BytesParser
 from email.policy import default
@@ -24,7 +23,7 @@ class DDAssist(object):
 
     # smtp infomation
     pop_server = 'pop.163.com'
-    pop_usr = 'ak3333520@163.com'
+    pop_usr = 'ak3336105@163.com'
     pop_pwd = '52023921033'
     usr_name = pop_usr.split('@')[0]
 
@@ -32,7 +31,13 @@ class DDAssist(object):
     local_file = 'email.info'
 
     def __init__(self):
-        self.run()
+        try:
+            self.ec = poplib.POP3(self.pop_server)
+            self.ec.user(self.pop_usr)
+            self.ec.pass_(self.pop_pwd)
+            self.run()
+        except Exception as e:
+            print('{}\n{}'.format(e, format_exc()))
 
     def ss_close(self):
         resp = os.popen('taskkill /f /t /im {}'.format(self.name_ss)).read().strip()
@@ -70,10 +75,14 @@ class DDAssist(object):
 
     def check_tdata(self, ts, data):
         data = '{},{}'.format(ts, data.split('\n')[0].strip())
+        if '矿机' not in data:
+            return False
         rows = self.read_rows2list()
         row_new = []
         for row in rows:
             if not re.match(r'\d+,.*', row):
+                continue
+            if '矿机' not in row:
                 continue
             ts, msg = row.split(',')
             if (time()-int(ts)) >= 60*60*24*7:
@@ -111,19 +120,16 @@ class DDAssist(object):
 
     def email_recv(self):
         try:
-            s = poplib.POP3(self.pop_server)
-            s.user(self.pop_usr)
-            s.pass_(self.pop_pwd)
             # 获取服务器上的邮件列表，相当于发送POP 3的list命令
             # resp保存服务器的响应码
             # mails列表保存每封邮件的编号、大小
-            resp, mails, octets = s.list()
+            resp, mails, octets = self.ec.list()
             # 获取服务器上的邮件列表，相当于发送POP 3的list命令
             if len(mails) <= 0:
-                s.quit()
                 return False
-            for i in range(1, len(mails) + 1):
-                resp, data, octets = s.retr(i)
+            start = max(len(mails)-20, 1)
+            for i in range(start, len(mails) + 1):
+                resp, data, octets = self.ec.retr(i)
                 msg_data = b'\r\n'.join(data)
                 # 将字符串内容解析成邮件，此处一定要指定policy=default
                 msg = BytesParser(policy=default).parsebytes(msg_data)
@@ -134,22 +140,28 @@ class DDAssist(object):
                 # print('第一个发件人名字:' + msg['from'].addresses[0].username)
                 if msg['from'].addresses[0].username != self.usr_name:
                     # 删除非本人发送的邮件
-                    s.dele(i)
+                    self.ec.dele(i)
+                    continue
+                if '矿机' not in msg['subject']:
+                    # 删除非矿机邮件
+                    self.ec.dele(i)
                     continue
                 date, zoom = str(msg['date']).split('+')
                 ts = int(mktime(strptime(date.strip(), '%a, %d %b %Y %H:%M:%S')))
                 cts = time()
                 if (cts - ts) >= 60 * 60 * 24 * 7:
                     # 删除超过一周的邮件
-                    s.dele(i)
+                    # self.ec.dele(i)
                     continue
                 if (cts - ts) >= 60 * 60 * 24 * 1:
                     # 忽略超过一天的邮件
                     continue
                 self.email_parse(ts, msg)
-            s.quit()
         except Exception as e:
             print('{}\n{}'.format(e, format_exc()))
+            self.ec = poplib.POP3(self.pop_server)
+            self.ec.user(self.pop_usr)
+            self.ec.pass_(self.pop_pwd)
         return True
 
     def run(self):
@@ -159,7 +171,7 @@ class DDAssist(object):
                 print('检查到dd软件未启动：打开dd软件')
                 self.dd_open()
             self.email_recv()
-            sleep(60)
+            sleep(30)
 
 
 if __name__ == '__main__':
