@@ -37,15 +37,17 @@ class Pool(object):
     )
     robot = (
         'https://oapi.dingtalk.com/robot/send?access_token='
-        'ea1cec7b579e9f5acfec476e6a63fc90e47204fc8e16c49a094cb5366910556c'
+        '7a45b3d175f5060361726500dab381992d0547bc185ae5d15eb5744ce70adbb1'
     )
     item = [
-        'bhdBid', 'bhdAsk', 'boomBid', 'boomAsk', 'burstBid', 'burstAsk',
+        'bhdBid', 'bhdAsk', 'hddBid', 'hddAsk', 'lhdBid', 'lhdAsk',
+        'boomBid', 'boomAsk', 'burstBid', 'burstAsk',
         'poolProperty', 'poolToday', 'poolAverage',
-        'bhdToday', 'bhdFuture', 'bhdAmount', 'bhdProperty',
-        'lhdToday', 'lhdFuture', 'lhdAmount', 'lhdProperty',
-        'boomToday', 'boomFuture', 'boomAmount', 'boomProperty',
-        'burstToday', 'burstFuture', 'burstAmount', 'burstProperty',
+        'bhdToday', 'bhdFuture', 'bhdDayinc', 'bhdAmount', 'bhdProperty',
+        'hddToday', 'hddFuture', 'hddDayinc', 'hddAmount', 'hddProperty',
+        'lhdToday', 'lhdFuture', 'lhdDayinc', 'lhdAmount', 'lhdProperty',
+        'boomToday', 'boomFuture', 'boomDayinc', 'boomAmount', 'boomProperty',
+        'burstToday', 'burstFuture', 'burstDayinc', 'burstAmount', 'burstProperty',
         'cycPrice', 'cycPow', 'cycPay',
         'cycMachine', 'cycDisk', 'cycCapacity',
         'cycIncome', 'cycProfit', 'cycMonth', 'cycDate'
@@ -71,20 +73,29 @@ class Pool(object):
 
     tradeBHD = 0
     tradeLHD = 0
+    tradeHDD = 0
     tradeBOOM = 0
     tradeBURST = 0
 
     poolAverage = 0
 
     bhdToday = 0
+    hddToday = 0
     lhdToday = 0
     boomToday = 0
     burstToday = 0
     bhdFuture = 0
+    hddFuture = 0
     lhdFuture = 0
     boomFuture = 0
     burstFuture = 0
+    bhdDayinc = 0
+    hddDayinc = 0
+    lhdDayinc = 0
+    boomDayinc = 0
+    burstDayinc = 0
     bhdAmount = 0
+    hddAmount = 0
     lhdAmount = 0
     boomAmount = 0
     burstAmount = 0
@@ -155,31 +166,30 @@ class Pool(object):
     @staticmethod
     def get_wacai():
         tms = int(time() * 1000)
-        url = 'https://www.wacai.com/setting/account_list.action?timesamp={}'.format(tms)
+        url = 'https://www.wacai.com/setting/account_list.action?reqBalance=false?timesamp={}'.format(tms)
         headers = {
-            'Accept': '*/*',
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
             'Accept-Encoding': 'gzip, deflate, br',
             'Accept-Language': 'zh-CN,zh;q=0.9',
             'Connection': 'keep-alive',
-            'Content-Length': '58',
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'Cookie': (
+                'JSESSIONID=BF4803534D7A5201988FDFE72D6AF42C; '
+                'sajssdk_2015_cross_new_user=1; '
                 'sensorsdata2015jssdkcross=%7B%22'
-                'distinct_id%22%3A%2216c461828eb4c2-024faca9e80597-48774f16-1049088-16c461828ec28d%22%2C%22%24'
-                'device_id%22%3A%2216c461828eb4c2-024faca9e80597-48774f16-1049088-16c461828ec28d%22%2C%22'
-                'props%22%3A%7B%22%24latest_referrer%22%3A%22%22%2C%22%24'
+                'distinct_id%22%3A%2216d63bfe74b3e1-08e0dcf4673ea8-47754016-1049088-16d63bfe74c47%22%2C%22%24'
+                'device_id%22%3A%2216d63bfe74b3e1-08e0dcf4673ea8-47754016-1049088-16d63bfe74c47%22%2C%22'
+                'props%22%3A%7B%22%24'
+                'latest_referrer%22%3A%22%22%2C%22%24'
                 'latest_referrer_host%22%3A%22%22%2C%22%24'
                 'latest_traffic_source_type%22%3A%22%E7%9B%B4%E6%8E%A5%E6%B5%81%E9%87%8F%22%2C%22%24'
                 'latest_search_keyword%22%3A%22%E6%9C%AA%E5%8F%96%E5%88%B0%E5%80%BC_'
                 '%E7%9B%B4%E6%8E%A5%E6%89%93%E5%BC%80%22%7D%7D; '
-                'JSESSIONID=4596DBD14D553BD557700A6675CCD9C1; '
-                'wctk=WCeO2k48oaN8UlSPYLKsjchOAqMnsQlwD40eQ; '
-                'wctk.sig=8B9SQNb_1_k-yMasQ5POWhjxGi4; '
-                'access_token=WCeO2k48oaN8UlSPYLKsjchOAqMnsQlwD40eQ; '
-                'access_token.sig=cengeIVSknimMbcpFi5hgAYrpMU; '
+                'wctk=WCeO2k48odHUzPZPYLKsjchOGegdjZkS1KhjA; '
+                'wctk.sig=frmbhuZ7tbIc3XY2-gvGsbMuaiU; '
+                'access_token=WCeO2k48odHUzPZPYLKsjchOGegdjZkS1KhjA; '
+                'access_token.sig=b2DLvmTde4k-f4KW-nGkDhZ7oDQ; '
             ),
             'Host': 'www.wacai.com',
-            'Origin': 'https://www.wacai.com',
             'Referer': 'https://www.wacai.com/user/user.action',
             'User-Agent': (
                 'Mozilla/5.0 '
@@ -246,8 +256,10 @@ class Pool(object):
             elif symbol == 'BHD':
                 url = 'https://api.aex.zone/depth.php?c={}&mk_type=cnc'.format(symbol)
                 qbtc = False
-            else:
-                return [0, 0]
+            elif symbol == 'HDD':
+                return [1, 1]
+            else:   # symbol == 'LHD':
+                return [9, 9]
             req = request.Request(url=url, headers=headers)
             with closing(request.urlopen(req, timeout=10)) as resp:
                 context = resp.read().decode('utf-8')
@@ -271,34 +283,39 @@ class Pool(object):
             'Accept-Language': 'zh-CN,zh;q=0.9',
             'Connection': 'keep-alive',
             'Cookie': (
+                'language=zh-CN; '
+                'sd7038915=q9mjqnc651daad8i6gpum1uqf7; '
                 'loginName=mark3333520%40163.com; '
                 'loginPwd=f3in2oWmp61%2F'
                 'dHqnfanUzo6oqWKMjKnOl4h%2B'
                 'mK7LlNyMi6zNhsy3rX9igmOKqLbcg6W4qoCvg8qAZ3%2F'
                 'Pv7WVzYyhq9qGtrtoiqqSp324q86BqLmega97zoBne8u%2F'
-                'pZySgXu3mJHPrKN%2'
-                'FqoJkic6rz47LvZ98o2Wf; '
-                'language=zh-CN;'
+                'pZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf;'
             ),
             'User-Agent': self.user_agent,
             'Upgrade-Insecure-Requests': '1'
         }
         if symbol == 'BHD':
-            headers['Host'] = 'onepool.cc'
-            headers['Referer'] = 'http://onepool.cc/eco-bhd/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.cc/eco-bhd/user/asset.html'
+            headers['Host'] = 'www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-bhd/user.html'
+            cur_url = 'http://www.onepool.co/eco-bhd/user/asset.html'
+        elif symbol == 'HDD':
+            headers['Host'] = 'www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-hdd/user.html'
+            cur_url = 'http://www.onepool.co/eco-hdd/user/asset.html'
+            return 0
         elif symbol == 'LHD':
-            headers['Host'] = 'onepool.cc'
-            headers['Referer'] = 'http://onepool.cc/eco-lhd/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.cc/eco-lhd/user/asset.html'
+            headers['Host'] = 'www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-lhd/user.html'
+            cur_url = 'http://www.onepool.co/eco-lhd/user/asset.html'
         elif symbol == 'BOOM':
-            headers['Host'] = 'www.onepool.cc'
-            headers['Referer'] = 'http://www.onepool.cc/eco-boom/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.cc/eco-boom/user/asset.html'
+            headers['Host'] = 'www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-boom/user.html'
+            cur_url = 'http://www.onepool.co/eco-boom/user/asset.html'
         elif symbol == 'BURST':
-            headers['Host'] = 'www.onepool.cc'
-            headers['Referer'] = 'http://www.onepool.cc/burst/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.cc/burst/user/asset.html'
+            headers['Host'] = 'www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-burst/user.html'
+            cur_url = 'http://www.onepool.co/burst/user/asset.html'
         else:
             return None
         try:
@@ -339,36 +356,42 @@ class Pool(object):
             'User-Agent': self.user_agent,
             'X-Requested-With': 'XMLHttpRequest',
             'Cookie': (
+                'language=zh-CN; '
+                'sd7038915=q9mjqnc651daad8i6gpum1uqf7; '
                 'loginName=mark3333520%40163.com; '
                 'loginPwd=f3in2oWmp61%2F'
                 'dHqnfanUzo6oqWKMjKnOl4h%2B'
                 'mK7LlNyMi6zNhsy3rX9igmOKqLbcg6W4qoCvg8qAZ3%2F'
                 'Pv7WVzYyhq9qGtrtoiqqSp324q86BqLmega97zoBne8u%2F'
-                'pZySgXu3mJHPrKN%2'
-                'FqoJkic6rz47LvZ98o2Wf; '
-                'language=zh-CN;'
+                'pZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf;'
             )
         }
         if symbol == 'BHD':
-            headers['Host'] = 'onepool.cc'
-            headers['Origin'] = 'http://onepool.cc'
-            headers['Referer'] = 'http://onepool.cc/eco-bhd/user/income_inquiry.html'
-            cur_url = 'http://onepool.cc/eco_bhd/user/getincomeinquiry.html'
+            headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'http://www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-bhd/user/income_inquiry.html'
+            cur_url = 'http://www.onepool.co/eco_bhd/user/getincomeinquiry.html'
+        elif symbol == 'HDD':
+            headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'http://www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-hdd/user/income_inquiry.html'
+            cur_url = 'http://www.onepool.co/eco_lhd/user/getincomeinquiry.html'
+            return []
         elif symbol == 'LHD':
-            headers['Host'] = 'onepool.cc'
-            headers['Origin'] = 'http://onepool.cc'
-            headers['Referer'] = 'http://onepool.cc/eco-lhd/user/income_inquiry.html'
-            cur_url = 'http://onepool.cc/eco_lhd/user/getincomeinquiry.html'
+            headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'http://www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-lhd/user/income_inquiry.html'
+            cur_url = 'http://www.onepool.co/eco_lhd/user/getincomeinquiry.html'
         elif symbol == 'BOOM':
-            headers['Host'] = 'www.onepool.cc'
-            headers['Origin'] = 'http://www.onepool.cc'
-            headers['Referer'] = 'http://www.onepool.cc/eco-boom/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.cc/eco_boom/user/getincomeinquiry.html'
+            headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'http://www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-boom/user/income_inquiry.html'
+            cur_url = 'http://www.onepool.co/eco_boom/user/getincomeinquiry.html'
         elif symbol == 'BURST':
-            headers['Host'] = 'www.onepool.cc'
-            headers['Origin'] = 'http://www.onepool.cc'
-            headers['Referer'] = 'http://www.onepool.cc/burst/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.cc/burst/user/getincomeinquiry.html'
+            headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'http://www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/burst/user/income_inquiry.html'
+            cur_url = 'http://www.onepool.co/burst/user/getincomeinquiry.html'
         else:
             return None
         try:
@@ -401,7 +424,7 @@ class Pool(object):
                 write_log('{}\n{}'.format(e, format_exc()))
         return None
 
-    def get_profit_by_date(self, t_start, t_stop='', details=False, bhd=True, lhd=True, boom=True, burst=True):
+    def get_profit_by_date(self, t_start, t_stop='', details=False, bhd=True, hdd=True, lhd=True, boom=True, burst=True):
         if not t_stop:
             t_stop = t_start
         bhd_amount = 0
@@ -412,6 +435,14 @@ class Pool(object):
             else:
                 for data in d_list:
                     bhd_amount += float(data['amount'])
+        hdd_amount = 0
+        if hdd:
+            d_list = self.get_profit_date_to_list('HDD', t_start, t_stop)
+            if d_list is None:
+                return None
+            else:
+                for data in d_list:
+                    hdd_amount += float(data['amount'])
         lhd_amount = 0
         if lhd:
             d_list = self.get_profit_date_to_list('LHD', t_start, t_stop)
@@ -439,13 +470,15 @@ class Pool(object):
         if details:
             if bhd:
                 write_log('BHD amount:{}'.format(bhd_amount))
+            if hdd:
+                write_log('HDD amount:{}'.format(hdd_amount))
             if lhd:
                 write_log('LHD amount:{}'.format(lhd_amount))
             if boom:
                 write_log('BOOM amount:{}'.format(boom_amount))
             if burst:
                 write_log('BURST amount:{}'.format(burst_amount))
-        return bhd_amount, lhd_amount, boom_amount, burst_amount
+        return bhd_amount, hdd_amount, lhd_amount, boom_amount, burst_amount
 
     def get_theory_date_to_list(self, symbol, t_start, t_stop):
         headers = {
@@ -461,36 +494,42 @@ class Pool(object):
             'User-Agent': self.user_agent,
             'X-Requested-With': 'XMLHttpRequest',
             'Cookie': (
+                'language=zh-CN; '
+                'sd7038915=q9mjqnc651daad8i6gpum1uqf7; '
                 'loginName=mark3333520%40163.com; '
                 'loginPwd=f3in2oWmp61%2F'
                 'dHqnfanUzo6oqWKMjKnOl4h%2B'
                 'mK7LlNyMi6zNhsy3rX9igmOKqLbcg6W4qoCvg8qAZ3%2F'
                 'Pv7WVzYyhq9qGtrtoiqqSp324q86BqLmega97zoBne8u%2F'
-                'pZySgXu3mJHPrKN%2'
-                'FqoJkic6rz47LvZ98o2Wf; '
-                'language=zh-CN;'
+                'pZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf;'
             )
         }
         if symbol == 'BHD':
-            headers['Host'] = 'onepool.cc'
-            headers['Origin'] = 'http://onepool.cc'
-            headers['Referer'] = 'http://onepool.cc/eco-bhd/user/detail_inquiry.html'
-            cur_url = 'http://onepool.cc/eco_bhd/user/getdetailinquiry.html'
+            headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'http://www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-bhd/user/detail_inquiry.html'
+            cur_url = 'http://www.onepool.co/eco_bhd/user/getdetailinquiry.html'
+        elif symbol == 'HDD':
+            headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'http://www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-hdd/user/detail_inquiry.html'
+            cur_url = 'http://www.onepool.co/eco_hdd/user/getdetailinquiry.html'
+            return []
         elif symbol == 'LHD':
-            headers['Host'] = 'onepool.cc'
-            headers['Origin'] = 'http://onepool.cc'
-            headers['Referer'] = 'http://onepool.cc/eco-lhd/user/detail_inquiry.html'
-            cur_url = 'http://onepool.cc/eco_lhd/user/getdetailinquiry.html'
+            headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'http://www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-lhd/user/detail_inquiry.html'
+            cur_url = 'http://www.onepool.co/eco_lhd/user/getdetailinquiry.html'
         elif symbol == 'BOOM':
-            headers['Host'] = 'www.onepool.cc'
-            headers['Origin'] = 'http://www.onepool.cc'
-            headers['Referer'] = 'http://www.onepool.cc/eco-boom/user/detail_inquiry.html'
-            cur_url = 'http://www.onepool.cc/eco_boom/user/getdetailinquiry.html'
+            headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'http://www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/eco-boom/user/detail_inquiry.html'
+            cur_url = 'http://www.onepool.co/eco_boom/user/getdetailinquiry.html'
         elif symbol == 'BURST':
-            headers['Host'] = 'www.onepool.cc'
-            headers['Origin'] = 'http://www.onepool.cc'
-            headers['Referer'] = 'http://www.onepool.cc/burst/user/detail_inquiry.html'
-            cur_url = 'http://www.onepool.cc/burst/user/getdetailinquiry.html'
+            headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'http://www.onepool.co'
+            headers['Referer'] = 'http://www.onepool.co/burst/user/detail_inquiry.html'
+            cur_url = 'http://www.onepool.co/burst/user/getdetailinquiry.html'
         else:
             return []
         try:
@@ -511,7 +550,7 @@ class Pool(object):
                 write_log('{}\n{}'.format(e, format_exc()))
         return []
 
-    def get_theory(self, details=False, bhd=True, lhd=True, boom=True, burst=True):
+    def get_theory(self, details=False, bhd=True, hdd=True, lhd=True, boom=True, burst=True):
         t_start = strftime("%Y-%m-%d %H:%M:%S", localtime(time() - 3 * 24 * 60 * 60))
         t_stop = strftime("%Y-%m-%d %H:%M:%S", localtime())
         bhd_amount = 0
@@ -519,6 +558,14 @@ class Pool(object):
             try:
                 for data in self.get_theory_date_to_list('BHD', t_start, t_stop):
                     bhd_amount += float(data['amount'])
+            except Exception as e:
+                write_log('{}\n{}'.format(e, format_exc()))
+                return None
+        hdd_amount = 0
+        if hdd:
+            try:
+                for data in self.get_theory_date_to_list('HDD', t_start, t_stop):
+                    hdd_amount += float(data['amount'])
             except Exception as e:
                 write_log('{}\n{}'.format(e, format_exc()))
                 return None
@@ -549,11 +596,13 @@ class Pool(object):
         if details:
             if bhd:
                 write_log('BHD amount:{}'.format(bhd_amount))
+            if hdd:
+                write_log('HDD amount:{}'.format(hdd_amount))
             if boom:
                 write_log('BOOM amount:{}'.format(boom_amount))
             if burst:
                 write_log('BURST amount:{}'.format(burst_amount))
-        return bhd_amount, lhd_amount, boom_amount, burst_amount
+        return bhd_amount, hdd_amount, lhd_amount, boom_amount, burst_amount
 
     def on_thread_wacai(self):
         # 线程获取挖财数据，720分钟获取一次，获取失败则5秒后重试
@@ -573,10 +622,12 @@ class Pool(object):
     def on_thread_trade(self):
         # 线程获取实时报价，40分钟获取一次，获取失败则5秒后重试
         trade_bhd_ts = time()
+        trade_hdd_ts = time()
         trade_lhd_ts = time()
         trade_boom_ts = time()
         trade_burst_ts = time()
         trade_bhd_tout = 0
+        trade_hdd_tout = 0
         trade_lhd_tout = 0
         trade_boom_tout = 0
         trade_burst_tout = 0
@@ -590,6 +641,14 @@ class Pool(object):
                     trade_bhd_tout = default_tout
                     self.tradeBHD = price
                     write_log('获取BHD价格：{}'.format(price))
+            if (time() - trade_hdd_ts) >= trade_hdd_tout:
+                trade_hdd_ts = time()
+                trade_hdd_tout = 60
+                price = self.get_trade('HDD')
+                if price:
+                    trade_hdd_tout = default_tout
+                    self.tradeHDD = price
+                    write_log('获取HDD价格：{}'.format(price))
             if (time() - trade_lhd_ts) >= trade_lhd_tout:
                 trade_lhd_ts = time()
                 trade_lhd_tout = 60
@@ -622,11 +681,12 @@ class Pool(object):
         # '2019-08-07'  16号盘Plot后上线时间
         average_ts = time()
         average_tsout = 0
-        average_days = 15
+        average_days = 7
         default_tsout = 60 * 120
         while True:
             if (time() - average_ts) >= average_tsout and \
                     self.tradeBHD and \
+                    self.tradeHDD and \
                     self.tradeLHD and \
                     self.tradeBOOM and \
                     self.tradeBURST:
@@ -637,8 +697,9 @@ class Pool(object):
                 data = self.get_profit_by_date(lastweek, yesterday, details=False)
                 if data:
                     average_tsout = default_tsout
-                    bhd_amount, lhd_amount, boom_amount, burst_amount = data
+                    bhd_amount, hdd_amount, lhd_amount, boom_amount, burst_amount = data
                     total_income = bhd_amount * self.tradeBHD[0]
+                    total_income += hdd_amount * self.tradeHDD[0]
                     total_income += lhd_amount * self.tradeLHD[0]
                     total_income += boom_amount * self.tradeBOOM[0]
                     total_income += burst_amount * self.tradeBURST[0]
@@ -649,10 +710,12 @@ class Pool(object):
     def on_thread_property(self):
         # 线程获取矿池资产，40分钟获取一次，获取失败则5秒后重试
         property_bhd_ts = time()
+        property_hdd_ts = time()
         property_lhd_ts = time()
         property_boom_ts = time()
         property_burst_ts = time()
         property_bhd_tout = 0
+        property_hdd_tout = 0
         property_lhd_tout = 0
         property_boom_tout = 0
         property_burst_tout = 0
@@ -666,6 +729,14 @@ class Pool(object):
                     property_bhd_tout = default_tout
                     self.bhdAmount = data
                     write_log('获取BHD资产：{}'.format(data))
+            if (time() - property_hdd_ts) >= property_hdd_tout:
+                property_hdd_ts = time()
+                property_hdd_tout = 60
+                data = self.get_property('HDD')
+                if data:
+                    property_hdd_tout = default_tout
+                    self.hddAmount = data
+                    write_log('获取HDD资产：{}'.format(data))
             if (time() - property_lhd_ts) >= property_lhd_tout:
                 property_lhd_ts = time()
                 property_lhd_tout = 60
@@ -706,7 +777,7 @@ class Pool(object):
                 today_tout = 60
                 data = self.get_profit_by_date(today)
                 if data:
-                    self.bhdToday, self.lhdToday, self.boomToday, self.burstToday = data
+                    self.bhdToday, self.hddToday, self.lhdToday, self.boomToday, self.burstToday = data
                     today_tout = default_tout
                     write_log('获取当日收益：{}'.format(data))
             if (time() - future_ts) >= future_tout:
@@ -714,30 +785,41 @@ class Pool(object):
                 future_tout = 60
                 data = self.get_theory()
                 if data:
-                    self.bhdFuture, self.lhdFuture, self.boomFuture, self.burstFuture = data
+                    self.bhdFuture, self.hddFuture, self.lhdFuture, self.boomFuture, self.burstFuture = data
                     future_tout = default_tout
                     write_log('获取未分配收益：{}'.format(data))
             sleep(5)
 
     def commit_evt(self):
         # 报价
-        if not self.tradeBHD or not self.tradeLHD or not self.tradeBOOM or not self.tradeBURST:
+        if not self.tradeBHD or not self.tradeHDD or not self.tradeLHD or not self.tradeBOOM or not self.tradeBURST:
             print('{} 未正常获取'.format('报价'))
             return False
         bhdBid, bhdAsk = self.tradeBHD
+        hddBid, hddAsk = self.tradeHDD
         lhdBid, lhdAsk = self.tradeLHD
         boomBid, boomAsk = self.tradeBOOM
         burstBid, burstAsk = self.tradeBURST
         # ONEPOOL
-        if not self.bhdAmount and not self.boomAmount and not self.burstAmount:
+        if not self.bhdAmount \
+                and not self.hddAmount \
+                and not self.lhdAmount \
+                and not self.boomAmount \
+                and not self.burstAmount:
             print('{} 未正常获取'.format('ONEPOOL资产'))
             return False
         bhdProperty = self.bhdAmount * bhdBid
+        hddProperty = self.hddAmount * hddBid
         lhdProperty = self.lhdAmount * lhdBid
         boomProperty = self.boomAmount * boomBid
         burstProperty = self.burstAmount * burstBid
-        poolProperty = bhdProperty + boomProperty + burstProperty
-        poolToday = self.bhdToday * bhdBid + self.boomToday * boomBid + self.burstToday * burstBid
+        poolProperty = bhdProperty + hddProperty + lhdProperty + boomProperty + burstProperty
+        self.bhdDayinc = self.bhdToday * bhdBid
+        self.hddDayinc = self.hddToday * hddBid
+        self.lhdDayinc = self.lhdToday * lhdBid
+        self.boomDayinc = self.boomToday * boomBid
+        self.burstDayinc = self.burstToday * burstBid
+        poolToday = self.bhdDayinc + self.hddDayinc + self.lhdDayinc + self.boomDayinc + self.burstDayinc
         # 用电统计
         if not self.cycPrice or not self.cycPow:
             print('{} 未正常获取'.format('用电信息'))
@@ -761,6 +843,10 @@ class Pool(object):
         # 判断数据增长或减少
         self.this_push_dict['bhdBid'] = round(bhdBid, 6)
         self.this_push_dict['bhdAsk'] = round(bhdAsk, 6)
+        self.this_push_dict['hddBid'] = round(hddBid, 6)
+        self.this_push_dict['hddAsk'] = round(hddAsk, 6)
+        self.this_push_dict['lhdBid'] = round(lhdBid, 6)
+        self.this_push_dict['lhdAsk'] = round(lhdAsk, 6)
         self.this_push_dict['boomBid'] = round(boomBid, 6)
         self.this_push_dict['boomAsk'] = round(boomAsk, 6)
         self.this_push_dict['burstBid'] = round(burstBid, 6)
@@ -772,18 +858,27 @@ class Pool(object):
 
         self.this_push_dict['bhdToday'] = round(self.bhdToday, 6)
         self.this_push_dict['bhdFuture'] = round(self.bhdFuture, 6)
+        self.this_push_dict['bhdDayinc'] = round(self.bhdDayinc, 6)
         self.this_push_dict['bhdAmount'] = round(self.bhdAmount, 6)
         self.this_push_dict['bhdProperty'] = round(bhdProperty, 6)
+        self.this_push_dict['hddToday'] = round(self.hddToday, 6)
+        self.this_push_dict['hddFuture'] = round(self.hddFuture, 6)
+        self.this_push_dict['hddDayinc'] = round(self.hddDayinc, 6)
+        self.this_push_dict['hddAmount'] = round(self.hddAmount, 6)
+        self.this_push_dict['hddProperty'] = round(hddProperty, 6)
         self.this_push_dict['lhdToday'] = round(self.lhdToday, 6)
         self.this_push_dict['lhdFuture'] = round(self.lhdFuture, 6)
+        self.this_push_dict['lhdDayinc'] = round(self.lhdDayinc, 6)
         self.this_push_dict['lhdAmount'] = round(self.lhdAmount, 6)
         self.this_push_dict['lhdProperty'] = round(lhdProperty, 6)
         self.this_push_dict['boomToday'] = round(self.boomToday, 6)
         self.this_push_dict['boomFuture'] = round(self.boomFuture, 6)
+        self.this_push_dict['boomDayinc'] = round(self.boomDayinc, 6)
         self.this_push_dict['boomAmount'] = round(self.boomAmount, 6)
         self.this_push_dict['boomProperty'] = round(boomProperty, 6)
         self.this_push_dict['burstToday'] = round(self.burstToday, 6)
         self.this_push_dict['burstFuture'] = round(self.burstFuture, 6)
+        self.this_push_dict['burstDayinc'] = round(self.burstDayinc, 6)
         self.this_push_dict['burstAmount'] = round(self.burstAmount, 6)
         self.this_push_dict['burstProperty'] = round(burstProperty, 6)
 
@@ -824,6 +919,10 @@ class Pool(object):
         data = md.format(
             bhdBidDirect=self.this_push_direct['bhdBid'], bhdBid=self.this_push_dict['bhdBid'],
             bhdAskDirect=self.this_push_direct['bhdAsk'], bhdAsk=self.this_push_dict['bhdAsk'],
+            hddBidDirect=self.this_push_direct['hddBid'], hddBid=self.this_push_dict['hddBid'],
+            hddAskDirect=self.this_push_direct['hddAsk'], hddAsk=self.this_push_dict['hddAsk'],
+            lhdBidDirect=self.this_push_direct['lhdBid'], lhdBid=self.this_push_dict['lhdBid'],
+            lhdAskDirect=self.this_push_direct['lhdAsk'], lhdAsk=self.this_push_dict['lhdAsk'],
             boomBidDirect=self.this_push_direct['boomBid'], boomBid=self.this_push_dict['boomBid'],
             boomAskDirect=self.this_push_direct['boomAsk'], boomAsk=self.this_push_dict['boomAsk'],
             burstBidDirect=self.this_push_direct['burstBid'], burstBid=self.this_push_dict['burstBid'],
@@ -835,18 +934,27 @@ class Pool(object):
 
             bhdTodayDirect=self.this_push_direct['bhdToday'], bhdToday=self.this_push_dict['bhdToday'],
             bhdFutureDirect=self.this_push_direct['bhdFuture'], bhdFuture=self.this_push_dict['bhdFuture'],
+            bhdDayincDirect=self.this_push_direct['bhdDayinc'], bhdDayinc=self.this_push_dict['bhdDayinc'],
             bhdAmountDirect=self.this_push_direct['bhdAmount'], bhdAmount=self.this_push_dict['bhdAmount'],
             bhdPropertyDirect=self.this_push_direct['bhdProperty'], bhdProperty=self.this_push_dict['bhdProperty'],
+            hddTodayDirect=self.this_push_direct['hddToday'], hddToday=self.this_push_dict['hddToday'],
+            hddFutureDirect=self.this_push_direct['hddFuture'], hddFuture=self.this_push_dict['hddFuture'],
+            hddDayincDirect=self.this_push_direct['hddDayinc'], hddDayinc=self.this_push_dict['hddDayinc'],
+            hddAmountDirect=self.this_push_direct['hddAmount'], hddAmount=self.this_push_dict['hddAmount'],
+            hddPropertyDirect=self.this_push_direct['hddProperty'], hddProperty=self.this_push_dict['hddProperty'],
             lhdTodayDirect=self.this_push_direct['lhdToday'], lhdToday=self.this_push_dict['lhdToday'],
             lhdFutureDirect=self.this_push_direct['lhdFuture'], lhdFuture=self.this_push_dict['lhdFuture'],
+            lhdDayincDirect=self.this_push_direct['lhdDayinc'], lhdDayinc=self.this_push_dict['lhdDayinc'],
             lhdAmountDirect=self.this_push_direct['lhdAmount'], lhdAmount=self.this_push_dict['lhdAmount'],
             lhdPropertyDirect=self.this_push_direct['lhdProperty'], lhdProperty=self.this_push_dict['lhdProperty'],
             boomTodayDirect=self.this_push_direct['boomToday'], boomToday=self.this_push_dict['boomToday'],
             boomFutureDirect=self.this_push_direct['boomFuture'], boomFuture=self.this_push_dict['boomFuture'],
+            boomDayincDirect=self.this_push_direct['boomDayinc'], boomDayinc=self.this_push_dict['boomDayinc'],
             boomAmountDirect=self.this_push_direct['boomAmount'], boomAmount=self.this_push_dict['boomAmount'],
             boomPropertyDirect=self.this_push_direct['boomProperty'], boomProperty=self.this_push_dict['boomProperty'],
             burstTodayDirect=self.this_push_direct['burstToday'], burstToday=self.this_push_dict['burstToday'],
             burstFutureDirect=self.this_push_direct['burstFuture'], burstFuture=self.this_push_dict['burstFuture'],
+            burstDayincDirect=self.this_push_direct['burstDayinc'], burstDayinc=self.this_push_dict['burstDayinc'],
             burstAmountDirect=self.this_push_direct['burstAmount'], burstAmount=self.this_push_dict['burstAmount'],
             burstPropertyDirect=self.this_push_direct['burstProperty'],
             burstProperty=self.this_push_dict['burstProperty'],
