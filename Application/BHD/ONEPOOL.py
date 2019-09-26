@@ -235,7 +235,7 @@ class Pool(object):
                                 capacity = int(comment[1].split('=')[1])
                                 cost = float(comment[2].split('=')[1])
                                 power = int(comment[3].split('=')[1])
-                if value > 0 and disk > 0 and capacity > 0 and cost > 0 and power > 0:
+                if (value + disk + capacity + cost + power) != 0:
                     return [value, disk, capacity, cost, power]
         except Exception as e:
             if 'timed out' in str(e):
@@ -615,7 +615,17 @@ class Pool(object):
                 data = self.get_wacai()
                 if data:
                     wacai_tout = 60 * 720
-                    self.cycMachine, self.cycDisk, self.cycCapacity, self.cycPrice, self.cycPow = data
+                    Machine, Disk, Capacity, Price, Pow = data
+                    if Machine > self.cycMachine:
+                        self.cycMachine = Machine
+                    if Disk > self.cycDisk:
+                        self.cycDisk = Disk
+                    if Capacity > self.cycCapacity:
+                        self.cycCapacity = Capacity
+                    if Price > self.cycPrice:
+                        self.cycPrice = Price
+                    if Pow > self.cycPow:
+                        self.cycPow = Pow
                     write_log('获取挖财数据：{}'.format(data))
             sleep(5)
 
