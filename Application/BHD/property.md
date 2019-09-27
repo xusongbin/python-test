@@ -2,10 +2,10 @@
 - [BHD](https://www.aex-global.com/page/trade.html?mk_type=CNC&trade_coin_name=BHD)
 - 买盘：{bhdBid}{bhdBidDirect}
 - 卖盘：{bhdAsk}{bhdAskDirect}
-- [HDD]
+- [HDD](https://openapi.bitmart.io/v2/ticker?symbol=HDD_BHD)
 - 买盘：{hddBid}{hddBidDirect}
 - 卖盘：{hddAsk}{hddAskDirect}
-- [LHD]
+- [LHD](https://openapi.bitmart.io/v2/ticker?symbol=LHD_BHD)
 - 买盘：{lhdBid}{lhdBidDirect}
 - 卖盘：{lhdAsk}{lhdAskDirect}
 - [BOOM](https://www.qbtc.ink/trade?symbol=BOOM_CNYT)
