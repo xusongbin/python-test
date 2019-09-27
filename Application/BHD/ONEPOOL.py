@@ -15,6 +15,7 @@ from traceback import format_exc
 gc.set_threshold(100, 10, 10)
 gc.enable()
 
+from lxml import etree
 
 def write_log(_str):
     _data = strftime("%Y-%m-%d %H:%M:%S", localtime())
@@ -61,7 +62,7 @@ class Pool(object):
         this_push_dict[key] = 0.0
     for key in item:
         this_push_direct[key] = 'black'
-    robot_tout = 30      # 上报频率60分钟一次
+    robot_tout = 60 * 60      # 上报频率60分钟一次
     robot_ts = time() - robot_tout
     template = 'property.md'
 
@@ -244,7 +245,7 @@ class Pool(object):
                                 capacity = int(comment[1].split('=')[1])
                                 cost = float(comment[2].split('=')[1])
                                 power = int(comment[3].split('=')[1])
-                if value > 0 and disk > 0 and capacity > 0 and cost > 0 and power > 0:
+                if (value + disk + capacity + cost + power) != 0:
                     return [value, disk, capacity, cost, power]
         except Exception as e:
             if 'timed out' in str(e):
@@ -261,22 +262,24 @@ class Pool(object):
             if symbol == 'BOOM' or symbol == 'BURST':
                 headers['Host'] = 'www.qbtc.ink'
                 url = 'http://www.qbtc.ink/json/depthTable.do?tradeMarket=CNYT&symbol={}'.format(symbol)
-                qbtc = True
             elif symbol == 'BHD':
                 url = 'https://api.aex.zone/depth.php?c={}&mk_type=cnc'.format(symbol)
-                qbtc = False
             elif symbol == 'HDD':
-                return [1, 1]
+                url = 'https://openapi.bitmart.io/v2/ticker?symbol={}_BHD'.format(symbol)
             else:   # symbol == 'LHD':
-                return [9, 9]
+                url = 'https://openapi.bitmart.io/v2/ticker?symbol={}_BHD'.format(symbol)
             req = request.Request(url=url, headers=headers)
             with closing(request.urlopen(req, timeout=10)) as resp:
                 context = resp.read().decode('utf-8')
                 context = json.loads(context)
-                if qbtc:
+                if symbol == 'BOOM' or symbol == 'BURST':
                     data_list = [float(context['result']['buy'][0]['price']), float(context['result']['sell'][0]['price'])]
-                else:
+                elif symbol == 'BHD':
                     data_list = [float(context['bids'][0][0]), float(context['asks'][0][0])]
+                elif symbol == 'HDD':
+                    data_list = [float(context['bid_1']), float(context['ask_1'])]
+                else:   # symbol == 'LHD':
+                    data_list = [float(context['bid_1']), float(context['ask_1'])]
                 return data_list
         except Exception as e:
             if 'timed out' in str(e):
@@ -285,7 +288,7 @@ class Pool(object):
                 write_log('{}\n{}\n{}'.format(symbol, e, format_exc()))
         return None
 
-    def get_property(self, symbol):
+    def get_property(self):
         headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Encoding': 'gzip, deflate',
@@ -301,32 +304,12 @@ class Pool(object):
                 'Pv7WVzYyhq9qGtrtoiqqSp324q86BqLmega97zoBne8u%2F'
                 'pZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf;'
             ),
-            'User-Agent': self.user_agent,
-            'Upgrade-Insecure-Requests': '1'
+            'Host': 'www.onepool.co',
+            'Referer': 'http://www.onepool.co/',
+            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': self.user_agent
         }
-        if symbol == 'BHD':
-            headers['Host'] = 'www.onepool.co'
-            headers['Referer'] = 'http://www.onepool.co/eco-bhd/user.html'
-            cur_url = 'http://www.onepool.co/eco-bhd/user/asset.html'
-        elif symbol == 'HDD':
-            headers['Host'] = 'www.onepool.co'
-            headers['Referer'] = 'http://www.onepool.co/eco-hdd/user.html'
-            cur_url = 'http://www.onepool.co/eco-hdd/user/asset.html'
-            return 0
-        elif symbol == 'LHD':
-            headers['Host'] = 'www.onepool.co'
-            headers['Referer'] = 'http://www.onepool.co/eco-lhd/user.html'
-            cur_url = 'http://www.onepool.co/eco-lhd/user/asset.html'
-        elif symbol == 'BOOM':
-            headers['Host'] = 'www.onepool.co'
-            headers['Referer'] = 'http://www.onepool.co/eco-boom/user.html'
-            cur_url = 'http://www.onepool.co/eco-boom/user/asset.html'
-        elif symbol == 'BURST':
-            headers['Host'] = 'www.onepool.co'
-            headers['Referer'] = 'http://www.onepool.co/eco-burst/user.html'
-            cur_url = 'http://www.onepool.co/burst/user/asset.html'
-        else:
-            return None
+        cur_url = 'http://www.onepool.co/home/user/asset.html'
         try:
             req = request.Request(cur_url, headers=headers)
             with closing(request.urlopen(req, timeout=5)) as resp:
@@ -335,15 +318,42 @@ class Pool(object):
                     context = gzip.decompress(context).decode('utf-8')
                 else:
                     context = context.decode('utf-8')
-                if 'user_asset_avai_balance' not in context:
-                    print('Not found property')
-                    return None
-                context = context[:context.find('user_asset_avai_balance')]
-                context = context[context.rfind('asset-num'):]
-                property = 0
-                for d in re.findall(r'asset-num\">(\d+\.\d+)<.*', context):
-                    property = d
-                return float(property)
+                html = etree.HTML(context)
+                # BHD:['2.13215185']
+                # Burst:['285.16030599']
+                # Boom:['3.65841511']
+                # Boom:['0.00000000']
+                # Newbi:['0.00000000']
+                # LHD:['0.95614178']
+                # LHD:['0.00000000']
+                # Disc:['0.00000000']
+                # HDD:['0.00000000']
+                # BOOM:['377.40413118']
+                # LHD:['18.12297426']
+                cur_property = {}
+                cur_matters = {}
+                for tr in html.xpath('//div[@class="layui-tab-content"]/div[1]/div/table/tbody/tr'):
+                    coin_name = tr.xpath('td[1]/text()')[1].strip().split(' ')[0].upper()
+                    if tr.xpath('td[1]/lan/@t'):
+                        if tr.xpath('td[1]/lan/@t')[0] == 'user_asset_mort':
+                            continue
+                    cur_property[coin_name] = float(tr.xpath('td[4]/text()')[0])
+                for tr in html.xpath('//div[@class="layui-tab-content"]/div[2]/div/table/tbody/tr'):
+                    coin_name = tr.xpath('td[1]/text()')[1].strip().split(' ')[0].upper()
+                    cur_matters[coin_name] = float(tr.xpath('td[2]/text()')[0]) + float(tr.xpath('td[4]/text()')[0])
+                if 'BHD' in cur_property.keys() and \
+                        'HDD' in cur_property.keys() and \
+                        'LHD' in cur_property.keys() and \
+                        'BOOM' in cur_property.keys() and \
+                        'BURST' in cur_property.keys() and \
+                        'BOOM' in cur_matters.keys() and \
+                        'LHD' in cur_matters.keys():
+                    bhd_property = cur_property['BHD']
+                    hdd_property = cur_property['HDD']
+                    burst_property = cur_property['BURST']
+                    lhd_property = cur_property['LHD'] + cur_matters['LHD']
+                    boom_property = cur_property['BOOM'] + cur_matters['BOOM']
+                    return [bhd_property, hdd_property, lhd_property, boom_property, burst_property]
         except Exception as e:
             if 'timed out' in str(e):
                 write_log(str(e))
@@ -627,7 +637,17 @@ class Pool(object):
                 data = self.get_wacai()
                 if data:
                     wacai_tout = 60 * 720
-                    self.cycMachine, self.cycDisk, self.cycCapacity, self.cycPrice, self.cycPow = data
+                    Machine, Disk, Capacity, Price, Pow = data
+                    if Machine > self.cycMachine:
+                        self.cycMachine = Machine
+                    if Disk > self.cycDisk:
+                        self.cycDisk = Disk
+                    if Capacity > self.cycCapacity:
+                        self.cycCapacity = Capacity
+                    if Price > self.cycPrice:
+                        self.cycPrice = Price
+                    if Pow > self.cycPow:
+                        self.cycPow = Pow
                     write_log('获取挖财数据：{}'.format(data))
             sleep(5)
 
@@ -727,61 +747,18 @@ class Pool(object):
 
     def on_thread_property(self):
         # 线程获取矿池资产，40分钟获取一次，获取失败则5秒后重试
-        property_bhd_ts = time()
-        property_hdd_ts = time()
-        property_lhd_ts = time()
-        property_boom_ts = time()
-        property_burst_ts = time()
-        property_bhd_tout = 0
-        property_hdd_tout = 0
-        property_lhd_tout = 0
-        property_boom_tout = 0
-        property_burst_tout = 0
+        property_ts = time()
+        property_tout = 0
         default_tout = 60 * 40
         while True:
-            if not self.__get_valid_time():
-                sleep(60)
-                continue
-            if (time() - property_bhd_ts) >= property_bhd_tout:
-                property_bhd_ts = time()
-                property_bhd_tout = 60
-                data = self.get_property('BHD')
+            if (time() - property_ts) >= property_tout:
+                property_ts = time()
+                property_tout = 60
+                data = self.get_property()
                 if data:
-                    property_bhd_tout = default_tout
-                    self.bhdAmount = data
-                    write_log('获取BHD资产：{}'.format(data))
-            if (time() - property_hdd_ts) >= property_hdd_tout:
-                property_hdd_ts = time()
-                property_hdd_tout = 60
-                data = self.get_property('HDD')
-                if data:
-                    property_hdd_tout = default_tout
-                    self.hddAmount = data
-                    write_log('获取HDD资产：{}'.format(data))
-            if (time() - property_lhd_ts) >= property_lhd_tout:
-                property_lhd_ts = time()
-                property_lhd_tout = 60
-                data = self.get_property('LHD')
-                if data:
-                    property_lhd_tout = default_tout
-                    self.lhdAmount = data
-                    write_log('获取LHD资产：{}'.format(data))
-            if (time() - property_boom_ts) >= property_boom_tout:
-                property_boom_ts = time()
-                property_boom_tout = 60
-                data = self.get_property('BOOM')
-                if data:
-                    property_boom_tout = default_tout
-                    self.boomAmount = data
-                    write_log('获取BOOM资产：{}'.format(data))
-            if (time() - property_burst_ts) >= property_burst_tout:
-                property_burst_ts = time()
-                property_burst_tout = 60
-                data = self.get_property('BURST')
-                if data:
-                    property_burst_tout = default_tout
-                    self.burstAmount = data
-                    write_log('获取BURST资产：{}'.format(data))
+                    property_tout = default_tout
+                    self.bhdAmount, self.hddAmount, self.lhdAmount, self.boomAmount, self.burstAmount = data
+                    write_log('获取ONEPOOL资产：{}'.format(data))
             sleep(5)
 
     def on_thread_today(self):
@@ -824,6 +801,9 @@ class Pool(object):
         lhdBid, lhdAsk = self.tradeLHD
         boomBid, boomAsk = self.tradeBOOM
         burstBid, burstAsk = self.tradeBURST
+
+        hddBid, hddAsk = hddBid * bhdBid, hddAsk * bhdAsk
+        lhdBid, lhdAsk = lhdBid * bhdBid, lhdAsk * bhdAsk
         # ONEPOOL
         if not self.bhdAmount \
                 and not self.hddAmount \
