@@ -751,6 +751,9 @@ class Pool(object):
         property_tout = 0
         default_tout = 60 * 40
         while True:
+            if not self.__get_valid_time():
+                sleep(60)
+                continue
             if (time() - property_ts) >= property_tout:
                 property_ts = time()
                 property_tout = 60
