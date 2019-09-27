@@ -132,6 +132,15 @@ class Pool(object):
         self.run()
 
     @staticmethod
+    def __get_valid_time():
+        sec = int(time() - 1569254400)
+        day = sec % (60 * 60 * 24)
+        hour = day / (60 * 60)
+        if hour > 23 or hour < 9:
+            return False
+        return True
+
+    @staticmethod
     def __markdown_msg(context=''):
         _time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         _pack = {
@@ -609,6 +618,9 @@ class Pool(object):
         wacai_ts = time()
         wacai_tout = 0
         while True:
+            if not self.__get_valid_time():
+                sleep(60)
+                continue
             if (time() - wacai_ts) >= wacai_tout:
                 wacai_ts = time()
                 wacai_tout = 60
@@ -633,6 +645,9 @@ class Pool(object):
         trade_burst_tout = 0
         default_tout = 60 * 40
         while True:
+            if not self.__get_valid_time():
+                sleep(60)
+                continue
             if (time() - trade_bhd_ts) >= trade_bhd_tout:
                 trade_bhd_ts = time()
                 trade_bhd_tout = 60
@@ -684,6 +699,9 @@ class Pool(object):
         average_days = 7
         default_tsout = 60 * 120
         while True:
+            if not self.__get_valid_time():
+                sleep(60)
+                continue
             if (time() - average_ts) >= average_tsout and \
                     self.tradeBHD and \
                     self.tradeHDD and \
@@ -721,6 +739,9 @@ class Pool(object):
         property_burst_tout = 0
         default_tout = 60 * 40
         while True:
+            if not self.__get_valid_time():
+                sleep(60)
+                continue
             if (time() - property_bhd_ts) >= property_bhd_tout:
                 property_bhd_ts = time()
                 property_bhd_tout = 60
@@ -771,6 +792,9 @@ class Pool(object):
         future_tout = 0
         default_tout = 60 * 30
         while True:
+            if not self.__get_valid_time():
+                sleep(60)
+                continue
             today = strftime("%Y-%m-%d", localtime())
             if (time() - today_ts) >= today_tout:
                 today_ts = time()
@@ -990,6 +1014,9 @@ class Pool(object):
         # Thread get self.tradeBHD, self.tradeBOOM, self.tradeBURST
         # Thread get self.bhdAmount, self.boomAmount, self.burstAmount
         while True:
+            if not self.__get_valid_time():
+                sleep(60)
+                continue
             self.commit_evt()
             sleep(10)
 
