@@ -17,6 +17,7 @@ gc.enable()
 
 from lxml import etree
 
+
 def write_log(_str):
     _data = strftime("%Y-%m-%d %H:%M:%S", localtime())
     _data += '.%03d ' % (int(time() * 1000) % 1000)
@@ -132,8 +133,9 @@ class Pool(object):
         # 上报数据
         self.run()
 
-    @staticmethod
-    def __get_valid_time():
+    def __get_valid_time(self):
+        if not self.last_push_str:
+            return True
         sec = int(time() - 1569254400)
         day = sec % (60 * 60 * 24)
         hour = day / (60 * 60)
@@ -283,9 +285,9 @@ class Pool(object):
                 return data_list
         except Exception as e:
             if 'timed out' in str(e):
-                write_log(str(e))
+                write_log('get {} price timed out'.format(symbol))
             else:
-                write_log('{}\n{}\n{}'.format(symbol, e, format_exc()))
+                write_log('get {} price\n{}\n{}'.format(symbol, e, format_exc()))
         return None
 
     def get_property(self):
@@ -369,11 +371,6 @@ class Pool(object):
             'Connection': 'keep-alive',
             'Content-Length': '38',
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'Host': '',
-            'Origin': '',
-            'Referer': '',
-            'User-Agent': self.user_agent,
-            'X-Requested-With': 'XMLHttpRequest',
             'Cookie': (
                 'language=zh-CN; '
                 'sd7038915=q9mjqnc651daad8i6gpum1uqf7; '
@@ -383,32 +380,26 @@ class Pool(object):
                 'mK7LlNyMi6zNhsy3rX9igmOKqLbcg6W4qoCvg8qAZ3%2F'
                 'Pv7WVzYyhq9qGtrtoiqqSp324q86BqLmega97zoBne8u%2F'
                 'pZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf;'
-            )
+            ),
+            'Host': 'www.onepool.co',
+            'Origin': 'http://www.onepool.co',
+            'Referer': '',
+            'User-Agent': self.user_agent,
+            'X-Requested-With': 'XMLHttpRequest'
         }
         if symbol == 'BHD':
-            headers['Host'] = 'www.onepool.co'
-            headers['Origin'] = 'http://www.onepool.co'
             headers['Referer'] = 'http://www.onepool.co/eco-bhd/user/income_inquiry.html'
             cur_url = 'http://www.onepool.co/eco_bhd/user/getincomeinquiry.html'
         elif symbol == 'HDD':
-            headers['Host'] = 'www.onepool.co'
-            headers['Origin'] = 'http://www.onepool.co'
             headers['Referer'] = 'http://www.onepool.co/eco-hdd/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.co/eco_lhd/user/getincomeinquiry.html'
-            return []
+            cur_url = 'http://www.onepool.co/eco_hdd/user/getincomeinquiry.html'
         elif symbol == 'LHD':
-            headers['Host'] = 'www.onepool.co'
-            headers['Origin'] = 'http://www.onepool.co'
             headers['Referer'] = 'http://www.onepool.co/eco-lhd/user/income_inquiry.html'
             cur_url = 'http://www.onepool.co/eco_lhd/user/getincomeinquiry.html'
         elif symbol == 'BOOM':
-            headers['Host'] = 'www.onepool.co'
-            headers['Origin'] = 'http://www.onepool.co'
             headers['Referer'] = 'http://www.onepool.co/eco-boom/user/income_inquiry.html'
             cur_url = 'http://www.onepool.co/eco_boom/user/getincomeinquiry.html'
         elif symbol == 'BURST':
-            headers['Host'] = 'www.onepool.co'
-            headers['Origin'] = 'http://www.onepool.co'
             headers['Referer'] = 'http://www.onepool.co/burst/user/income_inquiry.html'
             cur_url = 'http://www.onepool.co/burst/user/getincomeinquiry.html'
         else:
@@ -424,7 +415,7 @@ class Pool(object):
                 data = {'page': page_idx, 'start': t_start, 'stop': t_stop}
                 data = parse.urlencode(data).encode('utf-8')
                 req = request.Request(cur_url, data=data, headers=headers)
-                with closing(request.urlopen(req, timeout=3)) as resp:
+                with closing(request.urlopen(req, timeout=5)) as resp:
                     context = resp.read().decode('utf-8')
                     js_data = json.loads(context)['data']
                     for data in js_data['data']:
@@ -438,9 +429,9 @@ class Pool(object):
             return rt_data
         except Exception as e:
             if 'timed out' in str(e):
-                write_log(str(e))
+                write_log('get {} profit list timed out'.format(symbol))
             else:
-                write_log('{}\n{}'.format(e, format_exc()))
+                write_log('get {} profit list\n{}\n{}'.format(symbol, e, format_exc()))
         return None
 
     def get_profit_by_date(self, t_start, t_stop='', details=False, bhd=True, hdd=True, lhd=True, boom=True, burst=True):
@@ -848,46 +839,46 @@ class Pool(object):
             return False
         
         # 判断数据增长或减少
-        self.this_push_dict['bhdBid'] = round(bhdBid, 6)
-        self.this_push_dict['bhdAsk'] = round(bhdAsk, 6)
-        self.this_push_dict['hddBid'] = round(hddBid, 6)
-        self.this_push_dict['hddAsk'] = round(hddAsk, 6)
-        self.this_push_dict['lhdBid'] = round(lhdBid, 6)
-        self.this_push_dict['lhdAsk'] = round(lhdAsk, 6)
-        self.this_push_dict['boomBid'] = round(boomBid, 6)
-        self.this_push_dict['boomAsk'] = round(boomAsk, 6)
-        self.this_push_dict['burstBid'] = round(burstBid, 6)
-        self.this_push_dict['burstAsk'] = round(burstAsk, 6)
+        self.this_push_dict['bhdBid'] = round(bhdBid, 2)
+        self.this_push_dict['bhdAsk'] = round(bhdAsk, 2)
+        self.this_push_dict['hddBid'] = round(hddBid, 2)
+        self.this_push_dict['hddAsk'] = round(hddAsk, 2)
+        self.this_push_dict['lhdBid'] = round(lhdBid, 2)
+        self.this_push_dict['lhdAsk'] = round(lhdAsk, 2)
+        self.this_push_dict['boomBid'] = round(boomBid, 2)
+        self.this_push_dict['boomAsk'] = round(boomAsk, 2)
+        self.this_push_dict['burstBid'] = round(burstBid, 2)
+        self.this_push_dict['burstAsk'] = round(burstAsk, 2)
 
-        self.this_push_dict['poolProperty'] = round(poolProperty, 6)
-        self.this_push_dict['poolToday'] = round(poolToday, 6)
-        self.this_push_dict['poolAverage'] = round(self.poolAverage, 6)
+        self.this_push_dict['poolProperty'] = round(poolProperty, 2)
+        self.this_push_dict['poolToday'] = round(poolToday, 2)
+        self.this_push_dict['poolAverage'] = round(self.poolAverage, 2)
 
-        self.this_push_dict['bhdToday'] = round(self.bhdToday, 6)
-        self.this_push_dict['bhdFuture'] = round(self.bhdFuture, 6)
-        self.this_push_dict['bhdDayinc'] = round(self.bhdDayinc, 6)
-        self.this_push_dict['bhdAmount'] = round(self.bhdAmount, 6)
-        self.this_push_dict['bhdProperty'] = round(bhdProperty, 6)
-        self.this_push_dict['hddToday'] = round(self.hddToday, 6)
-        self.this_push_dict['hddFuture'] = round(self.hddFuture, 6)
-        self.this_push_dict['hddDayinc'] = round(self.hddDayinc, 6)
-        self.this_push_dict['hddAmount'] = round(self.hddAmount, 6)
-        self.this_push_dict['hddProperty'] = round(hddProperty, 6)
-        self.this_push_dict['lhdToday'] = round(self.lhdToday, 6)
-        self.this_push_dict['lhdFuture'] = round(self.lhdFuture, 6)
-        self.this_push_dict['lhdDayinc'] = round(self.lhdDayinc, 6)
-        self.this_push_dict['lhdAmount'] = round(self.lhdAmount, 6)
-        self.this_push_dict['lhdProperty'] = round(lhdProperty, 6)
-        self.this_push_dict['boomToday'] = round(self.boomToday, 6)
-        self.this_push_dict['boomFuture'] = round(self.boomFuture, 6)
-        self.this_push_dict['boomDayinc'] = round(self.boomDayinc, 6)
-        self.this_push_dict['boomAmount'] = round(self.boomAmount, 6)
-        self.this_push_dict['boomProperty'] = round(boomProperty, 6)
-        self.this_push_dict['burstToday'] = round(self.burstToday, 6)
-        self.this_push_dict['burstFuture'] = round(self.burstFuture, 6)
-        self.this_push_dict['burstDayinc'] = round(self.burstDayinc, 6)
-        self.this_push_dict['burstAmount'] = round(self.burstAmount, 6)
-        self.this_push_dict['burstProperty'] = round(burstProperty, 6)
+        self.this_push_dict['bhdToday'] = round(self.bhdToday, 2)
+        self.this_push_dict['bhdFuture'] = round(self.bhdFuture, 2)
+        self.this_push_dict['bhdDayinc'] = round(self.bhdDayinc, 2)
+        self.this_push_dict['bhdAmount'] = round(self.bhdAmount, 2)
+        self.this_push_dict['bhdProperty'] = round(bhdProperty, 2)
+        self.this_push_dict['hddToday'] = round(self.hddToday, 2)
+        self.this_push_dict['hddFuture'] = round(self.hddFuture, 2)
+        self.this_push_dict['hddDayinc'] = round(self.hddDayinc, 2)
+        self.this_push_dict['hddAmount'] = round(self.hddAmount, 2)
+        self.this_push_dict['hddProperty'] = round(hddProperty, 2)
+        self.this_push_dict['lhdToday'] = round(self.lhdToday, 2)
+        self.this_push_dict['lhdFuture'] = round(self.lhdFuture, 2)
+        self.this_push_dict['lhdDayinc'] = round(self.lhdDayinc, 2)
+        self.this_push_dict['lhdAmount'] = round(self.lhdAmount, 2)
+        self.this_push_dict['lhdProperty'] = round(lhdProperty, 2)
+        self.this_push_dict['boomToday'] = round(self.boomToday, 2)
+        self.this_push_dict['boomFuture'] = round(self.boomFuture, 2)
+        self.this_push_dict['boomDayinc'] = round(self.boomDayinc, 2)
+        self.this_push_dict['boomAmount'] = round(self.boomAmount, 2)
+        self.this_push_dict['boomProperty'] = round(boomProperty, 2)
+        self.this_push_dict['burstToday'] = round(self.burstToday, 2)
+        self.this_push_dict['burstFuture'] = round(self.burstFuture, 2)
+        self.this_push_dict['burstDayinc'] = round(self.burstDayinc, 2)
+        self.this_push_dict['burstAmount'] = round(self.burstAmount, 2)
+        self.this_push_dict['burstProperty'] = round(burstProperty, 2)
 
         self.this_push_dict['cycPrice'] = round(self.cycPrice, 2)
         self.this_push_dict['cycPow'] = round(self.cycPow, 2)
