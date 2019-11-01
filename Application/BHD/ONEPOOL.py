@@ -332,13 +332,10 @@ class Pool(object):
                 # HDD:['0.00000000']
                 # BOOM:['377.40413118']
                 # LHD:['18.12297426']
-                cur_property = {}
-                cur_matters = {}
+                cur_property = {'BHD': 0, 'HDD': 0, 'LHD': 0, 'BOOM': 0, 'BURST': 0}
+                cur_matters = {'BHD': 0, 'HDD': 0, 'LHD': 0, 'BOOM': 0, 'BURST': 0}
                 for tr in html.xpath('//div[@class="layui-tab-content"]/div[1]/div/table/tbody/tr'):
                     coin_name = tr.xpath('td[1]/text()')[1].strip().split(' ')[0].upper()
-                    if tr.xpath('td[1]/lan/@t'):
-                        if tr.xpath('td[1]/lan/@t')[0] == 'user_asset_mort':
-                            continue
                     cur_property[coin_name] = float(tr.xpath('td[4]/text()')[0])
                 for tr in html.xpath('//div[@class="layui-tab-content"]/div[2]/div/table/tbody/tr'):
                     coin_name = tr.xpath('td[1]/text()')[1].strip().split(' ')[0].upper()
@@ -398,7 +395,7 @@ class Pool(object):
             cur_url = 'http://www.onepool.co/eco_lhd/user/getincomeinquiry.html'
         elif symbol == 'BOOM':
             headers['Referer'] = 'http://www.onepool.co/eco-boom/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.co/eco_boom/user/getincomeinquiry.html'
+            cur_url = 'http://www.onepool.co/boom/user/getincomeinquiry.html'
         elif symbol == 'BURST':
             headers['Referer'] = 'http://www.onepool.co/burst/user/income_inquiry.html'
             cur_url = 'http://www.onepool.co/burst/user/getincomeinquiry.html'
@@ -534,7 +531,7 @@ class Pool(object):
             headers['Host'] = 'www.onepool.co'
             headers['Origin'] = 'http://www.onepool.co'
             headers['Referer'] = 'http://www.onepool.co/eco-boom/user/detail_inquiry.html'
-            cur_url = 'http://www.onepool.co/eco_boom/user/getdetailinquiry.html'
+            cur_url = 'http://www.onepool.co/boom/user/getdetailinquiry.html'
         elif symbol == 'BURST':
             headers['Host'] = 'www.onepool.co'
             headers['Origin'] = 'http://www.onepool.co'
@@ -619,9 +616,6 @@ class Pool(object):
         wacai_ts = time()
         wacai_tout = 0
         while True:
-            if not self.__get_valid_time():
-                sleep(60)
-                continue
             if (time() - wacai_ts) >= wacai_tout:
                 wacai_ts = time()
                 wacai_tout = 60
@@ -656,9 +650,6 @@ class Pool(object):
         trade_burst_tout = 0
         default_tout = 60 * 40
         while True:
-            if not self.__get_valid_time():
-                sleep(60)
-                continue
             if (time() - trade_bhd_ts) >= trade_bhd_tout:
                 trade_bhd_ts = time()
                 trade_bhd_tout = 60
@@ -710,9 +701,6 @@ class Pool(object):
         average_days = 7
         default_tsout = 60 * 120
         while True:
-            if not self.__get_valid_time():
-                sleep(60)
-                continue
             if (time() - average_ts) >= average_tsout and \
                     self.tradeBHD and \
                     self.tradeHDD and \
@@ -742,9 +730,6 @@ class Pool(object):
         property_tout = 0
         default_tout = 60 * 40
         while True:
-            if not self.__get_valid_time():
-                sleep(60)
-                continue
             if (time() - property_ts) >= property_tout:
                 property_ts = time()
                 property_tout = 60
@@ -763,9 +748,6 @@ class Pool(object):
         future_tout = 0
         default_tout = 60 * 30
         while True:
-            if not self.__get_valid_time():
-                sleep(60)
-                continue
             today = strftime("%Y-%m-%d", localtime())
             if (time() - today_ts) >= today_tout:
                 today_ts = time()
