@@ -32,15 +32,18 @@ class App(object):
         self.tout = time()
 
         text = ''
-        resp = request.urlopen(self.url)
-        context = resp.read().decode('utf-8')
-        html = etree.HTML(context)
-        for li in html.xpath('//div[@class="r-body"]/ul/li'):
-            for div in li.xpath('div/div'):
-                text += '{} {} {}\r\n'.format(li.xpath('span/text()')[0],
-                                              div.xpath('span/text()')[0],
-                                              div.xpath('p/text()')[0].strip())
-        return text.strip()
+        try:
+            resp = request.urlopen(self.url, timeout=3)
+            context = resp.read().decode('utf-8')
+            html = etree.HTML(context)
+            for li in html.xpath('//div[@class="r-body"]/ul/li'):
+                for div in li.xpath('div/div'):
+                    text += '{} {} {}\r\n'.format(li.xpath('span/text()')[0],
+                                                  div.xpath('span/text()')[0],
+                                                  div.xpath('p/text()')[0].strip())
+            return text.strip()
+        except:
+            return None
 
 
 if __name__ == '__main__':
