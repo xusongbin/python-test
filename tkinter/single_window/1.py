@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from tkinter import *
 import random
+
+from threading import Thread
+from tkinter import *
+from time import sleep
 
 
 class MainWindow(Tk):
@@ -11,6 +14,10 @@ class MainWindow(Tk):
         self.title('test window')
         self.geometry('400x300')
         self.resizable(0, 0)
+        self.thread_run = True
+
+        self.task_list = []
+        self.taks_idx = 0
 
         self.label_usr = Label(self, text='1', width=10)
         self.label_usr.grid(row=1, column=1)
@@ -25,15 +32,27 @@ class MainWindow(Tk):
 
     def on_btn_usr_clicked(self):
         print('button clicked')
-        msg = str(random.random()*10000)
-        print(msg)
-        self.entry_usr_ver.set(msg)
-        # self.entry_usr.set(msg)
+        self.entry_usr_ver.set('{}'.format(int(random.random()*100)))
+        self.task_list.append(Thread(target=self.on_thread_test, args=(self.taks_idx, )))
+        self.task_list[self.taks_idx].start()
+        # self.task_list[self.taks_idx].join()
+        self.taks_idx += 1
+
+    def on_thread_test(self, task):
+        tick = 0
+        while self.thread_run:
+            print('Thread {} tick:{}'.format(task, tick))
+            sleep(1)
+            tick += 1
 
     def run(self):
         self.mainloop()
+
+    def exit(self):
+        self.thread_run = False
 
 
 if __name__ == '__main__':
     window = MainWindow()
     window.run()
+    window.exit()
