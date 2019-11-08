@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import re
 import gc
 import json
 import gzip
@@ -42,11 +41,10 @@ class Pool(object):
         '7a45b3d175f5060361726500dab381992d0547bc185ae5d15eb5744ce70adbb1'
     )
     item = [
-        'bhdBid', 'bhdAsk', 'hddBid', 'hddAsk', 'lhdBid', 'lhdAsk',
+        'bhdBid', 'bhdAsk', 'lhdBid', 'lhdAsk',
         'boomBid', 'boomAsk', 'burstBid', 'burstAsk',
         'poolProperty', 'poolToday', 'poolAverage',
         'bhdToday', 'bhdFuture', 'bhdDayinc', 'bhdAmount', 'bhdProperty',
-        'hddToday', 'hddFuture', 'hddDayinc', 'hddAmount', 'hddProperty',
         'lhdToday', 'lhdFuture', 'lhdDayinc', 'lhdAmount', 'lhdProperty',
         'boomToday', 'boomFuture', 'boomDayinc', 'boomAmount', 'boomProperty',
         'burstToday', 'burstFuture', 'burstDayinc', 'burstAmount', 'burstProperty',
@@ -63,41 +61,37 @@ class Pool(object):
         this_push_dict[key] = 0.0
     for key in item:
         this_push_direct[key] = 'black'
-    robot_tout = 60 * 60      # 上报频率60分钟一次
+    robot_tout = 60 * 60 * 2      # 上报频率60分钟一次
     robot_ts = time() - robot_tout
     template = 'property.md'
 
-    cycMachine = 25000
-    cycDisk = 16
-    cycCapacity = 134
-    cycPrice = 1.5
-    cycPow = 200
+    cycMachine = 24500
+    cycDisk = 18
+    cycCapacity = 150
+    cycPrice = 1.3
+    cycPow = 230
 
     tradeBHD = 0
     tradeLHD = 0
-    tradeHDD = 0
+    tradeQT = [0.838, 0.839]
     tradeBOOM = 0
     tradeBURST = 0
 
     poolAverage = 0
 
     bhdToday = 0
-    hddToday = 0
     lhdToday = 0
     boomToday = 0
     burstToday = 0
     bhdFuture = 0
-    hddFuture = 0
     lhdFuture = 0
     boomFuture = 0
     burstFuture = 0
     bhdDayinc = 0
-    hddDayinc = 0
     lhdDayinc = 0
     boomDayinc = 0
     burstDayinc = 0
     bhdAmount = 0
-    hddAmount = 0
     lhdAmount = 0
     boomAmount = 0
     burstAmount = 0
@@ -108,7 +102,7 @@ class Pool(object):
         # 线程获取挖财数据，720分钟获取一次，获取失败则5秒后重试
         self.thread_wacai = threading.Thread(target=self.on_thread_wacai)
         self.thread_wacai.setDaemon(True)
-        self.thread_wacai.start()
+        # self.thread_wacai.start()
 
         # 线程获取日均收益，120分钟获取一次，获取失败则5秒后重试
         self.thread_average = threading.Thread(target=self.on_thread_average)
@@ -139,7 +133,7 @@ class Pool(object):
         sec = int(time() - 1569254400)
         day = sec % (60 * 60 * 24)
         hour = day / (60 * 60)
-        if hour > 23 or hour < 9:
+        if hour > 23.5 or hour < 8:
             return False
         return True
 
@@ -261,25 +255,25 @@ class Pool(object):
             'User-Agent': self.user_agent
         }
         try:
-            if symbol == 'BOOM' or symbol == 'BURST':
+            if symbol == 'BOOM' or symbol == 'BURST' or symbol == 'QT':
                 headers['Host'] = 'www.qbtc.ink'
-                url = 'http://www.qbtc.ink/json/depthTable.do?tradeMarket=CNYT&symbol={}'.format(symbol)
+                if symbol == 'BOOM':
+                    market = 'QT'
+                else:
+                    market = 'CNYT'
+                url = 'http://www.qbtc.ink/json/depthTable.do?tradeMarket={}&symbol={}'.format(market, symbol)
             elif symbol == 'BHD':
                 url = 'https://api.aex.zone/depth.php?c={}&mk_type=cnc'.format(symbol)
-            elif symbol == 'HDD':
-                url = 'https://openapi.bitmart.io/v2/ticker?symbol={}_BHD'.format(symbol)
             else:   # symbol == 'LHD':
                 url = 'https://openapi.bitmart.io/v2/ticker?symbol={}_BHD'.format(symbol)
             req = request.Request(url=url, headers=headers)
             with closing(request.urlopen(req, timeout=10)) as resp:
                 context = resp.read().decode('utf-8')
                 context = json.loads(context)
-                if symbol == 'BOOM' or symbol == 'BURST':
+                if symbol == 'BOOM' or symbol == 'BURST' or symbol == 'QT':
                     data_list = [float(context['result']['buy'][0]['price']), float(context['result']['sell'][0]['price'])]
                 elif symbol == 'BHD':
                     data_list = [float(context['bids'][0][0]), float(context['asks'][0][0])]
-                elif symbol == 'HDD':
-                    data_list = [float(context['bid_1']), float(context['ask_1'])]
                 else:   # symbol == 'LHD':
                     data_list = [float(context['bid_1']), float(context['ask_1'])]
                 return data_list
@@ -341,18 +335,16 @@ class Pool(object):
                     coin_name = tr.xpath('td[1]/text()')[1].strip().split(' ')[0].upper()
                     cur_matters[coin_name] = float(tr.xpath('td[2]/text()')[0]) + float(tr.xpath('td[4]/text()')[0])
                 if 'BHD' in cur_property.keys() and \
-                        'HDD' in cur_property.keys() and \
                         'LHD' in cur_property.keys() and \
                         'BOOM' in cur_property.keys() and \
                         'BURST' in cur_property.keys() and \
                         'BOOM' in cur_matters.keys() and \
                         'LHD' in cur_matters.keys():
                     bhd_property = cur_property['BHD']
-                    hdd_property = cur_property['HDD']
                     burst_property = cur_property['BURST']
                     lhd_property = cur_property['LHD'] + cur_matters['LHD']
                     boom_property = cur_property['BOOM'] + cur_matters['BOOM']
-                    return [bhd_property, hdd_property, lhd_property, boom_property, burst_property]
+                    return [bhd_property, lhd_property, boom_property, burst_property]
         except Exception as e:
             if 'timed out' in str(e):
                 write_log(str(e))
@@ -387,9 +379,6 @@ class Pool(object):
         if symbol == 'BHD':
             headers['Referer'] = 'http://www.onepool.co/eco-bhd/user/income_inquiry.html'
             cur_url = 'http://www.onepool.co/eco_bhd/user/getincomeinquiry.html'
-        elif symbol == 'HDD':
-            headers['Referer'] = 'http://www.onepool.co/eco-hdd/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.co/eco_hdd/user/getincomeinquiry.html'
         elif symbol == 'LHD':
             headers['Referer'] = 'http://www.onepool.co/eco-lhd/user/income_inquiry.html'
             cur_url = 'http://www.onepool.co/eco_lhd/user/getincomeinquiry.html'
@@ -431,7 +420,7 @@ class Pool(object):
                 write_log('get {} profit list\n{}\n{}'.format(symbol, e, format_exc()))
         return None
 
-    def get_profit_by_date(self, t_start, t_stop='', details=False, bhd=True, hdd=True, lhd=True, boom=True, burst=True):
+    def get_profit_by_date(self, t_start, t_stop='', details=False, bhd=True, lhd=True, boom=True, burst=True):
         if not t_stop:
             t_stop = t_start
         bhd_amount = 0
@@ -442,14 +431,6 @@ class Pool(object):
             else:
                 for data in d_list:
                     bhd_amount += float(data['amount'])
-        hdd_amount = 0
-        if hdd:
-            d_list = self.get_profit_date_to_list('HDD', t_start, t_stop)
-            if d_list is None:
-                return None
-            else:
-                for data in d_list:
-                    hdd_amount += float(data['amount'])
         lhd_amount = 0
         if lhd:
             d_list = self.get_profit_date_to_list('LHD', t_start, t_stop)
@@ -477,15 +458,13 @@ class Pool(object):
         if details:
             if bhd:
                 write_log('BHD amount:{}'.format(bhd_amount))
-            if hdd:
-                write_log('HDD amount:{}'.format(hdd_amount))
             if lhd:
                 write_log('LHD amount:{}'.format(lhd_amount))
             if boom:
                 write_log('BOOM amount:{}'.format(boom_amount))
             if burst:
                 write_log('BURST amount:{}'.format(burst_amount))
-        return bhd_amount, hdd_amount, lhd_amount, boom_amount, burst_amount
+        return bhd_amount, lhd_amount, boom_amount, burst_amount
 
     def get_theory_date_to_list(self, symbol, t_start, t_stop):
         headers = {
@@ -516,12 +495,6 @@ class Pool(object):
             headers['Origin'] = 'http://www.onepool.co'
             headers['Referer'] = 'http://www.onepool.co/eco-bhd/user/detail_inquiry.html'
             cur_url = 'http://www.onepool.co/eco_bhd/user/getdetailinquiry.html'
-        elif symbol == 'HDD':
-            headers['Host'] = 'www.onepool.co'
-            headers['Origin'] = 'http://www.onepool.co'
-            headers['Referer'] = 'http://www.onepool.co/eco-hdd/user/detail_inquiry.html'
-            cur_url = 'http://www.onepool.co/eco_hdd/user/getdetailinquiry.html'
-            return []
         elif symbol == 'LHD':
             headers['Host'] = 'www.onepool.co'
             headers['Origin'] = 'http://www.onepool.co'
@@ -557,7 +530,7 @@ class Pool(object):
                 write_log('{}\n{}'.format(e, format_exc()))
         return []
 
-    def get_theory(self, details=False, bhd=True, hdd=True, lhd=True, boom=True, burst=True):
+    def get_theory(self, details=False, bhd=True, lhd=True, boom=True, burst=True):
         t_start = strftime("%Y-%m-%d %H:%M:%S", localtime(time() - 3 * 24 * 60 * 60))
         t_stop = strftime("%Y-%m-%d %H:%M:%S", localtime())
         bhd_amount = 0
@@ -565,14 +538,6 @@ class Pool(object):
             try:
                 for data in self.get_theory_date_to_list('BHD', t_start, t_stop):
                     bhd_amount += float(data['amount'])
-            except Exception as e:
-                write_log('{}\n{}'.format(e, format_exc()))
-                return None
-        hdd_amount = 0
-        if hdd:
-            try:
-                for data in self.get_theory_date_to_list('HDD', t_start, t_stop):
-                    hdd_amount += float(data['amount'])
             except Exception as e:
                 write_log('{}\n{}'.format(e, format_exc()))
                 return None
@@ -603,13 +568,11 @@ class Pool(object):
         if details:
             if bhd:
                 write_log('BHD amount:{}'.format(bhd_amount))
-            if hdd:
-                write_log('HDD amount:{}'.format(hdd_amount))
             if boom:
                 write_log('BOOM amount:{}'.format(boom_amount))
             if burst:
                 write_log('BURST amount:{}'.format(burst_amount))
-        return bhd_amount, hdd_amount, lhd_amount, boom_amount, burst_amount
+        return bhd_amount, lhd_amount, boom_amount, burst_amount
 
     def on_thread_wacai(self):
         # 线程获取挖财数据，720分钟获取一次，获取失败则5秒后重试
@@ -639,13 +602,13 @@ class Pool(object):
     def on_thread_trade(self):
         # 线程获取实时报价，40分钟获取一次，获取失败则5秒后重试
         trade_bhd_ts = time()
-        trade_hdd_ts = time()
         trade_lhd_ts = time()
+        trade_qt_ts = time()
         trade_boom_ts = time()
         trade_burst_ts = time()
         trade_bhd_tout = 0
-        trade_hdd_tout = 0
         trade_lhd_tout = 0
+        trade_qt_tout = 0
         trade_boom_tout = 0
         trade_burst_tout = 0
         default_tout = 60 * 40
@@ -658,14 +621,6 @@ class Pool(object):
                     trade_bhd_tout = default_tout
                     self.tradeBHD = price
                     write_log('获取BHD价格：{}'.format(price))
-            if (time() - trade_hdd_ts) >= trade_hdd_tout:
-                trade_hdd_ts = time()
-                trade_hdd_tout = 60
-                price = self.get_trade('HDD')
-                if price:
-                    trade_hdd_tout = default_tout
-                    self.tradeHDD = price
-                    write_log('获取HDD价格：{}'.format(price))
             if (time() - trade_lhd_ts) >= trade_lhd_tout:
                 trade_lhd_ts = time()
                 trade_lhd_tout = 60
@@ -674,13 +629,21 @@ class Pool(object):
                     trade_lhd_tout = default_tout
                     self.tradeLHD = price
                     write_log('获取LHD价格：{}'.format(price))
+            if (time() - trade_qt_ts) >= trade_qt_tout:
+                trade_qt_ts = time()
+                trade_qt_tout = 60
+                price = self.get_trade('QT')
+                if price:
+                    trade_qt_tout = default_tout
+                    self.tradeQT = price
+                    write_log('获取QT价格：{}'.format(price))
             if (time() - trade_boom_ts) >= trade_boom_tout:
                 trade_boom_ts = time()
                 trade_boom_tout = 60
                 price = self.get_trade('BOOM')
                 if price:
                     trade_boom_tout = default_tout
-                    self.tradeBOOM = price
+                    self.tradeBOOM = [price[0] * self.tradeQT[0], price[1] * self.tradeQT[1]]
                     write_log('获取BOOM价格：{}'.format(price))
             if (time() - trade_burst_ts) >= trade_burst_tout:
                 trade_burst_ts = time()
@@ -703,7 +666,6 @@ class Pool(object):
         while True:
             if (time() - average_ts) >= average_tsout and \
                     self.tradeBHD and \
-                    self.tradeHDD and \
                     self.tradeLHD and \
                     self.tradeBOOM and \
                     self.tradeBURST:
@@ -714,9 +676,8 @@ class Pool(object):
                 data = self.get_profit_by_date(lastweek, yesterday, details=False)
                 if data:
                     average_tsout = default_tsout
-                    bhd_amount, hdd_amount, lhd_amount, boom_amount, burst_amount = data
+                    bhd_amount, lhd_amount, boom_amount, burst_amount = data
                     total_income = bhd_amount * self.tradeBHD[0]
-                    total_income += hdd_amount * self.tradeHDD[0]
                     total_income += lhd_amount * self.tradeLHD[0]
                     total_income += boom_amount * self.tradeBOOM[0]
                     total_income += burst_amount * self.tradeBURST[0]
@@ -736,7 +697,7 @@ class Pool(object):
                 data = self.get_property()
                 if data:
                     property_tout = default_tout
-                    self.bhdAmount, self.hddAmount, self.lhdAmount, self.boomAmount, self.burstAmount = data
+                    self.bhdAmount, self.lhdAmount, self.boomAmount, self.burstAmount = data
                     write_log('获取ONEPOOL资产：{}'.format(data))
             sleep(5)
 
@@ -754,7 +715,7 @@ class Pool(object):
                 today_tout = 60
                 data = self.get_profit_by_date(today)
                 if data:
-                    self.bhdToday, self.hddToday, self.lhdToday, self.boomToday, self.burstToday = data
+                    self.bhdToday, self.lhdToday, self.boomToday, self.burstToday = data
                     today_tout = default_tout
                     write_log('获取当日收益：{}'.format(data))
             if (time() - future_ts) >= future_tout:
@@ -762,44 +723,39 @@ class Pool(object):
                 future_tout = 60
                 data = self.get_theory()
                 if data:
-                    self.bhdFuture, self.hddFuture, self.lhdFuture, self.boomFuture, self.burstFuture = data
+                    self.bhdFuture, self.lhdFuture, self.boomFuture, self.burstFuture = data
                     future_tout = default_tout
                     write_log('获取未分配收益：{}'.format(data))
             sleep(5)
 
     def commit_evt(self):
         # 报价
-        if not self.tradeBHD or not self.tradeHDD or not self.tradeLHD or not self.tradeBOOM or not self.tradeBURST:
+        if not self.tradeBHD or not self.tradeLHD or not self.tradeBOOM or not self.tradeBURST:
             print('{} 未正常获取'.format('报价'))
             return False
         bhdBid, bhdAsk = self.tradeBHD
-        hddBid, hddAsk = self.tradeHDD
         lhdBid, lhdAsk = self.tradeLHD
         boomBid, boomAsk = self.tradeBOOM
         burstBid, burstAsk = self.tradeBURST
 
-        hddBid, hddAsk = hddBid * bhdBid, hddAsk * bhdAsk
         lhdBid, lhdAsk = lhdBid * bhdBid, lhdAsk * bhdAsk
         # ONEPOOL
         if not self.bhdAmount \
-                and not self.hddAmount \
                 and not self.lhdAmount \
                 and not self.boomAmount \
                 and not self.burstAmount:
             print('{} 未正常获取'.format('ONEPOOL资产'))
             return False
         bhdProperty = self.bhdAmount * bhdBid
-        hddProperty = self.hddAmount * hddBid
         lhdProperty = self.lhdAmount * lhdBid
         boomProperty = self.boomAmount * boomBid
         burstProperty = self.burstAmount * burstBid
-        poolProperty = bhdProperty + hddProperty + lhdProperty + boomProperty + burstProperty
+        poolProperty = bhdProperty + lhdProperty + boomProperty + burstProperty
         self.bhdDayinc = self.bhdToday * bhdBid
-        self.hddDayinc = self.hddToday * hddBid
         self.lhdDayinc = self.lhdToday * lhdBid
         self.boomDayinc = self.boomToday * boomBid
         self.burstDayinc = self.burstToday * burstBid
-        poolToday = self.bhdDayinc + self.hddDayinc + self.lhdDayinc + self.boomDayinc + self.burstDayinc
+        poolToday = self.bhdDayinc + self.lhdDayinc + self.boomDayinc + self.burstDayinc
         # 用电统计
         if not self.cycPrice or not self.cycPow:
             print('{} 未正常获取'.format('用电信息'))
@@ -823,8 +779,6 @@ class Pool(object):
         # 判断数据增长或减少
         self.this_push_dict['bhdBid'] = round(bhdBid, 2)
         self.this_push_dict['bhdAsk'] = round(bhdAsk, 2)
-        self.this_push_dict['hddBid'] = round(hddBid, 2)
-        self.this_push_dict['hddAsk'] = round(hddAsk, 2)
         self.this_push_dict['lhdBid'] = round(lhdBid, 2)
         self.this_push_dict['lhdAsk'] = round(lhdAsk, 2)
         self.this_push_dict['boomBid'] = round(boomBid, 2)
@@ -841,11 +795,6 @@ class Pool(object):
         self.this_push_dict['bhdDayinc'] = round(self.bhdDayinc, 2)
         self.this_push_dict['bhdAmount'] = round(self.bhdAmount, 2)
         self.this_push_dict['bhdProperty'] = round(bhdProperty, 2)
-        self.this_push_dict['hddToday'] = round(self.hddToday, 2)
-        self.this_push_dict['hddFuture'] = round(self.hddFuture, 2)
-        self.this_push_dict['hddDayinc'] = round(self.hddDayinc, 2)
-        self.this_push_dict['hddAmount'] = round(self.hddAmount, 2)
-        self.this_push_dict['hddProperty'] = round(hddProperty, 2)
         self.this_push_dict['lhdToday'] = round(self.lhdToday, 2)
         self.this_push_dict['lhdFuture'] = round(self.lhdFuture, 2)
         self.this_push_dict['lhdDayinc'] = round(self.lhdDayinc, 2)
@@ -899,8 +848,6 @@ class Pool(object):
         data = md.format(
             bhdBidDirect=self.this_push_direct['bhdBid'], bhdBid=self.this_push_dict['bhdBid'],
             bhdAskDirect=self.this_push_direct['bhdAsk'], bhdAsk=self.this_push_dict['bhdAsk'],
-            hddBidDirect=self.this_push_direct['hddBid'], hddBid=self.this_push_dict['hddBid'],
-            hddAskDirect=self.this_push_direct['hddAsk'], hddAsk=self.this_push_dict['hddAsk'],
             lhdBidDirect=self.this_push_direct['lhdBid'], lhdBid=self.this_push_dict['lhdBid'],
             lhdAskDirect=self.this_push_direct['lhdAsk'], lhdAsk=self.this_push_dict['lhdAsk'],
             boomBidDirect=self.this_push_direct['boomBid'], boomBid=self.this_push_dict['boomBid'],
@@ -917,11 +864,6 @@ class Pool(object):
             bhdDayincDirect=self.this_push_direct['bhdDayinc'], bhdDayinc=self.this_push_dict['bhdDayinc'],
             bhdAmountDirect=self.this_push_direct['bhdAmount'], bhdAmount=self.this_push_dict['bhdAmount'],
             bhdPropertyDirect=self.this_push_direct['bhdProperty'], bhdProperty=self.this_push_dict['bhdProperty'],
-            hddTodayDirect=self.this_push_direct['hddToday'], hddToday=self.this_push_dict['hddToday'],
-            hddFutureDirect=self.this_push_direct['hddFuture'], hddFuture=self.this_push_dict['hddFuture'],
-            hddDayincDirect=self.this_push_direct['hddDayinc'], hddDayinc=self.this_push_dict['hddDayinc'],
-            hddAmountDirect=self.this_push_direct['hddAmount'], hddAmount=self.this_push_dict['hddAmount'],
-            hddPropertyDirect=self.this_push_direct['hddProperty'], hddProperty=self.this_push_dict['hddProperty'],
             lhdTodayDirect=self.this_push_direct['lhdToday'], lhdToday=self.this_push_dict['lhdToday'],
             lhdFutureDirect=self.this_push_direct['lhdFuture'], lhdFuture=self.this_push_dict['lhdFuture'],
             lhdDayincDirect=self.this_push_direct['lhdDayinc'], lhdDayinc=self.this_push_dict['lhdDayinc'],

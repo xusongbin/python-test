@@ -7,14 +7,6 @@
 - 资产数量：{bhdAmount}{bhdAmountDirect}
 - 资产价值：{bhdProperty}{bhdPropertyDirect}
 
-#### [HDD](https://openapi.bitmart.io/v2/ticker?symbol=HDD_BHD)
-- 买盘：{hddBid}{hddBidDirect}
-- 卖盘：{hddAsk}{hddAskDirect}
-- 已分配：{hddToday}{hddTodayDirect}
-- 未分配：{hddFuture}{hddFutureDirect}
-- 资产数量：{hddAmount}{hddAmountDirect}
-- 资产价值：{hddProperty}{hddPropertyDirect}
-
 #### [LHD](https://openapi.bitmart.io/v2/ticker?symbol=LHD_BHD)
 - 买盘：{lhdBid}{lhdBidDirect}
 - 卖盘：{lhdAsk}{lhdAskDirect}
@@ -56,7 +48,6 @@
 - 日均收益：{poolAverage}{poolAverageDirect}
 - 今日收益：{poolToday}{poolTodayDirect}
 - BHD收益：{bhdDayinc}{bhdDayincDirect}
-- HDD收益：{hddDayinc}{hddDayincDirect}
 - LHD收益：{lhdDayinc}{lhdDayincDirect}
 - BOOM收益：{boomDayinc}{boomDayincDirect}
 - BURST收益：{burstDayinc}{burstDayincDirect}
