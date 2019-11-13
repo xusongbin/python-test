@@ -292,20 +292,19 @@ class Pool(object):
             'Connection': 'keep-alive',
             'Cookie': (
                 'language=zh-CN; '
-                'sd7038915=q9mjqnc651daad8i6gpum1uqf7; '
                 'loginName=mark3333520%40163.com; '
-                'loginPwd=f3in2oWmp61%2F'
-                'dHqnfanUzo6oqWKMjKnOl4h%2B'
+                'loginPwd=f3in2oWmp61%2FdHqnfanUzo6oqWKMjKnOl4h%2B'
                 'mK7LlNyMi6zNhsy3rX9igmOKqLbcg6W4qoCvg8qAZ3%2F'
                 'Pv7WVzYyhq9qGtrtoiqqSp324q86BqLmega97zoBne8u%2F'
-                'pZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf;'
+                'pZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf; '
+                'sd7038915=o58htabrp06ufak7re61gum174;'
             ),
             'Host': 'www.onepool.co',
             'Referer': 'http://www.onepool.co/',
             'Upgrade-Insecure-Requests': '1',
             'User-Agent': self.user_agent
         }
-        cur_url = 'http://www.onepool.co/home/user/asset.html'
+        cur_url = 'https://www.onepool.co/home/user/asset.html'
         try:
             req = request.Request(cur_url, headers=headers)
             with closing(request.urlopen(req, timeout=5)) as resp:
@@ -362,13 +361,12 @@ class Pool(object):
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'Cookie': (
                 'language=zh-CN; '
-                'sd7038915=q9mjqnc651daad8i6gpum1uqf7; '
                 'loginName=mark3333520%40163.com; '
-                'loginPwd=f3in2oWmp61%2F'
-                'dHqnfanUzo6oqWKMjKnOl4h%2B'
+                'loginPwd=f3in2oWmp61%2FdHqnfanUzo6oqWKMjKnOl4h%2B'
                 'mK7LlNyMi6zNhsy3rX9igmOKqLbcg6W4qoCvg8qAZ3%2F'
                 'Pv7WVzYyhq9qGtrtoiqqSp324q86BqLmega97zoBne8u%2F'
-                'pZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf;'
+                'pZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf; '
+                'sd7038915=o58htabrp06ufak7re61gum174;'
             ),
             'Host': 'www.onepool.co',
             'Origin': 'http://www.onepool.co',
@@ -377,17 +375,17 @@ class Pool(object):
             'X-Requested-With': 'XMLHttpRequest'
         }
         if symbol == 'BHD':
-            headers['Referer'] = 'http://www.onepool.co/eco-bhd/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.co/eco_bhd/user/getincomeinquiry.html'
+            headers['Referer'] = 'https://www.onepool.co/eco-bhd/user/income_inquiry.html'
+            cur_url = 'https://www.onepool.co/eco_bhd/user/getincomeinquiry.html'
         elif symbol == 'LHD':
-            headers['Referer'] = 'http://www.onepool.co/eco-lhd/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.co/eco_lhd/user/getincomeinquiry.html'
+            headers['Referer'] = 'https://www.onepool.co/eco-lhd/user/income_inquiry.html'
+            cur_url = 'https://www.onepool.co/eco_lhd/user/getincomeinquiry.html'
         elif symbol == 'BOOM':
-            headers['Referer'] = 'http://www.onepool.co/eco-boom/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.co/boom/user/getincomeinquiry.html'
+            headers['Referer'] = 'https://www.onepool.co/eco-boom/user/income_inquiry.html'
+            cur_url = 'https://www.onepool.co/boom/user/getincomeinquiry.html'
         elif symbol == 'BURST':
-            headers['Referer'] = 'http://www.onepool.co/burst/user/income_inquiry.html'
-            cur_url = 'http://www.onepool.co/burst/user/getincomeinquiry.html'
+            headers['Referer'] = 'https://www.onepool.co/burst/user/income_inquiry.html'
+            cur_url = 'https://www.onepool.co/burst/user/getincomeinquiry.html'
         else:
             return None
         try:
@@ -469,47 +467,45 @@ class Pool(object):
     def get_theory_date_to_list(self, symbol, t_start, t_stop):
         headers = {
             'Accept': '*/*',
-            'Accept-Encoding': 'gzip, deflate',
+            'Accept-Encoding': 'gzip, deflate, br',
             'Accept-Language': 'zh-CN,zh;q=0.9',
-            'Connection': 'keep-alive',
             'Content-Length': '82',
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'Host': '',
+            # 'Host': '',
             'Origin': '',
             'Referer': '',
             'User-Agent': self.user_agent,
             'X-Requested-With': 'XMLHttpRequest',
             'Cookie': (
                 'language=zh-CN; '
-                'sd7038915=q9mjqnc651daad8i6gpum1uqf7; '
                 'loginName=mark3333520%40163.com; '
-                'loginPwd=f3in2oWmp61%2F'
-                'dHqnfanUzo6oqWKMjKnOl4h%2B'
+                'loginPwd=f3in2oWmp61%2FdHqnfanUzo6oqWKMjKnOl4h%2B'
                 'mK7LlNyMi6zNhsy3rX9igmOKqLbcg6W4qoCvg8qAZ3%2F'
                 'Pv7WVzYyhq9qGtrtoiqqSp324q86BqLmega97zoBne8u%2F'
-                'pZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf;'
+                'pZySgXu3mJHPrKN%2FqoJkic6rz47LvZ98o2Wf; '
+                'sd7038915=o58htabrp06ufak7re61gum174;'
             )
         }
         if symbol == 'BHD':
-            headers['Host'] = 'www.onepool.co'
-            headers['Origin'] = 'http://www.onepool.co'
-            headers['Referer'] = 'http://www.onepool.co/eco-bhd/user/detail_inquiry.html'
-            cur_url = 'http://www.onepool.co/eco_bhd/user/getdetailinquiry.html'
+            # headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'https://www.onepool.co'
+            headers['Referer'] = 'https://www.onepool.co/eco-bhd/user/detail_inquiry.html'
+            cur_url = 'https://www.onepool.co/eco_bhd/user/getdetailinquiry.html'
         elif symbol == 'LHD':
-            headers['Host'] = 'www.onepool.co'
-            headers['Origin'] = 'http://www.onepool.co'
-            headers['Referer'] = 'http://www.onepool.co/eco-lhd/user/detail_inquiry.html'
-            cur_url = 'http://www.onepool.co/eco_lhd/user/getdetailinquiry.html'
+            # headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'https://www.onepool.co'
+            headers['Referer'] = 'https://www.onepool.co/eco-lhd/user/detail_inquiry.html'
+            cur_url = 'https://www.onepool.co/eco_lhd/user/getdetailinquiry.html'
         elif symbol == 'BOOM':
-            headers['Host'] = 'www.onepool.co'
-            headers['Origin'] = 'http://www.onepool.co'
-            headers['Referer'] = 'http://www.onepool.co/eco-boom/user/detail_inquiry.html'
-            cur_url = 'http://www.onepool.co/boom/user/getdetailinquiry.html'
+            # headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'https://www.onepool.co'
+            headers['Referer'] = 'https://www.onepool.co/eco-boom/user/detail_inquiry.html'
+            cur_url = 'https://www.onepool.co/boom/user/getdetailinquiry.html'
         elif symbol == 'BURST':
-            headers['Host'] = 'www.onepool.co'
-            headers['Origin'] = 'http://www.onepool.co'
-            headers['Referer'] = 'http://www.onepool.co/burst/user/detail_inquiry.html'
-            cur_url = 'http://www.onepool.co/burst/user/getdetailinquiry.html'
+            # headers['Host'] = 'www.onepool.co'
+            headers['Origin'] = 'https://www.onepool.co'
+            headers['Referer'] = 'https://www.onepool.co/burst/user/detail_inquiry.html'
+            cur_url = 'https://www.onepool.co/burst/user/getdetailinquiry.html'
         else:
             return []
         try:
