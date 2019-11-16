@@ -39,12 +39,40 @@ class TestThread(Tk):
         self.geometry('400x300')
         self.resizable(0, 0)
 
-        self.button_add = Button(self, text='增加', width=6, height=1, command=lambda x=('+', 1): self.change_thread(x))
-        self.button_add.grid(row=1, column=4)
-        self.button_dec1 = Button(self, text='-', width=3, height=1, command=lambda x=('-', 1): self.change_thread(x))
-        self.button_dec1.grid(row=1, column=1)
-        self.button_dec2 = Button(self, text='-', width=3, height=1, command=lambda x=('-', 2): self.change_thread(x))
-        self.button_dec2.grid(row=2, column=1)
+        self.frame_left_fill = Frame(self, width=10)
+        self.frame_left_fill.grid(row=0, column=0)
+        # self.frame_left_fill_entry = Entry(self.frame_left_fill, width=)
+        self.frame_left = Frame(self)
+        self.frame_left.grid(row=0, column=1)
+        self.frame_left_line1 = Frame(self.frame_left)
+        self.frame_left_line1.pack(side=TOP)
+        self.frame_left_line2 = Frame(self.frame_left)
+        self.frame_left_line2.pack(side=TOP)
+        self.frame_right = Frame(self)
+        self.frame_right.grid(row=0, column=2)
+
+        self.button_dec1 = Button(
+            self.frame_left_line1, text='-', width=2, height=1,
+            command=lambda x=('-', 1): self.change_thread(x)
+        ).pack(side=LEFT)
+        self.entry_thread1_text = StringVar()
+        self.entry_thread1 = Entry(
+            self.frame_left_line1, textvariable=self.entry_thread1_text
+        ).pack(side=RIGHT)
+
+        self.button_dec2 = Button(
+            self.frame_left_line2, text='-', width=2, height=1,
+            command=lambda x=('-', 2): self.change_thread(x)
+        ).pack(side=LEFT)
+        self.entry_thread2_text = StringVar()
+        self.entry_thread2 = Entry(
+            self.frame_left_line2, textvariable=self.entry_thread2_text
+        ).pack(side=RIGHT)
+
+        self.button_add = Button(
+            self.frame_right, text='增加',
+            command=lambda x=('+', 1): self.change_thread(x)
+        ).pack()
 
     def change_thread(self, args):
         print(args)
