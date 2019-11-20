@@ -24,7 +24,7 @@ def write_log(_str):
 class DiskDump(object):
     dump_json_path = 'DiskDump.json'
     dump_xlsx_path = 'DiskDump.xlsx'
-    base_path = 'scavenger/'
+    base_path = '/'
     scavenger_all_file = base_path + 'all.xlsx'
     scavenger_bhd_file = base_path + 'bhd.xlsx'
     scavenger_boom_file = base_path + 'boom.xlsx'

@@ -29,7 +29,7 @@ class App(object):
     def __init__(self):
         self.max_deadline = 31536000
         self.limit_deadline = 1000000
-        self.path_base = 'scavenger/'
+        self.path_base = '/'
         self.path_log = self.path_base + 'scavenger.1.log'
         self.path_xlsx_all = self.path_base + 'all.xlsx'
         self.path_xlsx_bhd = self.path_base + 'bhd.xlsx'
