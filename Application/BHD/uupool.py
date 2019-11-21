@@ -64,7 +64,7 @@ class UUPool(object):
         _url = 'https://uupool.com/v1/assets/all'
         _request = request.Request(_url, headers=self.headers)
         try:
-            _respond = request.urlopen(_request)
+            _respond = request.urlopen(_request, timeout=5)
             _respond = _respond.read().decode('utf-8')
             _content = json.loads(_respond)
             # print(_content)
@@ -88,7 +88,7 @@ class UUPool(object):
         _url = 'https://uupool.com/v1/earnings/days/?pageSize=10&page=1&coin_name={}&type=0'.format(coin)
         _request = request.Request(_url, headers=self.headers)
         try:
-            _respond = request.urlopen(_request)
+            _respond = request.urlopen(_request, timeout=5)
             _respond = _respond.read().decode('utf-8')
             _content = json.loads(_respond)
             # print(_content)
@@ -101,6 +101,8 @@ class UUPool(object):
 
 
 if __name__ == '__main__':
-    uu = UUPool()
-    # uu.do_get_assets()
-    uu.do_update()
+    pool = UUPool()
+    # pool.do_get_assets()
+    # pool.do_get_days('bhd')
+    # pool.do_get_earnings()
+    pool.do_update()
