@@ -51,7 +51,7 @@ class ONEPool(object):
         _earning = self.do_get_earnings()
         if _earning:
             self.data_storage['earning'] = _earning
-        print(self.data_storage)
+        # print(self.data_storage)
         return self.data_storage
 
     def do_get_assets(self):
@@ -121,4 +121,4 @@ if __name__ == '__main__':
     # pool.do_get_assets()
     # pool.do_get_days('bhd')
     # pool.do_get_earnings()
-    pool.do_update()
+    print(pool.do_update())

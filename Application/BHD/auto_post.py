@@ -79,9 +79,13 @@ class Pool(object):
             sleep(10)
             if (time() - _tms) < _timeout:
                 continue
-            _tms = time()
-            self.update_cointrade = self.cointrade.do_get_trade()
-            print(self.update_cointrade)
+            _cointrade = self.cointrade.do_get_trade()
+            print(_cointrade)
+            if len(_cointrade.keys()) == 4:
+                _tms = time()
+                self.update_cointrade = _cointrade
+            else:
+                _tms = time() - _timeout + 10
 
     def run(self):
         while True:
@@ -106,15 +110,18 @@ class Pool(object):
             _pool_assert_value = 0
             _pool_today_value = 0
             for _coin in _coin_list:
-                _coin_bid = float(self.update_cointrade[_coin][0])
-                _coin_ask = float(self.update_cointrade[_coin][1])
+                _coin_bid = 0
+                _coin_ask = 0
                 _coin_day = 0
+                if _coin in self.update_cointrade.keys():
+                    _coin_bid = float(self.update_cointrade[_coin][0])
+                    _coin_ask = float(self.update_cointrade[_coin][1])
                 if _coin in self.update_uupool['earning'].keys():
                     if _today in self.update_uupool['earning'][_coin].keys():
-                        _coin_day += float(self.update_uupool['earning'][_coin])
+                        _coin_day += float(self.update_uupool['earning'][_coin][_today])
                 if _coin in self.update_onepool['earning'].keys():
                     if _today in self.update_onepool['earning'][_coin].keys():
-                        _coin_day += float(self.update_onepool['earning'][_coin])
+                        _coin_day += float(self.update_onepool['earning'][_coin][_today])
                 _coin_assert = 0
                 if _coin in self.update_uupool['assets'].keys():
                     _coin_assert += float(self.update_uupool['assets'][_coin])
@@ -141,6 +148,7 @@ class Pool(object):
             if self.update_list != _update_list:
                 self.update_list = _update_list
                 self.dingpost.post_md_list(_update_list)
+                write_log('上报最新数据')
 
 
 if __name__ == '__main__':

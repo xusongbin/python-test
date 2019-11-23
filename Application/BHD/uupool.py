@@ -8,15 +8,9 @@ from traceback import format_exc
 
 
 class UUPool(object):
+    __token = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6IjE3Nzc4MTY2ODMwIiwidGltZXN0YW1wIjoxNTc0NTIwNjg3MzU1LCJ1aWQiOjEwNjk5LCJhY2NvdW50S2V5IjoiMDg2OGRiZTItZDU5MS0zM2MxLWJlYjItZjZkZDUwYmRiNzJlIiwiZXhwIjoxNTc0NjA3MDg3LCJuYmYiOjE1NzQ1MjA2ODd9.Ro-ddvqsNqrbLipmQpRj-YiaqvIbr-T2XL4WB9Bm2pU'
     headers = {
-        'authorization_token': (
-            'eyJhbGciOiJIUzI1NiJ9.'
-            'eyJ1c2VybmFtZSI6IjE3Nzc4MTY2ODMwIiwidGltZXN0YW1wIjox'
-            'NTc0MjU2OTkyMDgxLCJ1aWQiOjEwNjk5LCJhY2NvdW50S2V5Ijoi'
-            'MDg2OGRiZTItZDU5MS0zM2MxLWJlYjItZjZkZDUwYmRiNzJlIiwi'
-            'ZXhwIjoxNTc0MzQzMzkyLCJuYmYiOjE1NzQyNTY5OTJ9.ldNUXm7'
-            'J8trpYHz1k6k-sJZJDtgb2ieYRKDNMdBIvz4'
-        ),
+        'authorization_token': __token,
         'authorization_uid': '10699',
         'authorization_username': '17778166830',
         'Connection': 'keep-alive',
@@ -30,14 +24,7 @@ class UUPool(object):
         'lan': 'zh',
         'platform': 'pc',
         'Referer': 'https://uupool.com/asset',
-        'token': (
-            'eyJhbGciOiJIUzI1NiJ9.'
-            'eyJ1c2VybmFtZSI6IjE3Nzc4MTY2ODMwIiwidGltZXN0YW1wIjox'
-            'NTc0MjU2OTkyMDgxLCJ1aWQiOjEwNjk5LCJhY2NvdW50S2V5Ijoi'
-            'MDg2OGRiZTItZDU5MS0zM2MxLWJlYjItZjZkZDUwYmRiNzJlIiwi'
-            'ZXhwIjoxNTc0MzQzMzkyLCJuYmYiOjE1NzQyNTY5OTJ9.ldNUXm7'
-            'J8trpYHz1k6k-sJZJDtgb2ieYRKDNMdBIvz4'
-        ),
+        'token': __token,
         'User-Agent': (
             'Mozilla/5.0 (Windows NT 6.1; WOW64) '
             'AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -105,4 +92,4 @@ if __name__ == '__main__':
     # pool.do_get_assets()
     # pool.do_get_days('bhd')
     # pool.do_get_earnings()
-    pool.do_update()
+    print(pool.do_update())

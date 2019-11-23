@@ -55,8 +55,11 @@ class CoinTrade(object):
             _data = self.__symbol_trade(symbol)
             if _data is not None:
                 _trade[symbol] = _data
-        if 'BOOM' in _trade.keys() and 'QT' in _trade.keys():
-            _trade['BOOM'] = [_trade['BOOM'][0] * _trade['QT'][0], _trade['BOOM'][1] * _trade['QT'][1]]
+        if 'BOOM' in _trade.keys():
+            if 'QT' in _trade.keys():
+                _trade['BOOM'] = [_trade['BOOM'][0] * _trade['QT'][0], _trade['BOOM'][1] * _trade['QT'][1]]
+            else:
+                _trade['BOOM'] = [_trade['BOOM'][0] * 0.8, _trade['BOOM'][1] * 0.8]
         for coin in _trade.keys():
             if coin == 'QT':
                 continue
