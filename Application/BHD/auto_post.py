@@ -41,6 +41,16 @@ class Pool(object):
 
         self.run()
 
+    def check_post_able(self):
+        if not self.update_flag:
+            return False
+        if (time() - self.update_ts) < 60:
+            return False
+        if (time() % (24 * 3600)) < 8 * 3600:       # AM:08:00
+            return False
+        self.update_flag = False
+        return True
+
     def run(self):
         while True:
             sleep(5)
@@ -106,8 +116,7 @@ class Pool(object):
                 self.update_list = _update_list
                 self.update_ts = time()
                 self.update_flag = True
-            elif (time() - self.update_ts) > 1 * 60 and self.update_flag:
-                self.update_flag = False
+            if self.check_post_able():
                 self.dingpost.post_md_list(_update_list)
                 write_log('上报最新数据')
 
