@@ -31,6 +31,8 @@ class Pool(object):
         self.dingpost = DingPost()
 
         self.update_list = []
+        self.update_ts = time()
+        self.update_flag = True
         self.pow_price = 1.3
         self.pow_power = 210
         self.pow_today = self.pow_power * 24 * 1.3 / 1000
@@ -102,6 +104,10 @@ class Pool(object):
             ]
             if self.update_list != _update_list:
                 self.update_list = _update_list
+                self.update_ts = time()
+                self.update_flag = True
+            elif (time() - self.update_ts) > 1 * 60 and self.update_flag:
+                self.update_flag = False
                 self.dingpost.post_md_list(_update_list)
                 write_log('上报最新数据')
 
