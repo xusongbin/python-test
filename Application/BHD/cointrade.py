@@ -2,18 +2,82 @@
 # -*- coding: utf-8 -*-
 
 import json
+import threading
 from urllib import request
+from time import time, sleep
 from traceback import format_exc
 
 
 class CoinTrade(object):
-    __coin_list = ['BHD', 'LHD', 'BURST', 'BOOM', 'QT']
+    def __init__(self, period=3600, timeout=5):
+        self.period = period
+        self.timeout = timeout
 
-    def __init__(self):
-        self.trade = {}
+        self.coin_list = ['BHD', 'LHD', 'BURST', 'BOOM', 'QT']
+        self.coin_trade = {
+            'BHD': {'valid': False, 'time': time() - period, 'bid': 0.0, 'ask': 0.0}
+        }
+        for coin in self.coin_list:
+            self.coin_trade[coin] = {'valid': False, 'time': time() - period, 'bid': 0.0, 'ask': 0.0}
+
+        self.thread_trade = threading.Thread(target=self.on_thread_trade)
+        self.thread_trade.setDaemon(True)
+        self.thread_trade.start()
+
+    def get_trade(self):
+        _trade = {}
+        _trade_valid = True
+        for coin in self.coin_list:
+            if not self.coin_trade[coin]['valid']:
+                _trade_valid = False
+            _trade[coin] = {'bid': self.coin_trade[coin]['bid'], 'ask': self.coin_trade[coin]['ask']}
+        _trade['valid'] = _trade_valid
+        return _trade
+
+    def check_timeout(self, ts):
+        if time() - ts >= self.period:
+            return True
+        return False
+
+    def get_timeout(self, dl=None):
+        if dl:
+            return time() - self.period + dl
+        else:
+            return time()
+
+    def on_thread_trade(self):
+        while True:
+            sleep(1)
+            for coin in self.coin_list:
+                if self.check_timeout(self.coin_trade[coin]['time']):
+                    trade = self.get_symbol_trade(coin)
+                    self.prase_symbol_trade(coin, trade)
+
+    def prase_symbol_trade(self, coin, trade):
+        if trade:
+            if coin == 'LHD' and not self.coin_trade['BHD']['valid']:
+                self.coin_trade[coin]['time'] = self.get_timeout(self.timeout)
+                return
+            if coin == 'BOOM' and not self.coin_trade['QT']['valid']:
+                self.coin_trade[coin]['time'] = self.get_timeout(self.timeout)
+                return
+            self.coin_trade[coin]['bid'] = trade[0]
+            self.coin_trade[coin]['ask'] = trade[1]
+            if coin == 'LHD':
+                self.coin_trade[coin]['bid'] = trade[0] * self.coin_trade['BHD']['bid']
+                self.coin_trade[coin]['ask'] = trade[1] * self.coin_trade['BHD']['ask']
+            if coin == 'BOOM':
+                self.coin_trade[coin]['bid'] = trade[0] * self.coin_trade['QT']['bid']
+                self.coin_trade[coin]['ask'] = trade[1] * self.coin_trade['QT']['ask']
+            self.coin_trade[coin]['valid'] = True
+            self.coin_trade[coin]['time'] = self.get_timeout()
+            _trade = self.coin_trade[coin]
+            print('PARSE {} TRADE: BID:{} ASK:{}'.format(coin, _trade['bid'], _trade['ask']))
+        else:
+            self.coin_trade[coin]['time'] = self.get_timeout(self.timeout)
 
     @staticmethod
-    def __symbol_trade(symbol):
+    def get_symbol_trade(symbol):
         headers = {
             'User-Agent': (
                 'Mozilla/5.0 (Windows NT 6.1; WOW64) '
@@ -49,24 +113,8 @@ class CoinTrade(object):
             print('get {} price\n{}\n{}'.format(symbol, e, format_exc()))
         return None
 
-    def do_get_trade(self):
-        _trade = {}
-        for symbol in self.__coin_list:
-            _data = self.__symbol_trade(symbol)
-            if _data is not None:
-                _trade[symbol] = _data
-        if 'BOOM' in _trade.keys():
-            if 'QT' in _trade.keys():
-                _trade['BOOM'] = [_trade['BOOM'][0] * _trade['QT'][0], _trade['BOOM'][1] * _trade['QT'][1]]
-            else:
-                _trade['BOOM'] = [_trade['BOOM'][0] * 0.8, _trade['BOOM'][1] * 0.8]
-        for coin in _trade.keys():
-            if coin == 'QT':
-                continue
-            self.trade[coin] = _trade[coin]
-        return self.trade
-
 
 if __name__ == '__main__':
     ct = CoinTrade()
-    print(ct.do_get_trade())
+    while True:
+        pass

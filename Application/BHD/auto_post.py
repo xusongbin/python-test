@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import threading
 from time import time, strftime, localtime, mktime, strptime, sleep
 from traceback import format_exc
 
@@ -25,126 +24,82 @@ def write_log(_str):
 
 
 class Pool(object):
-    uupool = UUPool()
-    onepool = ONEPool()
-    cointrade = CoinTrade()
-    dingpost = DingPost()
-
-    update_uupool = None
-    update_onepool = None
-    update_cointrade = None
-
-    update_list = None
-
     def __init__(self):
-        # 线程获取矿池数据，1小时获取一次，获取失败则10秒后重试
-        self.thread_uupool = threading.Thread(target=self.on_thread_uupool)
-        self.thread_uupool.setDaemon(True)
-        self.thread_uupool.start()
-        self.thread_onepool = threading.Thread(target=self.on_thread_onepool)
-        self.thread_onepool.setDaemon(True)
-        self.thread_onepool.start()
-        self.thread_cointrade = threading.Thread(target=self.on_thread_cointrade)
-        self.thread_cointrade.setDaemon(True)
-        self.thread_cointrade.start()
+        self.uupool = UUPool()
+        self.onepool = ONEPool()
+        self.cointrade = CoinTrade()
+        self.dingpost = DingPost()
+
+        self.update_list = []
+        self.pow_price = 1.3
+        self.pow_power = 210
+        self.pow_today = self.pow_power * 24 * 1.3 / 1000
+        self.pow_month = self.pow_today * 30
+        self.spend = 23200
 
         self.run()
 
-    def on_thread_uupool(self):
-        _timeout = 1 * 3600
-        _tms = time() - _timeout
-        while True:
-            sleep(10)
-            if (time() - _tms) < _timeout:
-                continue
-            _tms = time()
-            self.update_uupool = self.uupool.do_update()
-            print(self.update_uupool)
-
-    def on_thread_onepool(self):
-        _timeout = 1 * 3600
-        _tms = time() - _timeout
-        while True:
-            sleep(10)
-            if (time() - _tms) < _timeout:
-                continue
-            _tms = time()
-            self.update_onepool = self.onepool.do_update()
-            print(self.update_onepool)
-
-    def on_thread_cointrade(self):
-        _timeout = 1 * 3600
-        _tms = time() - _timeout
-        while True:
-            sleep(10)
-            if (time() - _tms) < _timeout:
-                continue
-            _cointrade = self.cointrade.do_get_trade()
-            print(_cointrade)
-            if len(_cointrade.keys()) == 4:
-                _tms = time()
-                self.update_cointrade = _cointrade
-            else:
-                _tms = time() - _timeout + 10
-
     def run(self):
         while True:
-            sleep(10)
-            if self.update_onepool is None:
+            sleep(5)
+            coin_trade = self.cointrade.get_trade()
+            if not coin_trade['valid']:
                 continue
-            if 'earning' not in self.update_onepool.keys():
+            onepool_property = self.onepool.get_property()
+            if not onepool_property['valid']:
                 continue
-            if 'assets' not in self.update_onepool.keys():
+            uupool_property = self.uupool.get_property()
+            if not uupool_property['valid']:
                 continue
-            if self.update_uupool is None:
-                continue
-            if 'earning' not in self.update_uupool.keys():
-                continue
-            if 'assets' not in self.update_uupool.keys():
-                continue
-            if self.update_cointrade is None:
-                continue
-            _coin_list = ['BHD', 'LHD', 'BOOM', 'BURST']
-            _today = strftime("%Y-%m-%d", localtime())
-            _update_list = []
-            _pool_assert_value = 0
-            _pool_today_value = 0
-            for _coin in _coin_list:
-                _coin_bid = 0
-                _coin_ask = 0
-                _coin_day = 0
-                if _coin in self.update_cointrade.keys():
-                    _coin_bid = float(self.update_cointrade[_coin][0])
-                    _coin_ask = float(self.update_cointrade[_coin][1])
-                if _coin in self.update_uupool['earning'].keys():
-                    if _today in self.update_uupool['earning'][_coin].keys():
-                        _coin_day += float(self.update_uupool['earning'][_coin][_today])
-                if _coin in self.update_onepool['earning'].keys():
-                    if _today in self.update_onepool['earning'][_coin].keys():
-                        _coin_day += float(self.update_onepool['earning'][_coin][_today])
-                _coin_assert = 0
-                if _coin in self.update_uupool['assets'].keys():
-                    _coin_assert += float(self.update_uupool['assets'][_coin])
-                if _coin in self.update_onepool['assets'].keys():
-                    _coin_assert += float(self.update_onepool['assets'][_coin])
-                _coin_day_value = _coin_day * _coin_bid
-                _coin_assert_value = _coin_assert * _coin_bid
-                _update_list.append(_coin_bid)
-                _update_list.append(_coin_ask)
-                _update_list.append(_coin_day)
-                _update_list.append(_coin_day_value)
-                _update_list.append(_coin_assert)
-                _update_list.append(_coin_assert_value)
-                _pool_assert_value += _coin_assert_value
-                _pool_today_value += _coin_day_value
-            _update_list.append(_pool_assert_value)
-            _update_list.append(_pool_today_value)
-            _power_rate = 1.3
-            _power_pow = 210
-            _power_value = _power_pow * 24 * 30 * 1.3 / 1000
-            _update_list.append(_power_rate)
-            _update_list.append(_power_pow)
-            _update_list.append(_power_value)
+            bhd_today_value = uupool_property['BHD']['today'] * coin_trade['BHD']['bid']
+            lhd_today_value = uupool_property['LHD']['today'] * coin_trade['LHD']['bid']
+            boom_today_value = onepool_property['BOOM']['today'] * coin_trade['BOOM']['bid']
+            burst_today_value = onepool_property['BURST']['today'] * coin_trade['BURST']['bid']
+            bhd_average_value = uupool_property['BHD']['average'] * coin_trade['BHD']['bid']
+            lhd_average_value = uupool_property['LHD']['average'] * coin_trade['LHD']['bid']
+            boom_average_value = onepool_property['BOOM']['average'] * coin_trade['BOOM']['bid']
+            burst_average_value = onepool_property['BURST']['average'] * coin_trade['BURST']['bid']
+            bhd_assert_value = uupool_property['BHD']['amount'] * coin_trade['BHD']['bid']
+            lhd_assert_value = uupool_property['LHD']['amount'] * coin_trade['LHD']['bid']
+            boom_assert_value = onepool_property['BOOM']['amount'] * coin_trade['BOOM']['bid']
+            burst_assert_value = onepool_property['BURST']['amount'] * coin_trade['BURST']['bid']
+            coin_total_assert = bhd_assert_value + lhd_assert_value + boom_assert_value + burst_assert_value
+            coin_average_value = bhd_average_value + lhd_average_value + boom_average_value + burst_average_value
+            coin_month_value = coin_average_value * 30
+            coin_today_value = bhd_today_value + lhd_today_value + boom_today_value + burst_today_value
+            coin_average_profit = coin_average_value - self.pow_today
+            coin_month_profit = coin_month_value - self.pow_month
+            coin_cycle_days = int(self.spend / coin_average_profit)
+            coin_cycle_date = strftime("%Y-%m-%d", localtime(time() + coin_cycle_days * 24 * 3600))
+            _update_list = [
+                coin_trade['BHD']['bid'], coin_trade['BHD']['ask'],
+                uupool_property['BHD']['today'], bhd_today_value,
+                uupool_property['BHD']['average'], bhd_average_value,
+
+                coin_trade['LHD']['bid'], coin_trade['LHD']['ask'],
+                uupool_property['LHD']['today'], lhd_today_value,
+                uupool_property['LHD']['average'], lhd_average_value,
+
+                coin_trade['BOOM']['bid'], coin_trade['BOOM']['ask'],
+                onepool_property['BOOM']['today'], boom_today_value,
+                onepool_property['BOOM']['average'], boom_average_value,
+
+                coin_trade['BURST']['bid'], coin_trade['BURST']['ask'],
+                onepool_property['BURST']['today'], burst_today_value,
+                onepool_property['BURST']['average'], burst_average_value,
+
+                coin_total_assert,
+                self.pow_month,
+
+                coin_average_value,
+                coin_today_value,
+
+                coin_month_value,
+                coin_month_profit,
+
+                coin_cycle_date,
+                coin_cycle_days
+            ]
             if self.update_list != _update_list:
                 self.update_list = _update_list
                 self.dingpost.post_md_list(_update_list)
