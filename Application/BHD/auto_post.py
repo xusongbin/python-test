@@ -31,7 +31,7 @@ class Pool(object):
         self.dingpost = DingPost()
 
         self.update_list = []
-        self.update_ts = time()
+        self.update_ts = 0
         self.update_flag = True
         self.pow_price = 1.3
         self.pow_power = 210
@@ -44,11 +44,12 @@ class Pool(object):
     def check_post_able(self):
         if not self.update_flag:
             return False
-        if (time() - self.update_ts) < 60:
+        if (time() - self.update_ts) < 4 * 3600 and self.update_ts != 0:
             return False
         if (time() % (24 * 3600)) < 8 * 3600:       # AM:08:00
             return False
         self.update_flag = False
+        self.update_ts = time()
         return True
 
     def run(self):
@@ -114,7 +115,6 @@ class Pool(object):
             ]
             if self.update_list != _update_list:
                 self.update_list = _update_list
-                self.update_ts = time()
                 self.update_flag = True
             if self.check_post_able():
                 self.dingpost.post_md_list(_update_list)

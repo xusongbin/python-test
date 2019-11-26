@@ -10,7 +10,7 @@ from traceback import format_exc
 
 
 class UUPool(object):
-    __token = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6IjE3Nzc4MTY2ODMwIiwidGltZXN0YW1wIjoxNTc0NTIwNjg3MzU1LCJ1aWQiOjEwNjk5LCJhY2NvdW50S2V5IjoiMDg2OGRiZTItZDU5MS0zM2MxLWJlYjItZjZkZDUwYmRiNzJlIiwiZXhwIjoxNTc0NjA3MDg3LCJuYmYiOjE1NzQ1MjA2ODd9.Ro-ddvqsNqrbLipmQpRj-YiaqvIbr-T2XL4WB9Bm2pU'
+    __token = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6IjE3Nzc4MTY2ODMwIiwidGltZXN0YW1wIjoxNTc0Nzc3OTUxMDU4LCJ1aWQiOjEwNjk5LCJhY2NvdW50S2V5IjoiMDg2OGRiZTItZDU5MS0zM2MxLWJlYjItZjZkZDUwYmRiNzJlIiwiZXhwIjoxNTc0ODY0MzUxLCJuYmYiOjE1NzQ3Nzc5NTF9.Iy7IJ-o_ljBAL6is3dA_Ib_TkG2tX-ON3dOn3mwv2ro'
     headers = {
         'authorization_token': __token,
         'authorization_uid': '10699',
