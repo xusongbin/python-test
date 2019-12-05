@@ -9,6 +9,10 @@ from onepool import ONEPool
 from cointrade import CoinTrade
 from dingpost import DingPost
 
+import gc
+gc.set_threshold(50, 10, 10)
+gc.enable()
+
 
 def write_log(_str):
     _data = strftime("%Y-%m-%d %H:%M:%S", localtime())
@@ -27,7 +31,7 @@ class Pool(object):
     def __init__(self):
         self.uupool = UUPool()
         self.onepool = ONEPool()
-        self.cointrade = CoinTrade()
+        self.cointrade = CoinTrade(20)
         self.dingpost = DingPost()
 
         self.update_list = []
@@ -38,6 +42,10 @@ class Pool(object):
         self.pow_today = self.pow_power * 24 * 1.3 / 1000
         self.pow_month = self.pow_today * 30
         self.spend = 23200
+
+        self.active = True
+        while self.active:
+            pass
 
         self.run()
 
@@ -81,6 +89,8 @@ class Pool(object):
             coin_month_value = coin_average_value * 30
             coin_today_value = bhd_today_value + lhd_today_value + boom_today_value + burst_today_value
             coin_average_profit = coin_average_value - self.pow_today
+            if coin_average_profit < 1:
+                coin_average_profit = 1
             coin_month_profit = coin_month_value - self.pow_month
             coin_cycle_days = int(self.spend / coin_average_profit)
             coin_cycle_date = strftime("%Y-%m-%d", localtime(time() + coin_cycle_days * 24 * 3600))

@@ -3,17 +3,21 @@
 
 import json
 import threading
-from urllib import request
-from time import time, sleep
+import requests
+from time import time, sleep, strftime, localtime
 from traceback import format_exc
+
+import gc
+gc.set_threshold(50, 10, 10)
+gc.enable()
 
 
 class CoinTrade(object):
-    def __init__(self, period=3600, timeout=5):
+    def __init__(self, period=3600, timeout=5, debug=False):
         self.period = period
         self.timeout = timeout
 
-        self.coin_list = ['BHD', 'LHD', 'BURST', 'BOOM', 'QT']
+        self.coin_list = ['BHD', 'LHD', 'USDT', 'QT', 'BURST', 'BOOM']
         self.coin_trade = {
             'BHD': {'valid': False, 'time': time() - period, 'bid': 0.0, 'ask': 0.0}
         }
@@ -22,7 +26,9 @@ class CoinTrade(object):
 
         self.thread_trade = threading.Thread(target=self.on_thread_trade)
         self.thread_trade.setDaemon(True)
-        self.thread_trade.start()
+
+        if not debug:
+            self.thread_trade.start()
 
     def get_trade(self):
         _trade = {}
@@ -35,7 +41,7 @@ class CoinTrade(object):
         return _trade
 
     def check_timeout(self, ts):
-        if time() - ts >= self.period:
+        if (time() - ts) >= self.period:
             return True
         return False
 
@@ -50,6 +56,7 @@ class CoinTrade(object):
             sleep(1)
             for coin in self.coin_list:
                 if self.check_timeout(self.coin_trade[coin]['time']):
+                    print('PARSE {} TRADE TIMEOUT:{}'.format(coin, strftime("%Y-%m-%d %H:%M:%S", localtime())))
                     trade = self.get_symbol_trade(coin)
                     self.prase_symbol_trade(coin, trade)
 
@@ -61,14 +68,26 @@ class CoinTrade(object):
             if coin == 'BOOM' and not self.coin_trade['QT']['valid']:
                 self.coin_trade[coin]['time'] = self.get_timeout(self.timeout)
                 return
+            if coin == 'BURST' and not self.coin_trade['USDT']['valid']:
+                self.coin_trade[coin]['time'] = self.get_timeout(self.timeout)
+                return
+            if coin == 'QT' and not self.coin_trade['USDT']['valid']:
+                self.coin_trade[coin]['time'] = self.get_timeout(self.timeout)
+                return
             self.coin_trade[coin]['bid'] = trade[0]
             self.coin_trade[coin]['ask'] = trade[1]
+            if coin == 'QT':
+                self.coin_trade[coin]['bid'] = trade[0] * self.coin_trade['USDT']['bid']
+                self.coin_trade[coin]['ask'] = trade[1] * self.coin_trade['USDT']['ask']
             if coin == 'LHD':
                 self.coin_trade[coin]['bid'] = trade[0] * self.coin_trade['BHD']['bid']
                 self.coin_trade[coin]['ask'] = trade[1] * self.coin_trade['BHD']['ask']
             if coin == 'BOOM':
                 self.coin_trade[coin]['bid'] = trade[0] * self.coin_trade['QT']['bid']
                 self.coin_trade[coin]['ask'] = trade[1] * self.coin_trade['QT']['ask']
+            if coin == 'BURST':
+                self.coin_trade[coin]['bid'] = trade[0] * self.coin_trade['USDT']['bid']
+                self.coin_trade[coin]['ask'] = trade[1] * self.coin_trade['USDT']['ask']
             self.coin_trade[coin]['valid'] = True
             self.coin_trade[coin]['time'] = self.get_timeout()
             _trade = self.coin_trade[coin]
@@ -86,10 +105,13 @@ class CoinTrade(object):
                 'QQBrowser/10.5.3819.400'
             )
         }
-        if symbol == 'BOOM' or symbol == 'BURST' or symbol == 'QT':
+        symbol = symbol.upper()
+        if symbol == 'BOOM' or symbol == 'BURST' or symbol == 'USDT' or symbol == 'QT':
             headers['Host'] = 'www.qbtc.ink'
             if symbol == 'BOOM':
                 market = 'QT'
+            elif symbol == 'BURST' or symbol == 'QT':
+                market = 'USDT'
             else:
                 market = 'CNYT'
             url = 'http://www.qbtc.ink/json/depthTable.do?tradeMarket={}&symbol={}'.format(market, symbol)
@@ -97,12 +119,12 @@ class CoinTrade(object):
             url = 'https://api.aex.zone/depth.php?c={}&mk_type=cnc'.format(symbol)
         else:  # symbol == 'LHD':
             url = 'https://openapi.bitmart.io/v2/ticker?symbol={}_BHD'.format(symbol)
-        _request = request.Request(url=url, headers=headers)
         try:
-            _respond = request.urlopen(_request, timeout=5)
-            context = _respond.read().decode('utf-8')
+            _respond = requests.get(url=url, headers=headers, timeout=5)
+            _respond.encoding = 'utf-8'
+            context = _respond.text
             context = json.loads(context)
-            if symbol == 'BOOM' or symbol == 'BURST' or symbol == 'QT':
+            if symbol == 'BOOM' or symbol == 'BURST' or symbol == 'QT' or symbol == 'USDT':
                 data_list = [float(context['result']['buy'][0]['price']), float(context['result']['sell'][0]['price'])]
             elif symbol == 'BHD':
                 data_list = [float(context['bids'][0][0]), float(context['asks'][0][0])]
@@ -115,6 +137,10 @@ class CoinTrade(object):
 
 
 if __name__ == '__main__':
-    ct = CoinTrade()
-    while True:
-        pass
+    debug = False
+    ct = CoinTrade(debug=debug)
+    if not debug:
+        while True:
+            pass
+    coin_price = ct.get_symbol_trade('BURST')
+    print(coin_price)

@@ -11,6 +11,10 @@ from time import time, strftime, localtime, sleep
 
 from traceback import format_exc
 
+import gc
+gc.set_threshold(50, 10, 10)
+gc.enable()
+
 
 class ONEPool(object):
     headers = {

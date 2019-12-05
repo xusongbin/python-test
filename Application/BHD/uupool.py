@@ -8,9 +8,13 @@ from time import time, strftime, localtime, sleep
 
 from traceback import format_exc
 
+import gc
+gc.set_threshold(50, 10, 10)
+gc.enable()
+
 
 class UUPool(object):
-    __token = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6IjE3Nzc4MTY2ODMwIiwidGltZXN0YW1wIjoxNTc0Nzc3OTUxMDU4LCJ1aWQiOjEwNjk5LCJhY2NvdW50S2V5IjoiMDg2OGRiZTItZDU5MS0zM2MxLWJlYjItZjZkZDUwYmRiNzJlIiwiZXhwIjoxNTc0ODY0MzUxLCJuYmYiOjE1NzQ3Nzc5NTF9.Iy7IJ-o_ljBAL6is3dA_Ib_TkG2tX-ON3dOn3mwv2ro'
+    __token = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6IjE3Nzc4MTY2ODMwIiwidGltZXN0YW1wIjoxNTc1NTU5NjA5MDg1LCJ1aWQiOjEwNjk5LCJhY2NvdW50S2V5IjoiMDg2OGRiZTItZDU5MS0zM2MxLWJlYjItZjZkZDUwYmRiNzJlIiwiZXhwIjoxNTc1NjQ2MDA5LCJuYmYiOjE1NzU1NTk2MDl9.Uq8_4D77A2nWI2y_TSH9ptXySVhmBe76a0nnv91u2LY'
     headers = {
         'authorization_token': __token,
         'authorization_uid': '10699',
