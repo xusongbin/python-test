@@ -2,9 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import json
-from urllib import request
+import requests
 from time import strftime, localtime
 from traceback import format_exc
+
+import gc
+gc.set_threshold(50, 10, 10)
+gc.enable()
 
 
 class DingPost(object):
@@ -40,11 +44,9 @@ class DingPost(object):
             'Content-Type': 'application/json;charset=utf-8'
         }
         _data = self.__markdown_msg(context)
-        _request = request.Request(self.__robot, data=bytes(_data, 'utf-8'), headers=headers)
         try:
-            _respond = request.urlopen(_request, timeout=5)
-            context = _respond.read().decode('utf-8')
-            context = json.loads(context)
+            _respond = requests.post(self.__robot, data=_data, headers=headers, timeout=3)
+            context = _respond.json()
             if context['errcode'] == 0:
                 return True
         except Exception as e:
@@ -58,4 +60,4 @@ class DingPost(object):
 if __name__ == '__main__':
     dp = DingPost()
     # dp.post_md_msg('123')
-    # dp.post_md_list([i for i in range(34)])
+    dp.post_md_list([i for i in range(32)])

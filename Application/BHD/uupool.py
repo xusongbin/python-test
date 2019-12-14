@@ -3,7 +3,7 @@
 
 import json
 import threading
-from urllib import request
+import requests
 from time import time, strftime, localtime, sleep
 
 from traceback import format_exc
@@ -14,7 +14,7 @@ gc.enable()
 
 
 class UUPool(object):
-    __token = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6IjE3Nzc4MTY2ODMwIiwidGltZXN0YW1wIjoxNTc1NTU5NjA5MDg1LCJ1aWQiOjEwNjk5LCJhY2NvdW50S2V5IjoiMDg2OGRiZTItZDU5MS0zM2MxLWJlYjItZjZkZDUwYmRiNzJlIiwiZXhwIjoxNTc1NjQ2MDA5LCJuYmYiOjE1NzU1NTk2MDl9.Uq8_4D77A2nWI2y_TSH9ptXySVhmBe76a0nnv91u2LY'
+    __token = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6IjE3Nzc4MTY2ODMwIiwidGltZXN0YW1wIjoxNTc1NzkzNDA1MjE1LCJ1aWQiOjEwNjk5LCJhY2NvdW50S2V5IjoiMDg2OGRiZTItZDU5MS0zM2MxLWJlYjItZjZkZDUwYmRiNzJlIiwiZXhwIjoxNTc1ODc5ODA1LCJuYmYiOjE1NzU3OTM0MDV9.z3t1_LzBJJ97eqDyae0Xd-5yYvB199a3zUF5nBExH88'
     headers = {
         'authorization_token': __token,
         'authorization_uid': '10699',
@@ -53,7 +53,8 @@ class UUPool(object):
             'earnings': {
                 'BHD': {'valid': False, 'time': time() - period, 'today': 0.0, 'average': 0.0},
                 'LHD': {'valid': False, 'time': time() - period, 'today': 0.0, 'average': 0.0},
-            }
+            },
+            'token': True
         }
         for coin in self.pool_coin:
             self.pool_property['assert'][coin] = {'valid': False, 'amount': 0.0}
@@ -126,12 +127,9 @@ class UUPool(object):
     def do_get_assets(self):
         _resp_dict = {}
         _url = 'https://uupool.com/v1/assets/all'
-        _request = request.Request(_url, headers=self.headers)
         try:
-            _respond = request.urlopen(_request, timeout=5)
-            _respond = _respond.read().decode('utf-8')
-            _content = json.loads(_respond)
-            # print(_content)
+            _respond = requests.get(url=_url, headers=self.headers, timeout=3)
+            _content = _respond.json()
             for data in _content['data']:
                 _resp_dict[data['coinName'].upper()] = float(data['availableAsset'])
         except Exception as e:
@@ -167,14 +165,16 @@ class UUPool(object):
     def do_get_earnings(self, coin):
         _resp_dict = {}
         _url = 'https://uupool.com/v1/earnings/days/?pageSize=10&page=1&coin_name={}&type=0'.format(coin)
-        _request = request.Request(_url, headers=self.headers)
         try:
-            _respond = request.urlopen(_request, timeout=5)
-            _respond = _respond.read().decode('utf-8')
-            _content = json.loads(_respond)
-            # print(_content)
-            for data in _content['data']['records']:
-                _resp_dict[data['date']] = float(data['totalIncome'])
+            _respond = requests.get(url=_url, headers=self.headers, timeout=5)
+            _respond.encoding = 'utf-8'
+            _content = json.loads(_respond.text)
+            if not _content['success']:
+                print(_content)
+                self.pool_property['token'] = False
+            else:
+                for data in _content['data']['records']:
+                    _resp_dict[data['date']] = float(data['totalIncome'])
         except Exception as e:
             print('{}\n{}'.format(e, format_exc()))
         # print(_resp_dict)
@@ -182,6 +182,6 @@ class UUPool(object):
 
 
 if __name__ == '__main__':
-    pool = UUPool()
+    pool = UUPool(1)
     while True:
         pass

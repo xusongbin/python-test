@@ -31,7 +31,7 @@ class Pool(object):
     def __init__(self):
         self.uupool = UUPool()
         self.onepool = ONEPool()
-        self.cointrade = CoinTrade(20)
+        self.cointrade = CoinTrade()
         self.dingpost = DingPost()
 
         self.update_list = []
@@ -43,16 +43,13 @@ class Pool(object):
         self.pow_month = self.pow_today * 30
         self.spend = 23200
 
-        self.active = True
-        while self.active:
-            pass
-
         self.run()
 
     def check_post_able(self):
         if not self.update_flag:
             return False
         if (time() - self.update_ts) < 4 * 3600 and self.update_ts != 0:
+        # if (time() - self.update_ts) < 20 and self.update_ts != 0:
             return False
         if (time() % (24 * 3600)) < 8 * 3600:       # AM:08:00
             return False

@@ -56,7 +56,7 @@ class CoinTrade(object):
             sleep(1)
             for coin in self.coin_list:
                 if self.check_timeout(self.coin_trade[coin]['time']):
-                    print('PARSE {} TRADE TIMEOUT:{}'.format(coin, strftime("%Y-%m-%d %H:%M:%S", localtime())))
+                    # print('PARSE {} TRADE TIMEOUT:{}'.format(coin, strftime("%Y-%m-%d %H:%M:%S", localtime())))
                     trade = self.get_symbol_trade(coin)
                     self.prase_symbol_trade(coin, trade)
 
@@ -120,10 +120,8 @@ class CoinTrade(object):
         else:  # symbol == 'LHD':
             url = 'https://openapi.bitmart.io/v2/ticker?symbol={}_BHD'.format(symbol)
         try:
-            _respond = requests.get(url=url, headers=headers, timeout=5)
-            _respond.encoding = 'utf-8'
-            context = _respond.text
-            context = json.loads(context)
+            _respond = requests.get(url=url, headers=headers, timeout=2)
+            context = _respond.json()
             if symbol == 'BOOM' or symbol == 'BURST' or symbol == 'QT' or symbol == 'USDT':
                 data_list = [float(context['result']['buy'][0]['price']), float(context['result']['sell'][0]['price'])]
             elif symbol == 'BHD':
@@ -138,7 +136,7 @@ class CoinTrade(object):
 
 if __name__ == '__main__':
     debug = False
-    ct = CoinTrade(debug=debug)
+    ct = CoinTrade(period=1, debug=debug)
     if not debug:
         while True:
             pass

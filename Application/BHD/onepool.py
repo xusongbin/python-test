@@ -4,8 +4,7 @@
 import json
 import gzip
 import threading
-from urllib import request
-from urllib import parse
+import requests
 from lxml import etree
 from time import time, strftime, localtime, sleep
 
@@ -133,16 +132,9 @@ class ONEPool(object):
     def do_get_assets(self):
         _resp_dict = {}
         _url = 'https://www.onepool.co/home/user/asset.html'
-        _request = request.Request(_url, headers=self.headers)
         try:
-            _respond = request.urlopen(_request)
-            _content = _respond.read()
-            if _respond.info().get('Content-Encoding') == 'gzip':
-                _content = gzip.decompress(_content).decode('utf-8')
-            else:
-                _content = _content.decode('utf-8')
-            # print(_content)
-            html = etree.HTML(_content)
+            _respond = requests.get(_url, headers=self.headers, timeout=3)
+            html = etree.HTML(_respond.text)
             _property = {}
             _matters = {}
             for tr in html.xpath('//div[@class="layui-tab-content"]/div[1]/div/table/tbody/tr'):
@@ -194,22 +186,17 @@ class ONEPool(object):
         _stop = strftime("%Y-%m-%d", localtime(_stop_ts))
         _start = strftime("%Y-%m-%d", localtime(_start_ts))
         data = {'page': 1, 'start': _start, 'stop': _stop}
-        data = parse.urlencode(data).encode('utf-8')
-        _request = request.Request(_url, data=data, headers=self.headers)
         try:
-            _respond = request.urlopen(_request, timeout=5)
-            _respond = _respond.read().decode('utf-8')
-            _content = json.loads(_respond)
-            # print(_content)
+            _respond = requests.post(_url, data=data, headers=self.headers, timeout=3)
+            _content = _respond.json()
             for data in _content['data']['data']:
                 _resp_dict[data['profit_date']] = float(data['amount'])
         except Exception as e:
             print('{}\n{}'.format(e, format_exc()))
-        # print(_resp_dict)
         return _resp_dict
 
 
 if __name__ == '__main__':
-    pool = ONEPool()
+    pool = ONEPool(1)
     while True:
         pass
