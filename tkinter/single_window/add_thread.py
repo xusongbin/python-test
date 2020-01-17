@@ -3,6 +3,7 @@
 
 from threading import Thread
 from tkinter import *
+from tkinter import ttk
 
 
 class ManageThread(object):
@@ -39,40 +40,88 @@ class TestThread(Tk):
         self.geometry('400x300')
         self.resizable(0, 0)
 
-        self.frame_left_fill = Frame(self, width=10)
-        self.frame_left_fill.grid(row=0, column=0)
-        # self.frame_left_fill_entry = Entry(self.frame_left_fill, width=)
-        self.frame_left = Frame(self)
-        self.frame_left.grid(row=0, column=1)
-        self.frame_left_line1 = Frame(self.frame_left)
-        self.frame_left_line1.pack(side=TOP)
-        self.frame_left_line2 = Frame(self.frame_left)
-        self.frame_left_line2.pack(side=TOP)
-        self.frame_right = Frame(self)
-        self.frame_right.grid(row=0, column=2)
-
-        self.button_dec1 = Button(
-            self.frame_left_line1, text='-', width=2, height=1,
-            command=lambda x=('-', 1): self.change_thread(x)
-        ).pack(side=LEFT)
         self.entry_thread1_text = StringVar()
-        self.entry_thread1 = Entry(
-            self.frame_left_line1, textvariable=self.entry_thread1_text
-        ).pack(side=RIGHT)
-
-        self.button_dec2 = Button(
-            self.frame_left_line2, text='-', width=2, height=1,
-            command=lambda x=('-', 2): self.change_thread(x)
-        ).pack(side=LEFT)
         self.entry_thread2_text = StringVar()
-        self.entry_thread2 = Entry(
-            self.frame_left_line2, textvariable=self.entry_thread2_text
-        ).pack(side=RIGHT)
 
-        self.button_add = Button(
-            self.frame_right, text='增加',
+        # self.init_tk_ui()
+        self.init_ttk_ui()
+
+    def init_tk_ui(self):
+        frame_left = Frame(self)
+        frame_right = Frame(self)
+        frame_left.grid(row=0, column=1)
+        frame_right.grid(row=0, column=2)
+
+        frame_left_line1 = Frame(frame_left)
+        frame_left_line1.pack(side=TOP)
+        frame_left_line2 = Frame(frame_left)
+        frame_left_line2.pack(side=TOP)
+
+        button_dec1 = Button(
+            frame_left_line1, text='-', width=2, height=1,
+            command=lambda x=('-', 1): self.change_thread(x)
+        )
+        entry_thread1 = Entry(
+            frame_left_line1, textvariable=self.entry_thread1_text
+        )
+
+        button_dec1.pack(side=LEFT)
+        entry_thread1.pack(side=RIGHT)
+
+        button_dec2 = Button(
+            frame_left_line2, text='-', width=2, height=1,
+            command=lambda x=('-', 2): self.change_thread(x)
+        )
+        entry_thread2 = Entry(
+            frame_left_line2, textvariable=self.entry_thread2_text
+        )
+
+        button_dec2.pack(side=LEFT)
+        entry_thread2.pack(side=RIGHT)
+
+        button_add = Button(
+            frame_right, text='增加',
             command=lambda x=('+', 1): self.change_thread(x)
-        ).pack()
+        )
+        button_add.pack()
+
+    def init_ttk_ui(self):
+        frame_left = Frame(self)
+        frame_right = Frame(self)
+        frame_left.grid(row=0, column=1)
+        frame_right.grid(row=0, column=2)
+        frame_left_line1 = Frame(frame_left)
+        frame_left_line1.pack(side=TOP)
+        frame_left_line2 = Frame(frame_left)
+        frame_left_line2.pack(side=TOP)
+
+        button_dec1 = ttk.Button(
+            frame_left_line1, text='-', width=2,
+            command=lambda x=('-', 1): self.change_thread(x)
+        )
+        entry_thread1 = ttk.Entry(
+            frame_left_line1, textvariable=self.entry_thread1_text
+        )
+
+        button_dec1.pack(side=LEFT)
+        entry_thread1.pack(side=RIGHT)
+
+        button_dec2 = ttk.Button(
+            frame_left_line2, text='-', width=2,
+            command=lambda x=('-', 2): self.change_thread(x)
+        )
+        entry_thread2 = ttk.Entry(
+            frame_left_line2, textvariable=self.entry_thread2_text
+        )
+
+        button_dec2.pack(side=LEFT)
+        entry_thread2.pack(side=RIGHT)
+
+        button_add = ttk.Button(
+            frame_right, text='增加',
+            command=lambda x=('+', 1): self.change_thread(x)
+        )
+        button_add.pack()
 
     def change_thread(self, args):
         print(args)
