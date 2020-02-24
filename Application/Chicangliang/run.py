@@ -6,6 +6,7 @@ import requests
 import pyperclip
 from lxml import etree
 from traceback import format_exc
+from time import strftime, localtime, time
 
 
 headers = {
@@ -126,7 +127,11 @@ def change_excel():
 
 
 if __name__ == '__main__':
-    date = input('请输入日期：')
+    date = input('请输入日期（默认获取昨天数据）：')
+    date = date.strip()
+    if not date:
+        date = strftime("%Y-%m-%d", localtime(time() - 24*3600))
+    print(date)
     result = put_clipboard(date)
     if result:
         print('已获取{}数据到剪切板'.format(date))
