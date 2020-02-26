@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
+import os
 import requests
 import pyperclip
-from lxml import etree
+import numpy
+from bs4 import BeautifulSoup
 from traceback import format_exc
 from time import strftime, localtime, time, sleep
 
@@ -23,56 +26,38 @@ def get(context='IC2003', date='2020-02-21'):
     url = 'http://data.futures.hexun.com/cccj.aspx?sContract={}&sDate={}&sRank=20'.format(context, date)
     try:
         resp = requests.get(url, headers=headers, timeout=3)
-        # print(resp.text)
-        selector = etree.HTML(resp.text)
-        _amount_list = []
-        _buy_list = []
-        _sell_list = []
-        for tr in selector.xpath('//div[@class="mainboxcontent"]/div[9]/table/tr[position()>=2]'):
-            _seat = tr.xpath('td[1]/text()')[0].strip()
-            _name = tr.xpath('td[2]/div/a/text()')[0].strip()
-            _amount = tr.xpath('td[3]/text()')[0].strip()
-            _amount_list.append([_seat, _name, _amount])
-        for tr in selector.xpath('//div[@class="mainboxcontent"]/div[10]/table/tr[position()>=2]'):
-            _seat = tr.xpath('td[1]/text()')[0].strip()
-            _name = tr.xpath('td[2]/div/a/text()')[0].strip()
-            _amount = tr.xpath('td[3]/text()')[0].strip()
-            _buy_list.append([_seat, _name, _amount])
-        for tr in selector.xpath('//div[@class="mainboxcontent"]/div[11]/table/tr[position()>=2]'):
-            _seat = tr.xpath('td[1]/text()')[0].strip()
-            _name = tr.xpath('td[2]/div/a/text()')[0].strip()
-            _amount = tr.xpath('td[3]/text()')[0].strip()
-            _sell_list.append([_seat, _name, _amount])
-        return [_amount_list, _buy_list, _sell_list]
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        _list = [x.string.strip() for x in soup.find_all('td') if x.string]
+        _nlist = numpy.array(_list).reshape((3, 21, 4))
+        # print(_nlist)
+        print('{}\t{}'.format(date, context))
+        for (buy, sell) in zip(list(_nlist[1, :, :]), list(_nlist[2, :, :])):
+            print('{}\t\t{}\t\t{}\t\t{}\t\t{}\t\t{}'.format(buy[0], buy[1], buy[2], sell[0], sell[1], sell[2]))
+        return _nlist
     except Exception as e:
         print('{}\n{}'.format(e, format_exc()))
     return None
 
 
 def count(context='IC2003', date='2020-02-21'):
-    _list = get(context, date)
-    # for l in _list:
-    #     print(l)
-    _name_list = [x[1] for x in _list[1]]
-    for ele in _list[2]:
-        if ele[1] not in _name_list:
-            _name_list.append(ele[1])
-    _name_dict = {}
-    for name in _name_list:
-        _name_dict[name] = 0
-    for ele in _list[1]:
-        if ele[1] in _name_dict.keys():
-            _name_dict[ele[1]] += int(ele[2])
-    for ele in _list[2]:
-        if ele[1] in _name_dict.keys():
-            _name_dict[ele[1]] += int(ele[2])
-    _name_dict = sorted(_name_dict.items(), key=lambda kv: [kv[1], kv[0]], reverse=True)
-    # print(_name_dict)
-    _name_list = [_name_dict[x][0] for x in range(20)]
-    _value_list = [_name_dict[x][1] for x in range(20)]
-    # _seat_list = [x+1 for x in range(20)]
-    # pd.DataFrame({'名次': _seat_list, context: _name_list, date: _value_list}).to_excel('123.xlsx', index=None)
-    return [_name_list, _value_list]
+    _nlist = get(context, date)
+    _buy_name = list(_nlist[1, 1:, 1])
+    _buy_value = list(_nlist[1, 1:, 2])
+    _buy_dict = dict(zip(_buy_name, _buy_value))
+    _sell_name = list(_nlist[2, 1:, 1])
+    _sell_value = list(_nlist[2, 1:, 2])
+    _sell_dict = dict(zip(_sell_name, _sell_value))
+    _total_name = list(set(_buy_name + _sell_name))
+    _total_value = dict(zip(_total_name, [0 for _ in range(len(_total_name))]))
+    for name in _total_value.keys():
+        if name in _buy_dict.keys():
+            _total_value[name] += int(_buy_dict[name])
+        if name in _sell_dict.keys():
+            _total_value[name] += int(_sell_dict[name])
+    # print(_total_value)
+    _total_value_s = {k: _total_value[k] for k in sorted(_total_value, key=_total_value.__getitem__, reverse=True)}
+    # print(_total_value_s)
+    return [list(_total_value_s.keys()), list(_total_value_s.values())]
 
 
 def put_clipboard(date='2020-02-21', top=10):
@@ -91,8 +76,8 @@ def put_clipboard(date='2020-02-21', top=10):
     return False
 
 
-if __name__ == '__main__':
-    yesterday = strftime("%Y-%m-%d", localtime(time() - 24*3600))
+def main():
+    yesterday = strftime("%Y-%m-%d", localtime())
     pyperclip.copy(yesterday)
     date = input('请输入日期（默认昨天的日期，可黏贴）：')
     date = date.strip()
@@ -103,4 +88,10 @@ if __name__ == '__main__':
         print('已获取{}数据到剪切板'.format(date))
     else:
         print('获取数据异常，请检查网络及日期是否正确。（2020-02-21）')
-    sleep(3)
+    os.system('pause')
+
+
+if __name__ == '__main__':
+    main()
+    # get()
+    # count()
