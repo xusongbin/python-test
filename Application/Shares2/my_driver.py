@@ -7,7 +7,7 @@ import socket
 import sqlite3
 import threading
 from time import time, sleep, strftime, localtime
-import traceback
+from traceback import format_exc
 
 import xlwt
 import xlrd
@@ -26,7 +26,7 @@ def write_log(_data):
         with open('log.txt', 'a+') as f:
             f.write(_data + '\n')
     except Exception as e:
-        print('LOG except:{}\n{}'.format(e, traceback.format_exc()))
+        print('LOG except:{}\n{}'.format(e, format_exc()))
 
 
 class Time(object):
@@ -49,7 +49,7 @@ class File(object):
         try:
             return os.path.exists(file)
         except Exception as e:
-            write_log('File except:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('File except:{}\n{}'.format(e, format_exc()))
         return False
 
     @staticmethod
@@ -59,7 +59,7 @@ class File(object):
             f.close()
             return True
         except Exception as e:
-            write_log('File except:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('File except:{}\n{}'.format(e, format_exc()))
         return False
 
     @staticmethod
@@ -69,7 +69,7 @@ class File(object):
                 os.remove(file)
             return True
         except Exception as e:
-            write_log('File except:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('File except:{}\n{}'.format(e, format_exc()))
         return False
 
     @staticmethod
@@ -175,7 +175,7 @@ class Serial(object):
             return True
         except Exception as e:
             _ = e
-            # write_log('open fail:{}\n{}'.format(e, traceback.format_exc()))
+            # write_log('open fail:{}\n{}'.format(e, format_exc()))
         return False
 
     def close(self):
@@ -185,7 +185,7 @@ class Serial(object):
             write_log('close pass:{}'.format(name))
             return True
         except Exception as e:
-            write_log('close fail:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('close fail:{}\n{}'.format(e, format_exc()))
         return False
 
     def open_rst(self):
@@ -207,7 +207,7 @@ class Serial(object):
                 self.__tx_buffer = data
             return True
         except Exception as e:
-            write_log('{} send except:{}\n{}'.format(name, e, traceback.format_exc()))
+            write_log('{} send except:{}\n{}'.format(name, e, format_exc()))
             self.close()
         return False
 
@@ -229,7 +229,7 @@ class Serial(object):
             if data:
                 write_log('{} read:{}'.format(name, data))
         except Exception as e:
-            write_log('{} read except:{}\n{}'.format(name, e, traceback.format_exc()))
+            write_log('{} read except:{}\n{}'.format(name, e, format_exc()))
             self.close()
         return data
 
@@ -278,7 +278,7 @@ class SQLite3(object):
             return True
         except Exception as e:
             write_log(content)
-            write_log('EXECUTE except:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('EXECUTE except:{}\n{}'.format(e, format_exc()))
         return False
 
     def commit(self):
@@ -291,7 +291,7 @@ class SQLite3(object):
             if data[0][0] == 1:
                 return True
         except Exception as e:
-            write_log('EXIST except:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('EXIST except:{}\n{}'.format(e, format_exc()))
         return False
 
     def create(self, table_name, table_item, item_data):
@@ -383,7 +383,7 @@ class Socket(object):
             return True
         except Exception as e:
             self.__sock_open = False
-            write_log('udp_new except:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('udp_new except:{}\n{}'.format(e, format_exc()))
         return False
 
     def udp_send(self, data, remote=None):
@@ -399,7 +399,7 @@ class Socket(object):
             return True
         except Exception as e:
             self.__sock_open = False
-            write_log('udp_send except:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('udp_send except:{}\n{}'.format(e, format_exc()))
         return False
 
     def udp_recv(self, redirect=True):
@@ -417,7 +417,7 @@ class Socket(object):
                 pass
             else:
                 self.__sock_open = False
-                write_log('udp_recv except:{}\n{}'.format(e, traceback.format_exc()))
+                write_log('udp_recv except:{}\n{}'.format(e, format_exc()))
         return data
 
     def udp_send_wait_regular(self, tx, regular='.*'):
@@ -443,7 +443,7 @@ class Socket(object):
             return True
         except Exception as e:
             self.__sock_open = False
-            write_log('tcp_new_server except:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('tcp_new_server except:{}\n{}'.format(e, format_exc()))
         return False
 
     def tcp_new_client(self, ip, port):
@@ -457,7 +457,7 @@ class Socket(object):
             return True
         except Exception as e:
             self.__sock_open = False
-            write_log('tcp_new_client except:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('tcp_new_client except:{}\n{}'.format(e, format_exc()))
         return False
 
     def tcp_accept(self):
@@ -474,7 +474,7 @@ class Socket(object):
             if str(e) == 'timed out':
                 pass
             else:
-                write_log('tcp_accept except:{}\n{}'.format(e, traceback.format_exc()))
+                write_log('tcp_accept except:{}\n{}'.format(e, format_exc()))
         return False
 
     def tcp_recv(self):
@@ -490,7 +490,7 @@ class Socket(object):
                 pass
             else:
                 self.__sock_open = False
-                write_log('tcp_recv except:{}\n{}'.format(e, traceback.format_exc()))
+                write_log('tcp_recv except:{}\n{}'.format(e, format_exc()))
         return data
 
     def tcp_send(self, data):
@@ -504,7 +504,7 @@ class Socket(object):
             return True
         except Exception as e:
             self.__sock_open = False
-            write_log('tcp_send except:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('tcp_send except:{}\n{}'.format(e, format_exc()))
         return False
 
 
@@ -539,7 +539,7 @@ class Excel(object):
                     worksheet.write(row, col, data)
             workbook.save(file)
         except Exception as e:
-            write_log('XLWT except:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('XLWT except:{}\n{}'.format(e, format_exc()))
             return False
         return True
 
@@ -552,7 +552,7 @@ class Excel(object):
             for i in range(worksheet.nrows):
                 _list.append(worksheet.row_values(i))
         except Exception as e:
-            write_log('XLRD except:{}\n{}'.format(e, traceback.format_exc()))
+            write_log('XLRD except:{}\n{}'.format(e, format_exc()))
         if not len(_list) > 0:
             return False
         return _list

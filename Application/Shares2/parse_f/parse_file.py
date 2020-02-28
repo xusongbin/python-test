@@ -10,35 +10,13 @@ class ParseFile(object):
         pass
 
     @staticmethod
-    def parse_time(_time, _idx, _len, _skip):
-        # 起始时间：2019-12-16 09:35:00
-        # 起始时间戳_calc_ts：1576460100，起始同花顺时间：0x077C8263， 同花顺每天相差：0x800
-        # 计算相对于以上时间，经过了day天，当天经过了min分钟
-        # 每天时间戳为86400秒，当前时间戳为：1576460100+day*86400+min*60
-        _calc_index = int((_idx-_skip) / _len) % 48     # 每天第几个数据，从9点半起始
-        _calc_ts = 1576460100               # 16号起始时间戳
-        _calc_hex = 0x077C8263              # 16号起始位置
-        _calc_step = 0x800                  # 每天的位置偏移量
-        _this_hex = _time                   # 当天的位置信息
-        _calc_day = 0
-        _calc_min = 0
-        if _calc_hex > _this_hex:
-            # 当前日期在参考日期之前
-            _calc_day -= int((_calc_hex - _this_hex) / _calc_step)
-            _calc_min = (_calc_hex - _this_hex) % _calc_step
-            if _calc_min > 0:
-                _calc_day -= 1
-        else:
-            # 当前日期在参考日期之后
-            _calc_day = int((_this_hex - _calc_hex) / _calc_step)
-            _calc_min = (_this_hex - _calc_hex) % _calc_step
-        _calc_now_ts = _calc_ts + _calc_day * 24 * 3600     # xxxx-xx-xx 09:35:00 当天9点35分时间戳
-        # 计算当前的时间戳
-        if _calc_index < 24:
-            _out_ts = _calc_now_ts + _calc_index * 5 * 60
-        else:
-            _out_ts = _calc_now_ts + _calc_index * 5 * 60 + 1.5 * 3600
-        return _out_ts
+    def parse_time(_time):
+        _year = (_time & 0xFFF00000) >> 20
+        _month = (_time & 0x000F0000) >> 16
+        _day = (_time & 0x0000F800) >> 11
+        _hour = (_time & 0x000007C0) >> 6
+        _min = (_time & 0x0000003F) >> 0
+        return '{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}'.format(_year+1900, _month, _day, _hour, _min, 0)
 
     def parse_file(self, file, digit=2):
         print(file)
@@ -71,16 +49,9 @@ class ParseFile(object):
             _close = int.from_bytes(_column_data[i+16:i+20], byteorder='little')
             _value = int.from_bytes(_column_data[i+20:i+24], byteorder='little')
             _volume = int.from_bytes(_column_data[i+24:i+28], byteorder='little')
-            # skip
-            if _skip and (abs(_time - 0x077C8263) % 0x800):
-                continue
-            if _skip:
-                _skip = False
-                _skip_num = i
             # parse
             # 计算时间点
-            _time_ts = self.parse_time(_time, i, _record_len, _skip_num)
-            _time_str = strftime("%Y-%m-%d %H:%M:%S", localtime(_time_ts))
+            _time_str = self.parse_time(_time)
             # TODO: maybe more than 0xC0000000
             _out_open = (_open & 0x0FFFFFFF) * pow(10, 8 - (_open >> 28))
             _out_high = (_high & 0x0FFFFFFF) * pow(10, 8 - (_high >> 28))

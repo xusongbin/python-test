@@ -19,6 +19,7 @@ def fetch():
     try:
         req = requests.get(url, headers=headers, timeout=3)
         content = json.loads(req.content)
+        print(content)
     except:
         pass
     return None

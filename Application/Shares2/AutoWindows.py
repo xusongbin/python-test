@@ -5,32 +5,34 @@ import win32api
 import win32gui
 import win32con
 import win32clipboard
-from vk_code import VK_CODE
 
-from time import time, sleep
+from my_driver import *
+from vk_code import VK_CODE
 
 
 class ControlWindows(object):
     __app_text = '同花顺(v8.80.24)'
-    __usdcnh_text = '同花顺(v8.80.24) - 外汇技术分析'
-    __1A0001_text = '同花顺(v8.80.24) - 指数技术分析'
-    __881155_text = '同花顺(v8.80.24) - 综合指数技术分析'
+    __usdcnh_text = '同花顺(v8.80.24)'     # '同花顺(v8.80.24) - 外汇技术分析'
+    __1A0001_text = '同花顺(v8.80.24)'     # '同花顺(v8.80.24) - 指数技术分析'
+    __881155_text = '同花顺(v8.80.24)'     # '同花顺(v8.80.24) - 综合指数技术分析'
 
     def __init__(self):
-        self.app = self.find_window(self.__app_text)
-        self.app_handle = 0
-        try:
-            self.app_handle = self.app['handle']
-        except:
-            pass
+        _handle = self.get()
+        write_log('Window get handle {}'.format(_handle))
 
-    def is_running(self):
-        return True if self.app_handle else False
+    def get(self):
+        _handle = None
+        _app = self.find_window(self.__app_text)
+        try:
+            _handle = _app['handle']
+        except Exception as e:
+            write_log('{}\n{}'.format(e, format_exc()))
+        return _handle
 
     def switch_usdcnh(self):
         _start = time()
         while (time() - _start) < 5:
-            self.set_force_window(self.app_handle)
+            self.set_force_window()
             sleep(0.5)
             self.push_message('usdcnh')
             if self.find_window(self.__usdcnh_text):
@@ -41,7 +43,7 @@ class ControlWindows(object):
     def switch_1A0001(self):
         _start = time()
         while (time() - _start) < 5:
-            self.set_force_window(self.app_handle)
+            self.set_force_window()
             sleep(0.5)
             self.push_message('1a0001')
             if self.find_window(self.__1A0001_text):
@@ -52,7 +54,7 @@ class ControlWindows(object):
     def switch_881155(self):
         _start = time()
         while (time() - _start) < 5:
-            self.set_force_window(self.app_handle)
+            self.set_force_window()
             sleep(0.5)
             self.push_message('881155')
             if self.find_window(self.__881155_text):
@@ -68,10 +70,13 @@ class ControlWindows(object):
                     return win
         return None
 
-    @staticmethod
-    def set_force_window(hand):
-        # win32gui.SendMessage(hand, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0)
-        win32gui.SetForegroundWindow(hand)
+    def set_force_window(self):
+        _handle = self.get()
+        if _handle:
+            # win32gui.SendMessage(_handle, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0)
+            win32gui.SetForegroundWindow(_handle)
+            return True
+        return False
 
     @staticmethod
     def push_message(code):
@@ -142,7 +147,7 @@ class ControlWindows(object):
 
 if __name__ == '__main__':
     cw = ControlWindows()
-    if cw.is_running():
+    if cw.get():
         cw.switch_1A0001()
     else:
         print('App not found')
