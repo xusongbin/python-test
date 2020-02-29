@@ -51,8 +51,9 @@ def get(context='IC2003', date='2020-02-21'):
 
 def count(context='IC2003', date='2020-02-21'):
     _list = get(context, date)
-    # for l in _list:
-    #     print(l)
+    print('{}\t{}'.format(context, date))
+    for idx in range(10):
+        print('{}\t{}\t{}\t{}'.format(_list[1][idx][1], _list[1][idx][2], _list[2][idx][1], _list[2][idx][2]))
     _name_list = [x[1] for x in _list[1]]
     for ele in _list[2]:
         if ele[1] not in _name_list:
@@ -75,13 +76,15 @@ def count(context='IC2003', date='2020-02-21'):
     return [_name_list, _value_list]
 
 
-def put_clipboard(date='2020-02-21', top=10):
+def put_clipboard(date='2020-02-21', top=20):
     try:
         IC2003 = count('IC2003', date)
         IF2003 = count('IF2003', date)
         _out = ''
         for idx in range(top):
-            _out += '{}\t{}\t{}\t{}'.format(IC2003[0][idx], IC2003[1][idx], IF2003[0][idx], IF2003[1][idx])
+            _out += '{}\t{}\t{}\t{}\t{}\t{}'.format(
+                idx+1, IC2003[0][idx], IC2003[1][idx],idx+1,  IF2003[0][idx], IF2003[1][idx]
+            )
             if idx < top-1:
                 _out += '\n'
         pyperclip.copy(_out)
@@ -92,7 +95,7 @@ def put_clipboard(date='2020-02-21', top=10):
 
 
 if __name__ == '__main__':
-    yesterday = strftime("%Y-%m-%d", localtime(time() - 24*3600))
+    yesterday = strftime("%Y-%m-%d", localtime(time()))
     pyperclip.copy(yesterday)
     date = input('请输入日期（默认昨天的日期，可黏贴）：')
     date = date.strip()
@@ -103,4 +106,4 @@ if __name__ == '__main__':
         print('已获取{}数据到剪切板'.format(date))
     else:
         print('获取数据异常，请检查网络及日期是否正确。（2020-02-21）')
-    sleep(3)
+    sleep(60)

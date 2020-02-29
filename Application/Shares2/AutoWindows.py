@@ -11,10 +11,10 @@ from time import time, sleep
 
 
 class ControlWindows(object):
-    __app_text = '同花顺(v8.80.24)'
-    __usdcnh_text = '同花顺(v8.80.24) - 外汇技术分析'
-    __1A0001_text = '同花顺(v8.80.24) - 指数技术分析'
-    __881155_text = '同花顺(v8.80.24) - 综合指数技术分析'
+    __app_text = ['同花顺(v8.80.24)']
+    __usdcnh_text = ['同花顺(v8.80.24) - 外汇技术分析']
+    __1A0001_text = ['同花顺(v8.80.24) - 指数技术分析', '同花顺(v8.80.24) - 上证指数']
+    __881155_text = ['同花顺(v8.80.24) - 综合指数技术分析']
 
     def __init__(self):
         self.app = self.find_window(self.__app_text)
@@ -42,7 +42,7 @@ class ControlWindows(object):
         _start = time()
         while (time() - _start) < 5:
             self.set_force_window(self.app_handle)
-            sleep(0.5)
+            sleep(1)
             self.push_message('1a0001')
             if self.find_window(self.__1A0001_text):
                 self.push_message('32')
@@ -64,8 +64,9 @@ class ControlWindows(object):
         _windows = self.enum_windows()
         if len(_windows) > 0 and key in _windows[0].keys():
             for win in _windows:
-                if info in win[key]:
-                    return win
+                for _x in info:
+                    if _x in win[key]:
+                        return win
         return None
 
     @staticmethod
