@@ -6,9 +6,11 @@ from my_driver import *
 
 class ParseFile(object):
     path_1A0001 = r'C:\同花顺软件\同花顺\history\shase\min5\1A0001.mn5'
+    path_399001 = r'C:\同花顺软件\同花顺\history\sznse\min5\399001.mn5'
     path_881155 = r'C:\同花顺软件\同花顺\history\newindx\min5\881155.mn5'
     path_USDCNH = r'C:\同花顺软件\同花顺\history\foreign\min5\USDCNH.mn5'
     digit_1A0001 = 2
+    digit_399001 = 2
     digit_881155 = 3
     digit_USDCNH = 5
 
@@ -89,6 +91,10 @@ class ParseFile(object):
         write_log('Parse {} {}'.format('1A0001', num))
         return self.parse_file(self.path_1A0001, self.digit_1A0001, num, delete)
 
+    def parse_399001(self, num=100000, delete=False):
+        write_log('Parse {} {}'.format('399001', num))
+        return self.parse_file(self.path_399001, self.digit_399001, num, delete)
+
     def parse_881155(self, num=100000, delete=False):
         write_log('Parse {} {}'.format('881155', num))
         return self.parse_file(self.path_881155, self.digit_881155, num, delete)
@@ -97,9 +103,35 @@ class ParseFile(object):
         write_log('Parse {} {}'.format('USDCNH', num))
         return self.parse_file(self.path_USDCNH, self.digit_USDCNH, num, delete)
 
+    def parse_1a0001_value(self, num=6, delete=False):
+        write_log('Parse {} {}'.format('1A0001', num))
+        _data = self.parse_file(self.path_1A0001, self.digit_1A0001, num, delete)
+        if len(_data) != 6:
+            return False
+        _time = _data[-1][0]
+        if not re.match(r'\d{4}-\d{2}-\d{2} \d{2}:(00|30):00', _time):
+            return False
+        _value = 0
+        for i in range(6):
+            _value += int(_data[i][-2])
+        return [_time, _value]
+
+    def parse_399001_value(self, num=6, delete=False):
+        write_log('Parse {} {}'.format('399001', num))
+        _data = self.parse_file(self.path_399001, self.digit_399001, num, delete)
+        if len(_data) != 6:
+            return False
+        _time = _data[-1][0]
+        if not re.match(r'\d{4}-\d{2}-\d{2} \d{2}:(00|30):00', _time):
+            return False
+        _value = 0
+        for i in range(6):
+            _value += int(_data[i][-2])
+        return [_time, _value]
+
 
 if __name__ == '__main__':
     fp = ParseFile()
-    print(fp.parse_1a0001())
+    print(fp.parse_1a0001_value())
     # fp.parse_881155()
     # fp.parse_usdcnh()

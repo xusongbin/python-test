@@ -6,6 +6,7 @@ from my_driver import *
 shares_database = 'shares.db'
 shares_usdcnh_table = 'USDCNH'
 shares_sh000001_table = 'SH000001'
+shares_sz399001_table = 'SZ399001'
 shares_ths881155_table = 'THS881155'
 shares_north_table = 'NORTH'
 shares_item = 'DAY,OPEN,HIGH,LOW,CLOSE,VALUE,VOLUME'
@@ -23,6 +24,8 @@ class Data(object):
     def __table_check(self):
         if not self.__sql.exist(shares_sh000001_table):
             self.__sql.create('TABLE', shares_sh000001_table, shares_form)
+        if not self.__sql.exist(shares_sz399001_table):
+            self.__sql.create('TABLE', shares_sz399001_table, shares_form)
         if not self.__sql.exist(shares_ths881155_table):
             self.__sql.create('TABLE', shares_ths881155_table, shares_form)
         if not self.__sql.exist(shares_usdcnh_table):
@@ -57,7 +60,7 @@ class Data(object):
     def commit(self):
         self.__sql.commit()
 
-    def save(self, table, day, open, high, low, close=0, value=0, volume=0):
+    def save(self, table, day, open, high, low, close=0.0, value=0, volume=0):
         _val = '"{}"'.format(day)
         _val += ',{}'.format(open)
         _val += ',{}'.format(high)

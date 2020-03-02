@@ -83,7 +83,7 @@ def put_clipboard(date='2020-02-21', top=20):
         _out = ''
         for idx in range(top):
             _out += '{}\t{}\t{}\t{}\t{}\t{}'.format(
-                idx+1, IC2003[0][idx], IC2003[1][idx],idx+1,  IF2003[0][idx], IF2003[1][idx]
+                idx+1, IC2003[0][idx], IC2003[1][idx], idx+1,  IF2003[0][idx], IF2003[1][idx]
             )
             if idx < top-1:
                 _out += '\n'
