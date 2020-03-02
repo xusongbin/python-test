@@ -120,6 +120,7 @@ class App(object):
         self.win_ui.label_399001_value_data.bind('<Button-1>', self.on_label_399001_value_data_click)
         self.win_ui.label_ccl_data.bind('<Button-1>', self.on_label_ccl_data_click)
 
+        self.win_ui.button_refresh.bind('<Button-1>', self.on_button_refresh_click)
         self.win_ui.button_1A0001_refresh.bind('<Button-1>', self.on_button_1a0001_refresh_click)
         self.win_ui.button_399001_refresh.bind('<Button-1>', self.on_button_399001_refresh_click)
         self.win_ui.button_881155_refresh.bind('<Button-1>', self.on_button_881155_refresh_click)
@@ -220,22 +221,28 @@ class App(object):
             self.do_show_info('获取失败')
             write_log('{}\n{}'.format(e, format_exc()))
 
+    def on_button_refresh_click(self, e):
+        self.win_ctl.switch_1a0001()
+        self.win_ctl.switch_399001()
+        self.win_ctl.switch_881155()
+        self.win.wm_attributes('-topmost', 1)
+
     def on_button_1a0001_refresh_click(self, e):
         self.win_ctl.switch_1a0001()
         self.win.wm_attributes('-topmost', 1)
-        sleep(2)
+        sleep(0.5)
         self.on_label_1a0001_data_click(e)
 
     def on_button_399001_refresh_click(self, e):
         self.win_ctl.switch_399001()
         self.win.wm_attributes('-topmost', 1)
-        sleep(2)
+        sleep(0.5)
         self.on_label_399001_data_click(e)
 
     def on_button_881155_refresh_click(self, e):
         self.win_ctl.switch_881155()
         self.win.wm_attributes('-topmost', 1)
-        sleep(2)
+        sleep(0.5)
         self.on_label_881155_data_click(e)
 
     def thread_win_ui_tick_event(self):
