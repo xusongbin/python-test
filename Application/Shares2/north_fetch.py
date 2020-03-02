@@ -19,7 +19,7 @@ class North(object):
     def __init__(self):
         self.data = Data()
 
-    def get(self):
+    def get_data(self):
         try:
             req = requests.get(self.__url, headers=self.__headers, timeout=3)
             content = json.loads(req.content)
@@ -29,7 +29,7 @@ class North(object):
         return None
 
     def fetch(self):
-        _ret = self.get()
+        _ret = self.get_data()
         if not _ret:
             return False
         try:
@@ -53,10 +53,19 @@ class North(object):
         _ndata = np.array([_day_list, _hgt_list, _sgt_list, _total_list]).T
         return _ndata
 
+    def get(self):
+        _nlist = self.fetch()
+        return _nlist[-1]
+        # _ret = []
+        # for d in _nlist:
+        #     if re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d(5|0):00', d[0]):
+        #         _ret = d
+        # return _ret
+
 
 def main():
     north = North()
-    print(north.fetch())
+    print(north.get())
 
 
 if __name__ == '__main__':

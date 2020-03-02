@@ -103,12 +103,12 @@ class ParseFile(object):
         write_log('Parse {} {}'.format('USDCNH', num))
         return self.parse_file(self.path_USDCNH, self.digit_USDCNH, num, delete)
 
-    def parse_1a0001_value(self, num=6, delete=False):
+    def parse_1a0001_value(self, num=7, delete=False):
         write_log('Parse {} {}'.format('1A0001', num))
         _data = self.parse_file(self.path_1A0001, self.digit_1A0001, num, delete)
-        if len(_data) != 6:
+        if len(_data) != 7:
             return False
-        _time = _data[-1][0]
+        _time = _data[-2][0]
         if not re.match(r'\d{4}-\d{2}-\d{2} \d{2}:(00|30):00', _time):
             return False
         _value = 0
@@ -116,12 +116,12 @@ class ParseFile(object):
             _value += int(_data[i][-2])
         return [_time, _value]
 
-    def parse_399001_value(self, num=6, delete=False):
+    def parse_399001_value(self, num=7, delete=False):
         write_log('Parse {} {}'.format('399001', num))
         _data = self.parse_file(self.path_399001, self.digit_399001, num, delete)
-        if len(_data) != 6:
+        if len(_data) != 7:
             return False
-        _time = _data[-1][0]
+        _time = _data[-2][0]
         if not re.match(r'\d{4}-\d{2}-\d{2} \d{2}:(00|30):00', _time):
             return False
         _value = 0

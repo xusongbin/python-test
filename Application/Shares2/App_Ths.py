@@ -114,7 +114,7 @@ class App(object):
 
     def on_label_1a0001_data_click(self, e):
         try:
-            _data = self.win_parse.parse_1a0001(1)[0]
+            _data = self.win_parse.parse_1a0001(2)[0]
             _show = '{:.1f}'.format(int(_data[-1])/10000)
             self.win_ui.label_1A0001_time['text'] = _data[0]
             self.win_ui.label_1A0001_data['text'] = _show
@@ -126,7 +126,7 @@ class App(object):
 
     def on_label_399001_data_click(self, e):
         try:
-            _data = self.win_parse.parse_399001(1)[0]
+            _data = self.win_parse.parse_399001(2)[0]
             _show = '{:.1f}'.format(int(_data[-1])/10000)
             self.win_ui.label_399001_time['text'] = _data[0]
             self.win_ui.label_399001_data['text'] = _show
@@ -138,7 +138,7 @@ class App(object):
 
     def on_label_881155_data_click(self, e):
         try:
-            _data = self.win_parse.parse_881155(1)[0]
+            _data = self.win_parse.parse_881155(2)[0]
             _show = '{:.2f}'.format(int(_data[-1])/10000)
             self.win_ui.label_881155_time['text'] = _data[0]
             self.win_ui.label_881155_data['text'] = _show
@@ -150,7 +150,7 @@ class App(object):
 
     def on_label_north_data_click(self, e):
         try:
-            _data = self.win_north.fetch()[-1]
+            _data = self.win_north.get()
             _text = '{}\t{}\t{}'.format(_data[1], _data[2], _data[3])
             self.win_ui.label_NORTH_time['text'] = _data[0]
             self.win_ui.label_NORTH_data['text'] = _text
