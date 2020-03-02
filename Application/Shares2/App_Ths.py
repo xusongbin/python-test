@@ -120,6 +120,10 @@ class App(object):
         self.win_ui.label_399001_value_data.bind('<Button-1>', self.on_label_399001_value_data_click)
         self.win_ui.label_ccl_data.bind('<Button-1>', self.on_label_ccl_data_click)
 
+        self.win_ui.button_1A0001_refresh.bind('<Button-1>', self.on_button_1a0001_refresh_click)
+        self.win_ui.button_399001_refresh.bind('<Button-1>', self.on_button_399001_refresh_click)
+        self.win_ui.button_881155_refresh.bind('<Button-1>', self.on_button_881155_refresh_click)
+
     def do_show_info(self, msg):
         write_log(msg)
         self.win_ui.lable_info['text'] = msg
@@ -215,6 +219,21 @@ class App(object):
         except Exception as e:
             self.do_show_info('获取失败')
             write_log('{}\n{}'.format(e, format_exc()))
+
+    def on_button_1a0001_refresh_click(self, e):
+        self.win_ctl.switch_1a0001()
+        sleep(1)
+        self.on_label_1a0001_data_click(e)
+
+    def on_button_399001_refresh_click(self, e):
+        self.win_ctl.switch_399001()
+        sleep(1)
+        self.on_label_399001_data_click(e)
+
+    def on_button_881155_refresh_click(self, e):
+        self.win_ctl.switch_1a0001()
+        sleep(1)
+        self.on_label_881155_data_click(e)
 
     def thread_win_ui_tick_event(self):
         while True:
