@@ -8,6 +8,7 @@ from my_driver import *
 from history_parse import ParseFile
 from north_fetch import North
 from ccl import Ccl
+from AutoWindows import ControlWindows
 
 
 class Layout(object):
@@ -21,14 +22,8 @@ class Layout(object):
         self.label_time.place(x=120, y=20, width=130, height=20)
         self.lable_data = Label(self.win, text='数据内容', anchor="w")
         self.lable_data.place(x=270, y=20, width=150, height=20)
-        # self.lable_back = Label(self.win, text='备注', anchor="w")
-        # self.lable_back.place(x=420, y=20, width=150, height=20)
-        self.lable_tinfo = Label(self.win, text='最后获取时间', anchor="e")
-        self.lable_tinfo.place(x=0, y=340, width=100, height=20)
-        self.lable_tms = Label(self.win, text='', anchor="w")
-        self.lable_tms.place(x=120, y=340, width=130, height=20)
-        self.lable_info = Label(self.win, text='', anchor="w")
-        self.lable_info.place(x=270, y=340, width=300, height=20)
+        self.button_refresh = Button(self.win, text='全部刷新')
+        self.button_refresh.place(x=420, y=20, width=60, height=20)
 
         self.label_1A0001_name = Label(self.win, text='上证指数', anchor="e")
         self.label_1A0001_name.place(x=0, y=60, width=100, height=20)
@@ -36,6 +31,8 @@ class Layout(object):
         self.label_1A0001_time.place(x=120, y=60, width=130, height=20)
         self.label_1A0001_data = Label(self.win, text='0', anchor="w")
         self.label_1A0001_data.place(x=270, y=60, width=150, height=20)
+        self.button_1A0001_refresh = Button(self.win, text='刷新')
+        self.button_1A0001_refresh.place(x=420, y=60, width=60, height=20)
 
         self.label_881155_name = Label(self.win, text='银行指数', anchor="e")
         self.label_881155_name.place(x=0, y=100, width=100, height=20)
@@ -43,6 +40,8 @@ class Layout(object):
         self.label_881155_time.place(x=120, y=100, width=130, height=20)
         self.label_881155_data = Label(self.win, text='0', anchor="w")
         self.label_881155_data.place(x=270, y=100, width=150, height=20)
+        self.button_881155_refresh = Button(self.win, text='刷新')
+        self.button_881155_refresh.place(x=420, y=100, width=60, height=20)
 
         self.label_399001_name = Label(self.win, text='深证成指', anchor="e")
         self.label_399001_name.place(x=0, y=140, width=100, height=20)
@@ -50,6 +49,8 @@ class Layout(object):
         self.label_399001_time.place(x=120, y=140, width=130, height=20)
         self.label_399001_data = Label(self.win, text='0', anchor="w")
         self.label_399001_data.place(x=270, y=140, width=150, height=20)
+        self.button_399001_refresh = Button(self.win, text='刷新')
+        self.button_399001_refresh.place(x=420, y=140, width=60, height=20)
 
         self.label_NORTH_name = Label(self.win, text='北向资金', anchor="e")
         self.label_NORTH_name.place(x=0, y=180, width=100, height=20)
@@ -79,6 +80,13 @@ class Layout(object):
         self.label_ccl_data = Label(self.win, text='0', anchor="w")
         self.label_ccl_data.place(x=270, y=300, width=150, height=20)
 
+        self.lable_tinfo = Label(self.win, text='最后获取时间', anchor="e")
+        self.lable_tinfo.place(x=0, y=340, width=100, height=20)
+        self.lable_tms = Label(self.win, text='', anchor="w")
+        self.lable_tms.place(x=120, y=340, width=130, height=20)
+        self.lable_info = Label(self.win, text='', anchor="w")
+        self.lable_info.place(x=270, y=340, width=300, height=20)
+
 
 class App(object):
     def __init__(self):
@@ -87,6 +95,7 @@ class App(object):
         self.win_parse = ParseFile()
         self.win_north = North()
         self.win_ccl = Ccl()
+        self.win_ctl = ControlWindows()
 
         self.var_info_ts = 0
 
