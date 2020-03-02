@@ -55,12 +55,12 @@ class North(object):
 
     def get(self):
         _nlist = self.fetch()
-        return _nlist[-1]
-        # _ret = []
-        # for d in _nlist:
-        #     if re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d(5|0):00', d[0]):
-        #         _ret = d
-        # return _ret
+        # return _nlist[-1]
+        _ret = []
+        for d in _nlist:
+            if re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d(5|0):00', d[0]):
+                _ret = d
+        return _ret
 
 
 def main():

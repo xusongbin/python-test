@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from my_driver import *
+from time import mktime, strptime
 
 
 class ParseFile(object):
@@ -26,7 +27,7 @@ class ParseFile(object):
         _min = (_time & 0x0000003F) >> 0
         return '{:04d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}'.format(_year+1900, _month, _day, _hour, _min, 0)
 
-    def parse_file(self, file, digit, num, delete):
+    def parse_file(self, file, digit, num=1, delete=False):
         with open(file, 'rb') as f:
             byte_array = f.read()
         try:
@@ -87,45 +88,100 @@ class ParseFile(object):
             # ))
         return np.array(_data_list)
 
-    def parse_1a0001(self, num=100000, delete=False):
-        write_log('Parse {} {}'.format('1A0001', num))
-        return self.parse_file(self.path_1A0001, self.digit_1A0001, num, delete)
+    def check_date(self, data_time='2020-02-27 11:30:00'):
+        _now_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        if _now_time.split(' ')[0] != data_time.split(' ')[0]:
+            # Not today
+            return True
+        _now_day_ts = int(time()) % 86400
+        if _now_day_ts < 32975 or _now_day_ts >= 54000 or 41400 <= _now_day_ts < 46800:
+            # Closed market
+            return True
+        else:
+            # Open market
+            _ts_5min = int(time() / 300) * 300
+            _now_time = strftime("%Y-%m-%d %H:%M:%S", localtime(_ts_5min))
+            if _now_time == data_time:
+                return True
+        return False
 
-    def parse_399001(self, num=100000, delete=False):
-        write_log('Parse {} {}'.format('399001', num))
-        return self.parse_file(self.path_399001, self.digit_399001, num, delete)
+    def parse_1a0001(self):
+        write_log('Parse {}'.format('1A0001'))
+        try:
+            _data = self.parse_file(self.path_1A0001, self.digit_1A0001, 2)
+            _data = _data[::-1]
+            for d in _data:
+                if self.check_date(d[0]):
+                    return d
+        except Exception as e:
+            write_log('{}\n{}'.format(e, format_exc()))
+        return None
 
-    def parse_881155(self, num=100000, delete=False):
-        write_log('Parse {} {}'.format('881155', num))
-        return self.parse_file(self.path_881155, self.digit_881155, num, delete)
+    def parse_399001(self):
+        write_log('Parse {}'.format('399001'))
+        try:
+            _data = self.parse_file(self.path_399001, self.digit_399001, 5)
+            _data = _data[::-1]
+            for d in _data:
+                if self.check_date(d[0]):
+                    return d
+        except Exception as e:
+            write_log('{}\n{}'.format(e, format_exc()))
+        return None
 
-    def parse_usdcnh(self, num=100000, delete=False):
-        write_log('Parse {} {}'.format('USDCNH', num))
-        return self.parse_file(self.path_USDCNH, self.digit_USDCNH, num, delete)
+    def parse_881155(self):
+        write_log('Parse {}'.format('881155'))
+        try:
+            _data = self.parse_file(self.path_881155, self.digit_881155, 5)
+            _data = _data[::-1]
+            for d in _data:
+                if self.check_date(d[0]):
+                    return d
+        except Exception as e:
+            write_log('{}\n{}'.format(e, format_exc()))
+        return None
 
-    def parse_1a0001_value(self, num=7, delete=False):
-        write_log('Parse {} {}'.format('1A0001', num))
-        _data = self.parse_file(self.path_1A0001, self.digit_1A0001, num, delete)
-        if len(_data) != 7:
-            return False
-        _time = _data[-2][0]
-        if not re.match(r'\d{4}-\d{2}-\d{2} \d{2}:(00|30):00', _time):
-            return False
+    def parse_usdcnh(self):
+        write_log('Parse {}'.format('USDCNH'))
+        try:
+            _data = self.parse_file(self.path_USDCNH, self.digit_USDCNH, 5)
+            _data = _data[::-1]
+            for d in _data:
+                if self.check_date(d[0]):
+                    return d
+        except Exception as e:
+            write_log('{}\n{}'.format(e, format_exc()))
+        return None
+
+    def parse_1a0001_value(self):
+        write_log('Parse {} value'.format('1A0001'))
+        _data = self.parse_file(self.path_1A0001, self.digit_1A0001, 10)
+        _data = _data[::-1]
+        _start = 0
+        _time = ''
+        for d in _data:
+            if re.match(r'\d{4}-\d{2}-\d{2} \d{2}:(00|30):00', d[0]):
+                _time = d[0]
+                break
+            _start += 1
         _value = 0
-        for i in range(6):
+        for i in range(_start, _start+6):
             _value += int(_data[i][-2])
         return [_time, _value]
 
-    def parse_399001_value(self, num=7, delete=False):
-        write_log('Parse {} {}'.format('399001', num))
-        _data = self.parse_file(self.path_399001, self.digit_399001, num, delete)
-        if len(_data) != 7:
-            return False
-        _time = _data[-2][0]
-        if not re.match(r'\d{4}-\d{2}-\d{2} \d{2}:(00|30):00', _time):
-            return False
+    def parse_399001_value(self):
+        write_log('Parse {} value'.format('399001'))
+        _data = self.parse_file(self.path_399001, self.digit_399001, 10)
+        _data = _data[::-1]
+        _start = 0
+        _time = ''
+        for d in _data:
+            if re.match(r'\d{4}-\d{2}-\d{2} \d{2}:(00|30):00', d[0]):
+                _time = d[0]
+                break
+            _start += 1
         _value = 0
-        for i in range(6):
+        for i in range(_start, _start+6):
             _value += int(_data[i][-2])
         return [_time, _value]
 
