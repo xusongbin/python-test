@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import numpy as np
-from save_data import Data
 from my_driver import *
 
 import gc
@@ -17,7 +16,7 @@ class North(object):
     }
 
     def __init__(self):
-        self.data = Data()
+        pass
 
     def get_data(self):
         try:
