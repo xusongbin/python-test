@@ -222,17 +222,20 @@ class App(object):
 
     def on_button_1a0001_refresh_click(self, e):
         self.win_ctl.switch_1a0001()
-        sleep(1)
+        self.win.wm_attributes('-topmost', 1)
+        sleep(2)
         self.on_label_1a0001_data_click(e)
 
     def on_button_399001_refresh_click(self, e):
         self.win_ctl.switch_399001()
-        sleep(1)
+        self.win.wm_attributes('-topmost', 1)
+        sleep(2)
         self.on_label_399001_data_click(e)
 
     def on_button_881155_refresh_click(self, e):
-        self.win_ctl.switch_1a0001()
-        sleep(1)
+        self.win_ctl.switch_881155()
+        self.win.wm_attributes('-topmost', 1)
+        sleep(2)
         self.on_label_881155_data_click(e)
 
     def thread_win_ui_tick_event(self):

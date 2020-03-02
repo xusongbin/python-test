@@ -11,14 +11,17 @@ from time import time, sleep
 
 
 class ControlWindows(object):
-    __app_text = ['同花顺(v8.80.24)']
-    __usdcnh_text = ['同花顺(v8.80.24) - 外汇技术分析']
-    __1A0001_text = ['同花顺(v8.80.24) - 指数技术分析', '同花顺(v8.80.24) - 上证指数']
-    __881155_text = ['同花顺(v8.80.24) - 综合指数技术分析']
-    __399001_text = ['同花顺(v8.80.24) - 综合指数技术分析']
+    __app_text = ['同花顺(v8.80.50)']
+    __usdcnh_text = ['同花顺(v8.80.50) - 外汇技术分析']
+    __1A0001_text = ['同花顺(v8.80.50) - 指数技术分析', '同花顺(v8.80.50) - 上证指数']
+    __881155_text = ['同花顺(v8.80.50) - 综合指数技术分析']
+    __399001_text = ['同花顺(v8.80.50) - 综合指数技术分析']
 
     def __init__(self):
         pass
+
+    def test(self):
+        self.switch_399001()
 
     def switch_usdcnh(self):
         _start = time()
@@ -34,43 +37,31 @@ class ControlWindows(object):
         return False
 
     def switch_1a0001(self):
-        _start = time()
-        while (time() - _start) < 5:
-            _handle = self.__find_handle(self.__app_text)
-            if not self.__set_force_window(_handle):
-                return False
-            sleep(0.5)
-            self.__push_message('1a0001')
-            if self.__find_window(self.__1A0001_text):
-                self.__push_message('32')
-                return True
-        return False
+        _handle = self.__find_handle(self.__app_text)
+        if not self.__set_force_window(_handle):
+            return False
+        sleep(0.5)
+        self.__push_message('1a0001')
+        self.__push_message('32')
+        return True
 
     def switch_399001(self):
-        _start = time()
-        while (time() - _start) < 5:
-            _handle = self.__find_handle(self.__app_text)
-            if not self.__set_force_window(_handle):
-                return False
-            sleep(0.5)
-            self.__push_message('399001')
-            if self.__find_window(self.__399001_text):
-                self.__push_message('32')
-                return True
-        return False
+        _handle = self.__find_handle(self.__app_text)
+        if not self.__set_force_window(_handle):
+            return False
+        sleep(0.5)
+        self.__push_message('399001')
+        self.__push_message('32')
+        return True
 
     def switch_881155(self):
-        _start = time()
-        while (time() - _start) < 5:
-            _handle = self.__find_handle(self.__app_text)
-            if not self.__set_force_window(_handle):
-                return False
-            sleep(0.5)
-            self.__push_message('881155')
-            if self.__find_window(self.__881155_text):
-                self.__push_message('32')
-                return True
-        return False
+        _handle = self.__find_handle(self.__app_text)
+        if not self.__set_force_window(_handle):
+            return False
+        sleep(0.5)
+        self.__push_message('881155')
+        self.__push_message('32')
+        return True
 
     def __find_handle(self, text):
         try:
@@ -160,7 +151,4 @@ class ControlWindows(object):
 
 if __name__ == '__main__':
     cw = ControlWindows()
-    if cw.is_running():
-        cw.switch_1A0001()
-    else:
-        print('App not found')
+    cw.test()
