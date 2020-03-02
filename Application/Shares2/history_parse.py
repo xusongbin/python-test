@@ -93,14 +93,15 @@ class ParseFile(object):
         if _now_time.split(' ')[0] != data_time.split(' ')[0]:
             # Not today
             return True
-        _now_day_ts = int(time()) % 86400
+        _now_day_ts = int(time() - 1583078400) % 86400
         if _now_day_ts < 32975 or _now_day_ts >= 54000 or 41400 <= _now_day_ts < 46800:
             # Closed market
             return True
         else:
             # Open market
-            _ts_5min = int(time() / 300) * 300
+            _ts_5min = int((time() - 1583078400) / 300) * 300
             _now_time = strftime("%Y-%m-%d %H:%M:%S", localtime(_ts_5min))
+            print(_now_time)
             if _now_time == data_time:
                 return True
         return False
@@ -188,6 +189,7 @@ class ParseFile(object):
 
 if __name__ == '__main__':
     fp = ParseFile()
-    print(fp.parse_1a0001_value())
+    # print(fp.parse_1a0001_value())
+    print(fp.check_date('2020-03-02 14:24:00'))
     # fp.parse_881155()
     # fp.parse_usdcnh()
