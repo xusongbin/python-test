@@ -93,15 +93,19 @@ class ParseFile(object):
         if _now_time.split(' ')[0] != data_time.split(' ')[0]:
             # Not today
             return True
-        _now_day_ts = int(time() - 1583078400) % 86400
+        _today = strftime("%Y-%m-%d 00:00:00", localtime())
+        _now_day_ts = int(time() - int(mktime(strptime(_today, '%Y-%m-%d %H:%M:%S'))))
         if _now_day_ts < 32975 or _now_day_ts >= 54000 or 41400 <= _now_day_ts < 46800:
             # Closed market
             return True
         else:
             # Open market
-            _ts_5min = int((time() - 1583078400) / 300) * 300
-            _now_time = strftime("%Y-%m-%d %H:%M:%S", localtime(_ts_5min + 1583078400))
+            _ts_5min = int((time()) / 300) * 300
+            _now_time = strftime("%Y-%m-%d %H:%M:%S", localtime(_ts_5min))
             if _now_time == data_time:
+                return True
+            _data_ts = int(mktime(strptime(data_time, '%Y-%m-%d %H:%M:%S')))
+            if (time() - _data_ts) > 300:
                 return True
         return False
 
