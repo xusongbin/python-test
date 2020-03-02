@@ -100,8 +100,7 @@ class ParseFile(object):
         else:
             # Open market
             _ts_5min = int((time() - 1583078400) / 300) * 300
-            _now_time = strftime("%Y-%m-%d %H:%M:%S", localtime(_ts_5min))
-            print(_now_time)
+            _now_time = strftime("%Y-%m-%d %H:%M:%S", localtime(_ts_5min + 1583078400))
             if _now_time == data_time:
                 return True
         return False
@@ -190,6 +189,6 @@ class ParseFile(object):
 if __name__ == '__main__':
     fp = ParseFile()
     # print(fp.parse_1a0001_value())
-    print(fp.check_date('2020-03-02 14:24:00'))
+    print(fp.check_date('2020-03-02 14:30:00'))
     # fp.parse_881155()
     # fp.parse_usdcnh()
