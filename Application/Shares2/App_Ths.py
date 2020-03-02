@@ -23,8 +23,12 @@ class Layout(object):
         self.lable_data.place(x=270, y=20, width=150, height=20)
         # self.lable_back = Label(self.win, text='备注', anchor="w")
         # self.lable_back.place(x=420, y=20, width=150, height=20)
+        self.lable_tinfo = Label(self.win, text='最后获取时间', anchor="e")
+        self.lable_tinfo.place(x=0, y=340, width=100, height=20)
+        self.lable_tms = Label(self.win, text='', anchor="w")
+        self.lable_tms.place(x=120, y=340, width=130, height=20)
         self.lable_info = Label(self.win, text='', anchor="w")
-        self.lable_info.place(x=0, y=340, width=300, height=20)
+        self.lable_info.place(x=270, y=340, width=300, height=20)
 
         self.label_1A0001_name = Label(self.win, text='上证指数', anchor="e")
         self.label_1A0001_name.place(x=0, y=60, width=100, height=20)
@@ -113,6 +117,7 @@ class App(object):
         self.var_info_ts = 15
 
     def on_label_1a0001_data_click(self, e):
+        self.win_ui.lable_tms['text'] = strftime("%Y-%m-%d %H:%M:%S", localtime())
         try:
             _data = self.win_parse.parse_1a0001()
             _show = '{:.1f}'.format(int(_data[-1])/10000)
@@ -125,6 +130,7 @@ class App(object):
             write_log('{}\n{}'.format(e, format_exc()))
 
     def on_label_399001_data_click(self, e):
+        self.win_ui.lable_tms['text'] = strftime("%Y-%m-%d %H:%M:%S", localtime())
         try:
             _data = self.win_parse.parse_399001()
             _show = '{:.1f}'.format(int(_data[-1])/10000)
@@ -137,6 +143,7 @@ class App(object):
             write_log('{}\n{}'.format(e, format_exc()))
 
     def on_label_881155_data_click(self, e):
+        self.win_ui.lable_tms['text'] = strftime("%Y-%m-%d %H:%M:%S", localtime())
         try:
             _data = self.win_parse.parse_881155()
             _show = '{:.2f}'.format(int(_data[-1])/10000)
@@ -149,6 +156,7 @@ class App(object):
             write_log('{}\n{}'.format(e, format_exc()))
 
     def on_label_north_data_click(self, e):
+        self.win_ui.lable_tms['text'] = strftime("%Y-%m-%d %H:%M:%S", localtime())
         try:
             _data = self.win_north.get()
             _text = '{}\t{}\t{}'.format(_data[1], _data[2], _data[3])
@@ -161,6 +169,7 @@ class App(object):
             write_log('{}\n{}'.format(e, format_exc()))
 
     def on_label_1a0001_value_data_click(self, e):
+        self.win_ui.lable_tms['text'] = strftime("%Y-%m-%d %H:%M:%S", localtime())
         try:
             _data = self.win_parse.parse_1a0001_value()
             _show = '{:.1f}'.format(_data[1]/100000000)
@@ -173,6 +182,7 @@ class App(object):
             write_log('{}\n{}'.format(e, format_exc()))
 
     def on_label_399001_value_data_click(self, e):
+        self.win_ui.lable_tms['text'] = strftime("%Y-%m-%d %H:%M:%S", localtime())
         try:
             _data = self.win_parse.parse_399001_value()
             _show = '{:.1f}'.format(_data[1]/100000000)
@@ -185,6 +195,7 @@ class App(object):
             write_log('{}\n{}'.format(e, format_exc()))
 
     def on_label_ccl_data_click(self, e):
+        self.win_ui.lable_tms['text'] = strftime("%Y-%m-%d %H:%M:%S", localtime())
         try:
             _data = self.win_ccl.get()
             _show = _data[1]
