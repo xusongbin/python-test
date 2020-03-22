@@ -60,26 +60,55 @@ class Ccl(object):
             write_log('{}\n{}'.format(e, format_exc()))
         return None
 
-    def get(self):
-        _date = strftime("%Y-%m-%d", localtime())
+    def get(self, _date=None, show=False, top=10):
+        if not _date:
+            _date = strftime("%Y-%m-%d", localtime())
         # _date = '2020-02-27'
-        _nlist1 = self.get_data('IC2003', _date)
-        _nlist2 = self.get_data('IF2003', _date)
-        # _old = '{}\t{}\t{}\t{}'.format(_nlist1[1][1][1], _nlist1[1][1][2], _nlist2[1][1][1], _nlist2[1][1][2])
-        _old = '{}\t{}'.format(_nlist1[1][1][2], _nlist2[1][1][2])
-        _clist1 = self.count(_nlist1)
-        _clist2 = self.count(_nlist2)
-        _count = ''
-        _top = 20
-        for idx in range(_top):
-            _count += '{}\t{}\t{}\t{}\t{}\t{}'.format(
-                idx+1, _clist1[0][idx], _clist1[1][idx], idx+1,  _clist2[0][idx], _clist2[1][idx]
-            )
-            if idx < _top-1:
-                _count += '\n'
-        return [_date, _old, _count]
+        _nlist1 = self.get_data('IC2006', _date)
+        _nlist2 = self.get_data('IF2006', _date)
+        if show:
+            print('{}\t{}'.format(_date, 'IC2006'))
+            for i in range(1, 11):
+                print('{:<4}\t{:<10}\t{:<4}\t{:<10}'.format(
+                    _nlist1[1][i][1], _nlist1[1][i][2], _nlist1[2][i][1], _nlist1[2][i][2]
+                ))
+            print('{}\t{}'.format(_date, 'IF2006'))
+            for i in range(1, 11):
+                print('{:<4}\t{:<10}\t{:<4}\t{:<10}'.format(
+                    _nlist2[1][i][1], _nlist2[1][i][2], _nlist2[2][i][1], _nlist2[2][i][2]
+                ))
+        try:
+            # _old = '{}\t{}\t{}\t{}'.format(_nlist1[1][1][1], _nlist1[1][1][2], _nlist2[1][1][1], _nlist2[1][1][2])
+            _old = '{}\t{}'.format(_nlist1[1][1][2], _nlist2[1][1][2])
+            _clist1 = self.count(_nlist1)
+            _clist2 = self.count(_nlist2)
+            _count = ''
+            for idx in range(top):
+                _count += '{}\t{}\t{}\t{}\t{}\t{}'.format(
+                    idx+1, _clist1[0][idx], _clist1[1][idx], idx+1,  _clist2[0][idx], _clist2[1][idx]
+                )
+                if idx < top-1:
+                    _count += '\n'
+            return [_date, _old, _count]
+        except Exception as e:
+            write_log('{}\n{}'.format(e, format_exc()))
+        return None
 
 
 if __name__ == '__main__':
+    import pyperclip
+    today = strftime("%Y-%m-%d", localtime())
     ccl = Ccl()
-    print(ccl.get())
+    while True:
+        pyperclip.copy(today)
+        date = input('请输入日期（默认今天的日期，可黏贴）：')
+        if not re.match(r'\d{4}-\d{2}-\d{2}', date):
+            print('输入日期异常，重新开始！')
+            continue
+        try:
+            recv = ccl.get(date, show=True)
+            pyperclip.copy(recv[2])
+            print('数据已复制到剪切板')
+        except Exception as e:
+            print('数据异常')
+            _ = e
