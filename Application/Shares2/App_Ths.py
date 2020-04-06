@@ -75,8 +75,9 @@ class Layout(object):
 
         self.label_ccl_name = Label(self.win, text='持仓量', anchor="e")
         self.label_ccl_name.place(x=0, y=300, width=100, height=20)
-        self.label_ccl_time = Label(self.win, text='', anchor="w")
-        self.label_ccl_time.place(x=120, y=300, width=130, height=20)
+        self.line_ccl_var = StringVar()
+        self.line_ccl_date = Entry(self.win, textvariable=self.line_ccl_var)
+        self.line_ccl_date.place(x=120, y=300, width=120, height=20)
         self.label_ccl_data = Label(self.win, text='0', anchor="w")
         self.label_ccl_data.place(x=270, y=300, width=150, height=20)
 
@@ -124,6 +125,8 @@ class App(object):
         self.win_ui.button_1A0001_refresh.bind('<Button-1>', self.on_button_1a0001_refresh_click)
         self.win_ui.button_399001_refresh.bind('<Button-1>', self.on_button_399001_refresh_click)
         self.win_ui.button_881155_refresh.bind('<Button-1>', self.on_button_881155_refresh_click)
+
+        self.win_ui.line_ccl_var.set(strftime("%Y-%m-%d", localtime()))
 
     def do_show_info(self, msg):
         write_log(msg)
@@ -211,9 +214,9 @@ class App(object):
     def on_label_ccl_data_click(self, e):
         self.win_ui.lable_tms['text'] = strftime("%Y-%m-%d %H:%M:%S", localtime())
         try:
-            _data = self.win_ccl.get()
+            _data = self.win_ccl.get(self.win_ui.line_ccl_var.get())
             _show = _data[1]
-            self.win_ui.label_ccl_time['text'] = _data[0]
+            self.win_ui.line_ccl_var.set(_data[0])
             self.win_ui.label_ccl_data['text'] = _show
             pyperclip.copy(_data[2])
             self.do_show_info('持仓量 复制成功')
