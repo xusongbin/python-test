@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import random
-from time import sleep
 from phone import *
 
 
@@ -26,7 +24,7 @@ class Dy(object):
     __resourceId_zhuanfa = 'com.ss.android.ugc.aweme:id/dbv'
     __resourceId_zhuanfaliang = 'com.ss.android.ugc.aweme:id/ekt'
 
-    __resourceId_neirong = 'com.ss.android.ugc.aweme:id/gjr'
+    __resourceId_neirong = 'com.ss.android.ugc.aweme:id/a90'
 
     __resourceId_biaoti = 'com.ss.android.ugc.aweme:id/title'
     __resourceId_shijian = 'com.ss.android.ugc.aweme:id/g2t'
@@ -40,11 +38,25 @@ class Dy(object):
         self.device = Device()
         self.device.connect(self.__phone_ip)
         if not self.device.is_running():
-            raise Exception('not run')
+            raise Exception('connect failure')
         print('connect successfully')
 
     def app_on(self):
+        assert isinstance(self.device.target, u2.Device)
         self.device.start(self.__pkt_name)
+        while True:
+            try:
+                info = self.device.target(text=self.__text_qingshaonian)
+                if info:
+                    print('find qsn note!')
+                    self.device.click_text(self.__xpath_know_qingshaonian)
+                info = self.device.target(text=self.__text_wo)
+                if info:
+                    break
+            except Exception as e:
+                _ = e
+            sleep(1)
+        print('app into main page')
 
     def app_off(self):
         self.device.stop(self.__pkt_name)
@@ -69,10 +81,11 @@ class Dy(object):
         return False
 
     def run(self):
+        self.app_on()
         while True:
             sleep(5 + random.randrange(-1000, 3000) / 10000)
-            self.app_next()
             self.app_info()
+            self.app_next()
 
 
 if __name__ == '__main__':

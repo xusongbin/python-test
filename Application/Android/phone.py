@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import random
 import uiautomator2 as u2
 from traceback import format_exc
+from time import sleep, time
 
 
 class Device(object):
@@ -26,7 +28,7 @@ class Device(object):
             print('{}\n{}'.format(e, format_exc()))
         return False
 
-    def connect(self, info):
+    def connect(self, info=None):
         try:
             self.target = u2.connect(info)
             self.running = True
@@ -86,3 +88,9 @@ class Device(object):
         except Exception as e:
             print('{}\n{}'.format(e, format_exc()))
         return False
+
+
+if __name__ == '__main__':
+    p = Device()
+    p.connect()
+    p.unlock_pwd([1, 2, 3, 4, 5, 6])
