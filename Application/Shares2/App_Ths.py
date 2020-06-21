@@ -4,11 +4,11 @@
 import pyperclip
 from tkinter import *
 
-from my_driver import *
 from history_parse import ParseFile
 from north_fetch import North
 from ccl import Ccl
 from AutoWindows import ControlWindows
+from myDriver import *
 
 
 class Layout(object):
@@ -80,6 +80,9 @@ class Layout(object):
         self.line_ccl_date.place(x=120, y=300, width=120, height=20)
         self.label_ccl_data = Label(self.win, text='0', anchor="w")
         self.label_ccl_data.place(x=270, y=300, width=150, height=20)
+        self.line_ccl_ydat = StringVar()
+        self.line_ccl_year = Entry(self.win, textvariable=self.line_ccl_ydat)
+        self.line_ccl_year.place(x=420, y=300, width=50, height=20)
 
         self.lable_tinfo = Label(self.win, text='最后获取时间', anchor="e")
         self.lable_tinfo.place(x=0, y=340, width=100, height=20)
@@ -97,6 +100,7 @@ class App(object):
         self.win_north = North()
         self.win_ccl = Ccl()
         self.win_ctl = ControlWindows()
+        self.win_ini = Ini()
 
         self.var_info_ts = 0
 
@@ -127,6 +131,11 @@ class App(object):
         self.win_ui.button_881155_refresh.bind('<Button-1>', self.on_button_881155_refresh_click)
 
         self.win_ui.line_ccl_var.set(strftime("%Y-%m-%d", localtime()))
+        _year = self.win_ini.read('CCL', 'YEAR')
+        if not re.match(r'\d{4}', _year):
+            _year = '2009'
+            self.win_ini.write('CCL', 'YEAR', _year)
+        self.win_ui.line_ccl_ydat.set(_year)
 
     def do_show_info(self, msg):
         write_log(msg)
@@ -214,7 +223,11 @@ class App(object):
     def on_label_ccl_data_click(self, e):
         self.win_ui.lable_tms['text'] = strftime("%Y-%m-%d %H:%M:%S", localtime())
         try:
-            _data = self.win_ccl.get(self.win_ui.line_ccl_var.get())
+            _year = self.win_ui.line_ccl_ydat.get()
+            if not re.match(r'\d{4}', _year):
+                _year = '2009'
+            self.win_ini.write('CCL', 'YEAR', _year)
+            _data = self.win_ccl.get(self.win_ui.line_ccl_var.get(), year=_year)
             _show = _data[1]
             self.win_ui.line_ccl_var.set(_data[0])
             self.win_ui.label_ccl_data['text'] = _show

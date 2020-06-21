@@ -3,7 +3,7 @@
 import numpy
 from bs4 import BeautifulSoup
 
-from my_driver import *
+from myDriver import *
 
 
 class Ccl(object):
@@ -60,19 +60,19 @@ class Ccl(object):
             write_log('{}\n{}'.format(e, format_exc()))
         return None
 
-    def get(self, _date=None, show=False, top=10):
+    def get(self, _date=None, show=False, top=10, year='2006'):
         if not _date:
             _date = strftime("%Y-%m-%d", localtime())
         # _date = '2020-02-27'
-        _nlist1 = self.get_data('IC2006', _date)
-        _nlist2 = self.get_data('IF2006', _date)
+        _nlist1 = self.get_data('IC{}'.format(year), _date)
+        _nlist2 = self.get_data('IF{}'.format(year), _date)
         if show:
-            print('{}\t{}'.format(_date, 'IC2006'))
+            print('{}\t{}'.format(_date, 'IC{}'.format(year)))
             for i in range(1, 11):
                 print('{:<4}\t{:<10}\t{:<4}\t{:<10}'.format(
                     _nlist1[1][i][1], _nlist1[1][i][2], _nlist1[2][i][1], _nlist1[2][i][2]
                 ))
-            print('{}\t{}'.format(_date, 'IF2006'))
+            print('{}\t{}'.format(_date, 'IF{}'.format(year)))
             for i in range(1, 11):
                 print('{:<4}\t{:<10}\t{:<4}\t{:<10}'.format(
                     _nlist2[1][i][1], _nlist2[1][i][2], _nlist2[2][i][1], _nlist2[2][i][2]
@@ -99,6 +99,10 @@ if __name__ == '__main__':
     import pyperclip
     today = strftime("%Y-%m-%d", localtime())
     ccl = Ccl()
+    ini = Ini()
+    _year = ini.read('CCL', 'YEAR')
+    if not re.match(r'\d{4}', _year):
+        _year = '2009'
     while True:
         pyperclip.copy(today)
         date = input('请输入日期（默认今天的日期，可黏贴）：')
@@ -106,7 +110,7 @@ if __name__ == '__main__':
             print('输入日期异常，重新开始！')
             continue
         try:
-            recv = ccl.get(date, show=True)
+            recv = ccl.get(date, show=True, year=_year)
             pyperclip.copy(recv[2])
             print('数据已复制到剪切板')
         except Exception as e:
