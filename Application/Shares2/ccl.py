@@ -18,12 +18,12 @@ class Ccl(object):
     }
 
     def __init__(self):
-        pass
+        self.req = Requests()
 
     def get_data(self, context='IC2003', date='2020-02-21'):
         url = 'http://data.futures.hexun.com/cccj.aspx?sContract={}&sDate={}&sRank=20'.format(context, date)
         try:
-            resp = requests.get(url, headers=self.__headers, timeout=3)
+            resp = self.req.get(url=url, headers=self.__headers, timeout=3)
             soup = BeautifulSoup(resp.text, 'html.parser')
             _list = [x.string.strip() for x in soup.find_all('td') if x.string]
             if len(_list) != 252:

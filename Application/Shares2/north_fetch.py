@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import numpy as np
-from my_driver import *
+from myDriver import *
 
 import gc
 gc.set_threshold(50, 10, 10)
@@ -16,11 +16,11 @@ class North(object):
     }
 
     def __init__(self):
-        pass
+        self.req = Requests()
 
     def get_data(self):
         try:
-            req = requests.get(self.__url, headers=self.__headers, timeout=3)
+            req = self.req.get(self.__url, headers=self.__headers, timeout=3)
             content = json.loads(req.content)
             return content
         except Exception as e:
