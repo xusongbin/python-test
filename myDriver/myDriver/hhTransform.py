@@ -21,10 +21,12 @@ class Transform(object):
             raise Exception('input is not int')
         return hex(data)
 
-    @staticmethod
-    def hex_to_dec(data):
+    def hex_to_dec(self, data, little=False):
         if not re.match(r'(0[xX])?[0-9A-Fa-f]+', data):
             raise Exception('input is not hex')
+        if little:
+            data = self.str_to_bytes(data)
+            return self.byte_to_int(data, sign=False)
         return int(data, 16)
 
     @staticmethod
@@ -67,8 +69,6 @@ class Transform(object):
     def byte_to_int(data, order='little', sign=True):
         if type(data) is not bytes:
             raise Exception('input is not bytes')
-        if len(data) != 4:
-            raise Exception('input bytes length is not 4')
         fmt = '<'
         if order == 'big':
             fmt = '>'
@@ -76,7 +76,16 @@ class Transform(object):
             fmt += 'i'
         else:
             fmt += 'I'
-        return struct.unpack('{}'.format(fmt), bytes(data))[0]
+        if len(data) == 4:
+            return struct.unpack('{}'.format(fmt), bytes(data))[0]
+        elif len(data) == 8:
+            _h = struct.unpack('{}'.format(fmt), bytes(data[:4]))[0]
+            _l = struct.unpack('{}'.format(fmt), bytes(data[4:]))[0]
+            if order == 'big':
+                return _h * 0xFFFFFFFF + _l
+            else:
+                return _l * 0xFFFFFFFF + _h
+        raise Exception('input bytes length is not 4')
 
     @staticmethod
     def byte_to_long(data, order='little', sign=True):
@@ -184,6 +193,8 @@ class Transform(object):
 
     @staticmethod
     def str_to_bytes(data):
+        if re.match(r'0[xX][0-9A-Fa-f]+', data):
+            data = data.upper().split('X')[1]
         if not re.match(r'[0-9A-Fa-f]+', data):
             raise Exception('input is not string')
         return bytes.fromhex(data)

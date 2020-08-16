@@ -14,6 +14,66 @@ from myDriver.hhFile import File
 
 
 class PtServer(object):
+    ERROR_CODE = {
+        0:    "ok",
+        1001: "系统繁忙",
+        1002: "缺少token，请重新登录",
+        1003: "无效token，请重新登录",
+        1004: "空参数",
+        1005: "参数错误",
+        1006: "权限错误",
+        1007: "查询错误",
+        2001: "无效账号",
+        2002: "账号名或密码错误",
+        2003: "账号已存在",
+        2004: "账号不存在",
+        2005: "账号被禁用",
+        2006: "上位机账户禁止登录",
+        2007: "禁止更新超级管理员信息",
+        2008: "新密码和旧密码一样",
+        3001: "工厂名或编码已存在",
+        3002: "工厂不存在",
+        3003: "工厂已关联批次，不允许更新或删除",
+        3201: "型号已存在",
+        3202: "型号不存在",
+        3203: "型号已关联批次，不允许更新或删除",
+        3204: "型号类型不匹配",
+        3205: "产品标识已存在",
+        3206: "型号已关联文件",
+        3401: "批次已存在",
+        3402: "批次不存在",
+        3403: "批次已结束",
+        3404: "批次阶段不匹配",
+        3405: "批次已关联数据，不允许更新或删除",
+        3406: "批次已启动，不允许更新",
+        3407: "批次已关联文件",
+        3408: "批次查询错误",
+        3601: "MAC地址已关联测试数据，不允许删除",
+        4001: "文件摘要不存在",
+        4002: "文件已存在",
+        4003: "文件摘要错误",
+        4004: "文件获取错误",
+        4005: "文件读取错误",
+        4201: "图片摘要不存在",
+        4202: "图片已存在",
+        4203: "图片摘要错误",
+        4204: "图片被关联，不允许删除",
+        5001: "DevEUI重复",
+        5002: "UUID重复",
+        5003: "DevEUI和UUID都重复",
+        5004: "MAC地址重复",
+        5005: "第一阶段数据未找到",
+        5006: "跳过测试步骤",
+        5007: "打开sqlite数据库错误",
+        5008: "读取表数据错误",
+        5009: "插入表数据错误",
+        5010: "更新表数据错误",
+        5011: "合并表数据错误",
+        5012: "SN码重复",
+        5013: "MAC地址和SN码都重复",
+        5014: "TUUID重复",
+        5015: "重复测试",
+    }
     TYPE_NODE_MODULE = 'node_module'
     TYPE_CARRY_BOARD = 'carry_board'
     TYPE_NODE_PRODUCT = 'node_product'
@@ -29,11 +89,16 @@ class PtServer(object):
             write_log(msg)
 
     def __init__(self, config=None, log=False):
+        self.__online = False
         self.__log = log
         self.__config = self.__load_config(config)
 
     def is_valid(self):
         if self.__config:
+            return True
+        return False
+    def is_online(self):
+        if self.__online:
             return True
         return False
 
@@ -100,9 +165,15 @@ class PtServer(object):
             )
             json_data = resp.json()
             self.debug('PtServer check result:{}'.format(json_data))
+            if 'code' not in json_data.keys():
+                return False
+            if int(json_data['code']) < 5000:
+                return False
+            self.__online = True
             return json_data
         except Exception as e:
             self.debug('{}\n{}'.format(e, format_exc()))
+        self.__online = False
         self.debug('PtServer check error!')
         return False
 

@@ -7,8 +7,6 @@ from traceback import format_exc
 from Crypto.Cipher import AES
 from configparser import ConfigParser
 
-from myDriver.hhLog import write_log
-
 
 class File(object):
     @staticmethod
@@ -16,7 +14,7 @@ class File(object):
         try:
             return os.path.exists(file)
         except Exception as e:
-            write_log('File except:{}\n{}'.format(e, format_exc()))
+            _ = e
         return False
 
     @staticmethod
@@ -27,7 +25,7 @@ class File(object):
             f.close()
             return True
         except Exception as e:
-            write_log('File except:{}\n{}'.format(e, format_exc()))
+            _ = e
         return False
 
     @staticmethod
@@ -37,12 +35,15 @@ class File(object):
                 os.remove(file)
             return True
         except Exception as e:
-            write_log('File except:{}\n{}'.format(e, format_exc()))
+            _ = e
         return False
 
     @staticmethod
     def size(file):
         return os.path.getsize(file)
+    @staticmethod
+    def name(file):
+        return os.path.basename(file)
 
     def read(self, file, mode='r'):
         if not self.exists(file):
@@ -77,6 +78,25 @@ class File(object):
         return self.delete(src)
 
     @staticmethod
+    def find(src=None, fm=None):
+        _files = []
+        if not src:
+            src = os.getcwd()
+        try:
+            for s in os.listdir(src):
+                if '.' not in s:
+                    continue
+                _fm = s.split('.')[1]
+                if not fm:
+                    _files.append(s)
+                    continue
+                if _fm in fm:
+                    _files.append(s)
+                    continue
+        except Exception as e:
+            _ = e
+        return _files
+    @staticmethod
     def aes_encrypt(bin_data, mode='ECB', key=b'RisingHF20150203', iv=b''):
         if mode.upper() == 'ECB':
             aes = AES.new(key, AES.MODE_ECB)
@@ -90,7 +110,7 @@ class File(object):
                 bin_data += b'\x00' * (16 - add)
             return aes.encrypt(bin_data)
         except Exception as e:
-            write_log('{}\n{}'.format(e, format_exc()))
+            _ = e
         return None
 
     @staticmethod
@@ -104,7 +124,7 @@ class File(object):
         try:
             return aes.decrypt(bin_data)
         except Exception as e:
-            write_log('{}\n{}'.format(e, format_exc()))
+            _ = e
         return None
 
     @staticmethod
@@ -124,6 +144,22 @@ class File(object):
         if not byte:
             out = out.decode()
         return out
+class Directory(object):
+    @staticmethod
+    def exist(path):
+        if os.path.isdir(path):
+            return True
+        return False
+    @staticmethod
+    def create(path):
+        if os.path.isdir(path):
+            return True
+        try:
+            os.makedirs(path)
+            return True
+        except Exception as e:
+            _ = e
+        return False
 
 
 class Ini(object):
@@ -165,6 +201,7 @@ if __name__ == '__main__':
     ftest = File()
     print(ftest.base64_encode('123', True))
     print(ftest.base64_decode('MTIz'))
+    print(ftest.find(fm=['py']))
 
     fini = Ini()
     fini.write('MODULE', 'name', 'COM12')

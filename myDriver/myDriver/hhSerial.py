@@ -35,6 +35,7 @@ class Serial(object):
         self.__queue_tx = queue.Queue()
         self.__xmodem = XMODEM(self.__get_char, self.__put_char, mode='xmodem1k')
         self.__xmodem_sta = False
+        self.__halt = False
         self.close()
 
         self.__com_turn = 0
@@ -47,7 +48,7 @@ class Serial(object):
         self.__xmodem_sta = True
         try:
             with open(path, 'rb') as f:
-                result = self.__xmodem.send(f, timeout=2000, retry=500)
+                result = self.__xmodem.send(f, timeout=50, retry=20)
         except Exception as e:
             write_log('xmodem send fail:{}\n{}'.format(e, format_exc()))
             result = False
@@ -126,6 +127,8 @@ class Serial(object):
         #         continue
         #     return name
         # return None
+    def set_halt(self, sta):
+        self.__halt = sta
 
     def set_ignore(self, com):
         self.__ignore = com
@@ -240,6 +243,8 @@ class Serial(object):
         if not data:
             return True
         name = self.get_port_name()
+        if not self.get_port_open():
+            return False
         try:
             if directory:
                 if self.__wakeup:
@@ -292,6 +297,11 @@ class Serial(object):
             self.close()
         return data
 
+    def send_wait_re_retry(self, tx, regular=None, tout=None, retry=3):
+        while retry:
+            retry -= 1
+            self.send_wait_regular(tx, regular, tout)
+        return False
     def send_wait_regular(self, tx, regular=None, tout=None):
         if tout:
             tout = tout / 1000
@@ -332,7 +342,7 @@ class Serial(object):
 
     def __on_serial_thread(self):
         while True:
-            if self.__xmodem_sta:
+            if self.__xmodem_sta or self.__halt:
                 sleep(0.1)
                 continue
             if not self.get_port_open():

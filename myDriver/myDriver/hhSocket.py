@@ -48,7 +48,11 @@ class UdpSocket(object):
         if not timeout:
             if self.__queue_rx.empty():
                 return ''
-            self.__remote_addr, data = self.__queue_rx.get()
+            try:
+                self.__remote_addr, data = self.__queue_rx.get()
+            except Exception as e:
+                _ = e
+                return ''
             if self.__byte:
                 return data
             else:
@@ -58,7 +62,11 @@ class UdpSocket(object):
             sleep(0.005)
             if self.__queue_rx.empty():
                 continue
-            self.__remote_addr, data = self.__queue_rx.get()
+            try:
+                self.__remote_addr, data = self.__queue_rx.get()
+            except Exception as e:
+                _ = e
+                return ''
             if self.__byte:
                 return data
             else:

@@ -13,9 +13,11 @@ from traceback import format_exc
 from time import time, sleep, strftime, strptime, localtime
 
 from myDriver.hhLog import write_log
-# from myDriver.hhAi import ClipBoard, KeyBoard
+from myDriver.hhAi import ClipBoard, KeyBoard
 from myDriver.hhWin32 import Windows
 from myDriver.hhFile import File, Ini
+from myDriver.hhTime import Time
+from myDriver.hhLwkey import LwKey, LwSign
 from myDriver.hhQtColor import QtColor
 from myDriver.hhTransform import Transform
 
