@@ -24,6 +24,7 @@ class StLink(object):
     __cmd_option_byte = '-ob'
     __cmd_start = '--start'
     __cmd_reset = '--rst'
+    __cmd_version = '-version'
 
     def __init__(self, path='STM32_Programmer_CLI', log=True):
         self.path = path
@@ -56,11 +57,19 @@ class StLink(object):
         respond = self.run(cmd)
         return respond
 
+    def version(self):
+        cmd = self.__cmd_version
+        respond = self.run(cmd)
+        if 'STM32CubeProgrammer version' not in respond:
+            return None
+        respond = respond[respond.find('version:'):].split('\n')[0].split(':')[1].strip()
+        return respond
+
     def erase_chip(self):
         cmd = self.__cmd_connect
         cmd += ' {}'.format(self.__cmd_erase_chip)
         respond = self.run(cmd)
-        if 'Mass erase successfully achieved' in respond:
+        if respond and 'Mass erase successfully achieved' in respond:
             write_log('Erase chip done.')
             return True
         write_log('Erase chip except.')
@@ -74,12 +83,8 @@ class StLink(object):
         else:
             cmd += ' {}'.format(file)
         respond = self.run(cmd)
-        print(respond)
-        try:
-            if 'File download complete' in respond:
-                return True
-        except Exception as e:
-            print('{}\n{}'.format(e, format_exc()))
+        if respond and 'File download complete' in respond:
+            return True
         return False
 
     def read_protect(self):
@@ -87,6 +92,8 @@ class StLink(object):
         cmd += ' {}'.format(self.__cmd_option_byte)
         cmd += ' {}'.format('displ')
         respond = self.run(cmd)
+        if not respond:
+            return False
         find = re.findall(r'(RDP.*0x[0-9A-F]+)', respond)
         if len(find) == 0:
             return False
@@ -98,22 +105,23 @@ class StLink(object):
         cmd += ' {}'.format(self.__cmd_option_byte)
         cmd += ' RDP={}'.format(rdp)
         respond = self.run(cmd)
-        if 'Option Bytes successfully programmed' in respond:
-            return True
-        if 'Option Byte: rdp, value: 0xAA, was not modified' in respond:
-            return True
+        if respond:
+            if 'Option Bytes successfully programmed' in respond:
+                return True
+            if 'Option Byte: rdp, value: 0xAA, was not modified' in respond:
+                return True
         return False
 
     def start(self):
         cmd = self.__cmd_connect
         cmd += ' {}'.format(self.__cmd_start)
         cmd += ' {}'.format('0x08000000')
-        self.run(cmd)
+        return self.run(cmd)
 
     def reset(self):
         cmd = self.__cmd_connect
         cmd += ' {}'.format(self.__cmd_reset)
-        self.run(cmd)
+        return self.run(cmd)
 
     def rewrite_fimware(self, firmware, protect=True, lock=True):
         if lock:
@@ -144,6 +152,7 @@ if __name__ == '__main__':
     # cmd = "STM32_Programmer_CLI -c port=SWD reset=HWrst -d E:/GIT/firmware-merge-tool/RHF0M055/v1.1.0-20200408/rhf0m055-v1.1.0-20200408-allinone.hex"
     # firmware = r'C:\Users\Administrator\Desktop\rhf0m055-v0.0.9-20191223-allinone.hex'
     # firmware = r'E:\Development\项目资料\RHF76-052-JRI\测试固件\LoRa_JRI_2020-04-01.hex'
-    # st = StLink()
+    st = StLink()
     # st.rewrite_fimware(firmware, False)
-    batch_loading()
+    # batch_loading()
+    print(st.version())

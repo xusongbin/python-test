@@ -127,6 +127,7 @@ class Serial(object):
         #         continue
         #     return name
         # return None
+
     def set_halt(self, sta):
         self.__halt = sta
 
@@ -239,7 +240,7 @@ class Serial(object):
         self.close()
         return self.open()
 
-    def send(self, data, directory=False):
+    def send(self, data, directory=False, Linux=False):
         if not data:
             return True
         name = self.get_port_name()
@@ -250,7 +251,10 @@ class Serial(object):
                 if self.__wakeup:
                     self.__port.write(b'\xff\xff\xff\xff')
                 if type(data) is str:
-                    data = data.strip() + '\r\n'
+                    if Linux:
+                        data = data.strip() + '\n'
+                    else:
+                        data = data.strip() + '\r\n'
                     self.__port.write(data.encode('utf-8'))
                 else:
                     self.__port.write(data)
@@ -297,17 +301,20 @@ class Serial(object):
             self.close()
         return data
 
-    def send_wait_re_retry(self, tx, regular=None, tout=None, retry=3):
+    def send_wait_re_retry(self, tx, regular=None, tout=None, retry=3, Linux=False):
         while retry:
             retry -= 1
-            self.send_wait_regular(tx, regular, tout)
+            rx = self.send_wait_regular(tx, regular, tout, Linux)
+            if rx:
+                return rx
         return False
-    def send_wait_regular(self, tx, regular=None, tout=None):
+
+    def send_wait_regular(self, tx, regular=None, tout=None, Linux=False):
         if tout:
             tout = tout / 1000
         else:
             tout = self.__tout
-        self.send(tx, True)
+        self.send(tx, True, Linux)
         start = time()
         while (time() - start) <= tout:
             rx = self.get()

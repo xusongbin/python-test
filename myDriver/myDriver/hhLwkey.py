@@ -131,6 +131,6 @@ if __name__ == '__main__':
     # appeui	deveui	devaddr	nwkskey	appskey	appkey
     lwkey = LwKey()
     # print(lwkey.get('8C-F9-57-20-00-03-6E-EF', '526973696E6748468', 0))
-    print(lwkey.generate('8cf9572000036eef'))
+    print(lwkey.generate('8C:F9:57:20:00:03:6E:97'))
     # lwsign = LwSign()
     # print(lwsign.get('8CF957200001057B', '8CF9572000000000'))

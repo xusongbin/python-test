@@ -16,69 +16,82 @@ from myDriver.hhFile import File
 class PtServer(object):
     ERROR_CODE = {
         0:    "ok",
-        1001: "ÏµÍ³·±Ã¦",
-        1002: "È±ÉÙtoken£¬ÇëÖØÐÂµÇÂ¼",
-        1003: "ÎÞÐ§token£¬ÇëÖØÐÂµÇÂ¼",
-        1004: "¿Õ²ÎÊý",
-        1005: "²ÎÊý´íÎó",
-        1006: "È¨ÏÞ´íÎó",
-        1007: "²éÑ¯´íÎó",
-        2001: "ÎÞÐ§ÕËºÅ",
-        2002: "ÕËºÅÃû»òÃÜÂë´íÎó",
-        2003: "ÕËºÅÒÑ´æÔÚ",
-        2004: "ÕËºÅ²»´æÔÚ",
-        2005: "ÕËºÅ±»½ûÓÃ",
-        2006: "ÉÏÎ»»úÕË»§½ûÖ¹µÇÂ¼",
-        2007: "½ûÖ¹¸üÐÂ³¬¼¶¹ÜÀíÔ±ÐÅÏ¢",
-        2008: "ÐÂÃÜÂëºÍ¾ÉÃÜÂëÒ»Ñù",
-        3001: "¹¤³§Ãû»ò±àÂëÒÑ´æÔÚ",
-        3002: "¹¤³§²»´æÔÚ",
-        3003: "¹¤³§ÒÑ¹ØÁªÅú´Î£¬²»ÔÊÐí¸üÐÂ»òÉ¾³ý",
-        3201: "ÐÍºÅÒÑ´æÔÚ",
-        3202: "ÐÍºÅ²»´æÔÚ",
-        3203: "ÐÍºÅÒÑ¹ØÁªÅú´Î£¬²»ÔÊÐí¸üÐÂ»òÉ¾³ý",
-        3204: "ÐÍºÅÀàÐÍ²»Æ¥Åä",
-        3205: "²úÆ·±êÊ¶ÒÑ´æÔÚ",
-        3206: "ÐÍºÅÒÑ¹ØÁªÎÄ¼þ",
-        3401: "Åú´ÎÒÑ´æÔÚ",
-        3402: "Åú´Î²»´æÔÚ",
-        3403: "Åú´ÎÒÑ½áÊø",
-        3404: "Åú´Î½×¶Î²»Æ¥Åä",
-        3405: "Åú´ÎÒÑ¹ØÁªÊý¾Ý£¬²»ÔÊÐí¸üÐÂ»òÉ¾³ý",
-        3406: "Åú´ÎÒÑÆô¶¯£¬²»ÔÊÐí¸üÐÂ",
-        3407: "Åú´ÎÒÑ¹ØÁªÎÄ¼þ",
-        3408: "Åú´Î²éÑ¯´íÎó",
-        3601: "MACµØÖ·ÒÑ¹ØÁª²âÊÔÊý¾Ý£¬²»ÔÊÐíÉ¾³ý",
-        4001: "ÎÄ¼þÕªÒª²»´æÔÚ",
-        4002: "ÎÄ¼þÒÑ´æÔÚ",
-        4003: "ÎÄ¼þÕªÒª´íÎó",
-        4004: "ÎÄ¼þ»ñÈ¡´íÎó",
-        4005: "ÎÄ¼þ¶ÁÈ¡´íÎó",
-        4201: "Í¼Æ¬ÕªÒª²»´æÔÚ",
-        4202: "Í¼Æ¬ÒÑ´æÔÚ",
-        4203: "Í¼Æ¬ÕªÒª´íÎó",
-        4204: "Í¼Æ¬±»¹ØÁª£¬²»ÔÊÐíÉ¾³ý",
-        5001: "DevEUIÖØ¸´",
-        5002: "UUIDÖØ¸´",
-        5003: "DevEUIºÍUUID¶¼ÖØ¸´",
-        5004: "MACµØÖ·ÖØ¸´",
-        5005: "µÚÒ»½×¶ÎÊý¾ÝÎ´ÕÒµ½",
-        5006: "Ìø¹ý²âÊÔ²½Öè",
-        5007: "´ò¿ªsqliteÊý¾Ý¿â´íÎó",
-        5008: "¶ÁÈ¡±íÊý¾Ý´íÎó",
-        5009: "²åÈë±íÊý¾Ý´íÎó",
-        5010: "¸üÐÂ±íÊý¾Ý´íÎó",
-        5011: "ºÏ²¢±íÊý¾Ý´íÎó",
-        5012: "SNÂëÖØ¸´",
-        5013: "MACµØÖ·ºÍSNÂë¶¼ÖØ¸´",
-        5014: "TUUIDÖØ¸´",
-        5015: "ÖØ¸´²âÊÔ",
+        1001: "ç³»ç»Ÿç¹å¿™",
+        1002: "ç¼ºå°‘tokenï¼Œè¯·é‡æ–°ç™»å½•",
+        1003: "æ— æ•ˆtokenï¼Œè¯·é‡æ–°ç™»å½•",
+        1004: "ç©ºå‚æ•°",
+        1005: "å‚æ•°é”™è¯¯",
+        1006: "æƒé™é”™è¯¯",
+        1007: "æŸ¥è¯¢é”™è¯¯",
+
+        2001: "æ— æ•ˆè´¦å·",
+        2002: "è´¦å·åæˆ–å¯†ç é”™è¯¯",
+        2003: "è´¦å·å·²å­˜åœ¨",
+        2004: "è´¦å·ä¸å­˜åœ¨",
+        2005: "è´¦å·è¢«ç¦ç”¨",
+        2006: "ä¸Šä½æœºè´¦æˆ·ç¦æ­¢ç™»å½•",
+        2007: "ç¦æ­¢æ›´æ–°è¶…çº§ç®¡ç†å‘˜ä¿¡æ¯",
+        2008: "æ–°å¯†ç å’Œæ—§å¯†ç ä¸€æ ·",
+
+        3001: "å·¥åŽ‚åæˆ–ç¼–ç å·²å­˜åœ¨",
+        3002: "å·¥åŽ‚ä¸å­˜åœ¨",
+        3003: "å·¥åŽ‚å·²å…³è”æ‰¹æ¬¡ï¼Œä¸å…è®¸æ›´æ–°æˆ–åˆ é™¤",
+
+        3201: "åž‹å·å·²å­˜åœ¨",
+        3202: "åž‹å·ä¸å­˜åœ¨",
+        3203: "åž‹å·å·²å…³è”æ‰¹æ¬¡ï¼Œä¸å…è®¸æ›´æ–°æˆ–åˆ é™¤",
+        3204: "åž‹å·ç±»åž‹ä¸åŒ¹é…",
+        3205: "äº§å“æ ‡è¯†å·²å­˜åœ¨",
+        3206: "åž‹å·å·²å…³è”æ–‡ä»¶",
+
+        3401: "æ‰¹æ¬¡å·²å­˜åœ¨",
+        3402: "æ‰¹æ¬¡ä¸å­˜åœ¨",
+        3403: "æ‰¹æ¬¡å·²ç»“æŸ",
+        3404: "æ‰¹æ¬¡é˜¶æ®µä¸åŒ¹é…",
+        3405: "æ‰¹æ¬¡å·²å…³è”æ•°æ®ï¼Œä¸å…è®¸æ›´æ–°æˆ–åˆ é™¤",
+        3406: "æ‰¹æ¬¡å·²å¯åŠ¨ï¼Œä¸å…è®¸æ›´æ–°",
+        3407: "æ‰¹æ¬¡å·²å…³è”æ–‡ä»¶",
+        3408: "æ‰¹æ¬¡æŸ¥è¯¢é”™è¯¯",
+
+        3601: "MACåœ°å€å·²å…³è”æµ‹è¯•æ•°æ®ï¼Œä¸å…è®¸åˆ é™¤",
+
+        4001: "æ–‡ä»¶æ‘˜è¦ä¸å­˜åœ¨",
+        4002: "æ–‡ä»¶å·²å­˜åœ¨",
+        4003: "æ–‡ä»¶æ‘˜è¦é”™è¯¯",
+        4004: "æ–‡ä»¶èŽ·å–é”™è¯¯",
+        4005: "æ–‡ä»¶è¯»å–é”™è¯¯",
+
+        4201: "å›¾ç‰‡æ‘˜è¦ä¸å­˜åœ¨",
+        4202: "å›¾ç‰‡å·²å­˜åœ¨",
+        4203: "å›¾ç‰‡æ‘˜è¦é”™è¯¯",
+        4204: "å›¾ç‰‡è¢«å…³è”ï¼Œä¸å…è®¸åˆ é™¤",
+
+        5001: "DevEUIé‡å¤",
+        5002: "UUIDé‡å¤",
+        5003: "DevEUIå’ŒUUIDéƒ½é‡å¤",
+        5004: "MACåœ°å€é‡å¤",
+        5005: "ç¬¬ä¸€é˜¶æ®µæ•°æ®æœªæ‰¾åˆ°",
+        5006: "è·³è¿‡æµ‹è¯•æ­¥éª¤",
+        5007: "æ‰“å¼€sqliteæ•°æ®åº“é”™è¯¯",
+        5008: "è¯»å–è¡¨æ•°æ®é”™è¯¯",
+        5009: "æ’å…¥è¡¨æ•°æ®é”™è¯¯",
+        5010: "æ›´æ–°è¡¨æ•°æ®é”™è¯¯",
+        5011: "åˆå¹¶è¡¨æ•°æ®é”™è¯¯",
+        5012: "SNç é‡å¤",
+        5013: "MACåœ°å€å’ŒSNç éƒ½é‡å¤",
+        5014: "TUUIDé‡å¤",
+        5015: "é‡å¤æµ‹è¯•",
     }
     TYPE_NODE_MODULE = 'node_module'
     TYPE_CARRY_BOARD = 'carry_board'
     TYPE_NODE_PRODUCT = 'node_product'
     TYPE_GATEWAY_MODULE = 'gateway_module'
     TYPE_GATEWAY_PRODUCT = 'gateway_product'
+
+    __api_check = '/api/product/hostcomputer/check'
+    __api_create = '/api/product/hostcomputer/create'
+    __api_dbfile = '/api/product/hostcomputer/dbfile'
+    __api_logfile = '/api/product/hostcomputer/logfile'
 
     __path = os.getcwd()
     __aes_key = b'\x07\x09\x31\x21\x75\x67\x3b\x5d\x4f\x21\xab\x9b\xff\xff\xff\xff'
@@ -97,6 +110,7 @@ class PtServer(object):
         if self.__config:
             return True
         return False
+
     def is_online(self):
         if self.__online:
             return True
@@ -134,7 +148,6 @@ class PtServer(object):
     def check(self, ptype='node_module', deveui='', uuid='', mac=''):
         if not self.__config:
             return False
-        _api_check = '/api/product/hostcomputer/check'
         if not deveui:
             deveui = '{}'.format(time()*1000)
         if not uuid:
@@ -158,16 +171,16 @@ class PtServer(object):
             return False
         try:
             resp = requests.post(
-                self.__config['serverIP'] + _api_check,
+                self.__config['serverIP'] + self.__api_check,
                 json.dumps(data),
                 headers={'x-access-token': self.__config['token']},
-                timeout=1
+                timeout=3.05
             )
             json_data = resp.json()
             self.debug('PtServer check result:{}'.format(json_data))
             if 'code' not in json_data.keys():
                 return False
-            if int(json_data['code']) < 5000:
+            if 0 < int(json_data['code']) < 5000:
                 return False
             self.__online = True
             return json_data
@@ -177,17 +190,19 @@ class PtServer(object):
         self.debug('PtServer check error!')
         return False
 
-    def create(self, data):
-        if not self.__config:
-            return False
-        _api_create = '/api/product/hostcomputer/create'
+    def create(self, data, ip=None, token=None):
+        if not ip and not token:
+            if not self.__config:
+                return False
+            ip = self.__config['serverIP']
+            token = self.__config['token']
         self.debug('PtServer create:{}'.format(data))
         try:
             resp = requests.post(
-                self.__config['serverIP'] + _api_create,
+                ip + self.__api_create,
                 json.dumps(data),
-                headers={'x-access-token': self.__config['token']},
-                timeout=1
+                headers={'x-access-token': token},
+                timeout=3.05
             )
             json_data = resp.json()
             self.debug('PtServer create result:{}'.format(json_data))
@@ -195,6 +210,67 @@ class PtServer(object):
         except Exception as e:
             self.debug('{}\n{}'.format(e, format_exc()))
         self.debug('PtServer create error!')
+        return False
+
+    def upload_db(self, file):
+        if not self.__config:
+            return False
+        self.debug('PtServer upload_db:{}'.format(os.path.basename(file)))
+        try:
+            with open(file, 'rb') as f:
+                _md5 = File.md5_encode(f.read())
+            data = {
+                'batchName': self.batch_name(),
+                'modelName': self.model_name(),
+                'modelType': self.model_type(),
+                'fileName': os.path.basename(file),
+                'fileType': 4,
+                'fileMode': True,
+                'digest': _md5
+            }
+            print(data)
+            resp = requests.post(
+                self.__config['serverIP'] + self.__api_dbfile,
+                data,
+                files={'file': open(file, 'rb')},
+                headers={'x-access-token': self.__config['token']}
+            )
+            json_data = resp.json()
+            self.debug('PtServer upload_db result:{}'.format(json_data))
+            return json_data
+        except Exception as e:
+            self.debug('{}\n{}'.format(e, format_exc()))
+        self.debug('PtServer upload_db error!')
+        return False
+
+    def upload_log(self, file):
+        if not self.__config:
+            return False
+        self.debug('PtServer upload_log:{}'.format(os.path.basename(file)))
+        try:
+            with open(file, 'rb') as f:
+                _md5 = File.md5_encode(f.read())
+            data = {
+                'batchName': self.batch_name(),
+                'modelName': self.model_name(),
+                'modelType': self.model_type(),
+                'fileName': os.path.basename(file),
+                'fileType': 5,
+                'fileMode': True,
+                'digest': _md5
+            }
+            resp = requests.post(
+                self.__config['serverIP'] + self.__api_logfile,
+                data,
+                files={'file': open(file, 'rb')},
+                headers={'x-access-token': self.__config['token']}
+            )
+            json_data = resp.json()
+            self.debug('PtServer upload_log result:{}'.format(json_data))
+            return json_data
+        except Exception as e:
+            self.debug('{}\n{}'.format(e, format_exc()))
+        self.debug('PtServer upload_log error!')
         return False
 
     def config(self):
@@ -215,9 +291,20 @@ class PtServer(object):
             return ''
         return self.__config['modelType']
 
+    def server_ip(self):
+        if not self.__config:
+            return ''
+        return self.__config['serverIP']
+
+    def token(self):
+        if not self.__config:
+            return ''
+        return self.__config['token']
+
 
 def test_check(f):
     pts = PtServer(f)
+    print(pts.config())
     print(pts.check('node_product', '478E26DD00280020', '1'))
 
 
@@ -256,7 +343,13 @@ def test_config(f):
     print(json.dumps(pts.config()))
 
 
+def test_upload(f):
+    pts = PtServer(f, True)
+    print(pts.upload_db(r'C:\Users\Administrator\Desktop\jig.db'))
+
+
 if __name__ == '__main__':
-    test_check(r'C:\Users\Administrator\Desktop\12.json')
+    # test_check(r'C:\Users\Administrator\Desktop\configfile_rhf0m003_0m00320110_2020-09-18_11_19_57.json')
     # test_create()
     # test_config(r'C:\Users\Administrator\Desktop\12.json')
+    test_upload(r'C:\Users\Administrator\Desktop\configfile_rhf0m003_0m0032084c_2020-09-18_12_07_54.json')
